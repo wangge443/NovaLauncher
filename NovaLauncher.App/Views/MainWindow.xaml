@@ -1,13 +1,76 @@
 <Window x:Class="NovaLauncher.App.Views.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:views="clr-namespace:NovaLauncher.App.Views"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="{Binding Title}"
-        Width="800" Height="500"
-        MinWidth="400" MinHeight="240"
+        Width="1120" Height="720"
+        MinWidth="800" MinHeight="560"
+        WindowStyle="None" ResizeMode="CanResize"
+        Background="{DynamicResource WindowBrush}"
+        Foreground="{DynamicResource TextBrush}" FontFamily="{StaticResource AppFont}"
+        UseLayoutRounding="True" SnapsToDevicePixels="True"
         WindowStartupLocation="CenterScreen">
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="24">
-        <TextBlock Text="{Binding Title}" FontSize="24" TextAlignment="Center" />
-        <TextBlock Text="{Binding StatusMessage}" Margin="0,12,0,0"
-                   FontSize="16" TextAlignment="Center" />
-    </StackPanel>
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="48" ResizeBorderThickness="6" CornerRadius="12"
+                            GlassFrameThickness="0" UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+    <Border x:Name="WindowFrame" Background="{DynamicResource BackdropBrush}"
+            BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+        <Border.Style>
+            <Style TargetType="Border">
+                <Setter Property="CornerRadius" Value="12" />
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
+                        <Setter Property="CornerRadius" Value="0" />
+                        <Setter Property="Padding" Value="7" />
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
+        </Border.Style>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="48" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+            <Grid Background="Transparent">
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0">
+                    <TextBlock Text="N" Foreground="{DynamicResource AccentBrush}" FontSize="14" FontWeight="Bold" Margin="0,0,12,0" />
+                    <TextBlock Text="{Binding Title}" Foreground="{DynamicResource MutedTextBrush}" FontSize="12" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Top"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Style="{StaticResource CaptionButton}" Content="&#xE921;" Click="Minimize_Click"
+                            ToolTip="最小化" AutomationProperties.Name="最小化" AutomationProperties.AutomationId="MinimizeButton" />
+                    <Button Click="MaximizeRestore_Click" AutomationProperties.AutomationId="MaximizeButton">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource CaptionButton}">
+                                <Setter Property="Content" Value="&#xE922;" />
+                                <Setter Property="ToolTip" Value="最大化" />
+                                <Setter Property="AutomationProperties.Name" Value="最大化" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding WindowState, RelativeSource={RelativeSource AncestorType=Window}}" Value="Maximized">
+                                        <Setter Property="Content" Value="&#xE923;" />
+                                        <Setter Property="ToolTip" Value="还原" />
+                                        <Setter Property="AutomationProperties.Name" Value="还原" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    <Button Style="{StaticResource CaptionButton}" Content="&#xE8BB;" Click="Close_Click"
+                            Background="{DynamicResource CloseHoverBrush}" ToolTip="关闭"
+                            AutomationProperties.Name="关闭" AutomationProperties.AutomationId="CloseButton" />
+                </StackPanel>
+            </Grid>
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="3*" />
+                </Grid.ColumnDefinitions>
+                <views:SidebarView DataContext="{Binding Sidebar}" AutomationProperties.AutomationId="Sidebar" />
+                <views:ContentView Grid.Column="1" />
+            </Grid>
+        </Grid>
+    </Border>
 </Window>

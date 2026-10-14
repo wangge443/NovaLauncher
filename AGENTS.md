@@ -4,4 +4,4 @@
 
 产品范围见 [docs/Product.md](docs/Product.md)，开发与验收流程见 [docs/Development.md](docs/Development.md)。
 
-涉及 UI/UX 设计时，读取 Codex 用户技能目录中的 `ui-ux-pro-max/SKILL.md`；本机路径与验证记录见 [docs/SkillIntegration.md](docs/SkillIntegration.md)。技能建议不能覆盖 C# / .NET 9 / WPF / MVVM / SQLite 技术栈。当前第二阶段已获授权创建最小 WPF 与 MVVM 基础工程，仅展示初始化文字；不开发业务功能或最终 UI。
+涉及 UI/UX 设计时，读取 Codex 用户技能目录中的 `ui-ux-pro-max/SKILL.md`；本机路径与验证记录见 [docs/SkillIntegration.md](docs/SkillIntegration.md)。技能建议不能覆盖 C# / .NET 9 / WPF / MVVM / SQLite 技术栈。当前第三阶段已获授权创建基础 UI 外壳、导航选中态和内容占位；不开发业务功能。

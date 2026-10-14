@@ -2,7 +2,7 @@
 
 ## 当前边界
 
-第二阶段已创建 NovaLauncher.sln 和单个 NovaLauncher.App WPF 项目，目标框架为 net9.0-windows。当前只包含可启动窗口和基础 MVVM 结构，没有业务功能、数据库或最终 UI。
+NovaLauncher.sln 包含单个 NovaLauncher.App WPF 项目，目标框架为 net9.0-windows。第三阶段增加基础 UI 外壳和纯视图导航状态，没有业务功能或数据库。
 
 ## 已创建的项目结构
 
@@ -18,30 +18,39 @@ NovaLauncher.App/
 ├── AssemblyInfo.cs                 # WPF 默认主题资源查找配置
 ├── Views/
 │   ├── MainWindow.xaml
-│   └── MainWindow.xaml.cs
+│   ├── MainWindow.xaml.cs
+│   ├── SidebarView.xaml / .xaml.cs
+│   └── ContentView.xaml / .xaml.cs
 ├── ViewModels/
 │   ├── ViewModelBase.cs
-│   └── MainWindowViewModel.cs
+│   ├── MainWindowViewModel.cs
+│   └── SidebarViewModel.cs
 ├── Models/                         # 后续业务模型
 ├── Services/                       # 后续应用服务
 ├── Repositories/                   # 后续持久化抽象及实现
 ├── Data/                           # 后续数据库初始化与迁移
 ├── Resources/                      # 后续图片等静态资源
-├── Themes/                         # 后续样式与主题资源字典
-└── Helpers/                        # 按需添加小型辅助逻辑
+├── Themes/ShellTheme.xaml           # 语义画刷、字体、控件模板
+└── Helpers/
+    ├── HoverFeedback.cs            # 控件实例级 Hover 反馈
+    └── ShellPreferences.cs         # 系统动画与高对比度适配
+scripts/Test-UiShell.ps1             # 实际窗口回归与截图
+docs/screenshots/                   # 默认、Hover、最小尺寸截图
 ```
 
-七个尚无实现的目录通过 .gitkeep 保留；不添加空服务类或占位业务接口。实际数据库仍应写入用户数据目录，不能写入源码 Data 目录。
+Models、Services、Repositories、Data 和 Resources 五个尚无实现的目录通过 .gitkeep 保留；不添加空服务类或占位业务接口。实际数据库仍应写入用户数据目录，不能写入源码 Data 目录。
 
 ## 当前 MVVM 与依赖
 
 App.OnStartup 创建 MainWindowViewModel 并设置 MainWindow.DataContext，再显示主窗口。App.xaml 不使用 StartupUri，避免重复创建窗口；ShutdownMode 为 OnMainWindowClose。
 
-ViewModelBase 继承 CommunityToolkit.Mvvm 的 ObservableObject，为后续属性变更通知提供基础。MainWindowViewModel 暴露只读 Title 和 StatusMessage，分别绑定窗口标题及两行文本。当前没有可执行动作，因此不添加示例命令。MainWindow 的 code-behind 只调用 InitializeComponent。
+ViewModelBase 继承 CommunityToolkit.Mvvm 的 ObservableObject。MainWindowViewModel 暴露 Title 与 Sidebar；SidebarViewModel 持有只读 NavigationItem 列表及可观察 SelectedItem。NavigationItem 为 UI 导航描述，不是业务模型。SidebarView 使用 ListBox 双向绑定选择，ContentView 通过 Sidebar.SelectedItem.Name 更新占位标题，不使用页面路由、数据加载或业务命令。
+
+MainWindow 使用 WindowChrome 保留原生窗口行为，其 code-behind 仅通过 SystemCommands 执行最小化、最大化/还原及关闭。其余 UserControl 的 code-behind 只初始化视图。App 注册并在退出时解除系统偏好通知；ShellPreferences 只更新资源，HoverFeedback 只负责实例级动画，均不进入 ViewModel。
 
 唯一直接 NuGet 依赖为 [CommunityToolkit.Mvvm 8.4.2](https://www.nuget.org/packages/CommunityToolkit.Mvvm/8.4.2)，采用 MIT 许可，用于复用属性通知及后续命令能力，避免自行维护重复实现；当前目标框架下没有传递包依赖。未添加 DI 容器、SQLite 驱动、导航框架或第三方控件库。
 
-当前使用标准 WPF 窗口和系统默认样式，只有 Nova Launcher 与 Initialization Complete 两行文字。Design.md 的玻璃材质和最终视觉方案尚未实施；产品目标仍为 Windows 11，最低系统版本和材质 API 在后续视觉阶段确定。net9.0-windows 不表示已验证旧版 Windows 的兼容性。
+当前使用自定义标题栏、深色画刷、圆角和半透明表面叠加。尚未调用原生 Mica/Acrylic；设计与截图见 Design.md。产品目标为 Windows 11，最低系统版本和材质 API 在后续阶段确定。net9.0-windows 不表示已验证旧版 Windows 的兼容性。
 
 ## 模块与依赖
 
@@ -96,3 +105,5 @@ View 通过 Binding 显示 ViewModel 的状态，通过 ICommand 触发操作。
 后续业务阶段验证 ViewModel 命令状态和错误反馈、启动服务结果映射、SQLite CRUD 与迁移回滚，再在真实 WPF 窗口检查布局和交互。
 
 第二阶段验证（2026-10-14）：SDK 9.0.318、WindowsDesktop Runtime 9.0.20；锁定还原通过，Release 构建 0 警告、0 错误。实际启动生成的 exe，通过 Windows UI Automation 确认窗口标题及两行绑定文本均正确；关闭主窗口后进程以退出码 0 结束。此次未验证最终 UI、业务逻辑或发布包。
+
+第三阶段验证（2026-10-14）：Release 构建 0 警告、0 错误；Test-UiShell.ps1 通过六项导航与标题绑定、方向键导航、标题栏原生命中测试、最大化/还原/最小化/关闭、调整窗口大小及 25% 侧栏比例检查。默认与最小尺寸截图已人工检查，最小尺寸六个入口均可见；无新增 NuGet 依赖。
