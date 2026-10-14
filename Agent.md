@@ -2,15 +2,15 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前仅完成文档和 Git 初始化；在用户明确启动编码阶段前，不创建解决方案、项目文件、C#、XAML、数据库或业务代码。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前进入第二阶段：允许创建最小 WPF 工程、MVVM 基础与初始化窗口；不开发业务功能、不设计最终 UI、不创建数据库。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
 ## 技术栈规范
 
 - 固定使用 C#、.NET 9、WPF、MVVM 和 SQLite；未经用户明确调整，不替换技术栈。
-- 后续应用项目使用 Windows 专用目标框架 net9.0-windows，并启用 WPF。具体 Windows SDK 与最低系统版本在编码前确定。
-- MVVM 辅助库建议评估 CommunityToolkit.Mvvm，SQLite 驱动建议评估 Microsoft.Data.Sqlite；它们是候选依赖，当前尚未安装或锁定版本。
+- 应用项目使用 net9.0-windows 并启用 WPF，SDK 固定为 9.0.318；最低系统版本及材质相关 Windows SDK 在后续视觉阶段确定。
+- MVVM 已使用 CommunityToolkit.Mvvm 8.4.2，并提交依赖锁文件；SQLite 驱动 Microsoft.Data.Sqlite 仍为候选，尚未安装。
 - 新增依赖说明用途、许可证和替代方案；采用明确版本，禁止浮动版本。SDK 版本在创建工程时固定。
 - 应用数据保存到用户本地应用数据目录，不写入安装目录或仓库。
 
@@ -45,8 +45,8 @@
 - 默认分支 main；后续功能分支使用 feat/<name>、修复分支使用 fix/<name>。
 - 提交格式为 type(scope): summary，scope 可省略，type 使用 feat、fix、docs、refactor、test、chore 等；示例：docs: initialize project documentation。
 - 每次提交围绕一个明确变更，提交前检查 diff 和相关验证结果；不得夹带无关用户改动。
-- 不提交 bin、obj、IDE 缓存、运行数据库、日志、凭据和本地配置；创建工程时补充 .gitignore。
-- 不擅自推送、强制覆盖历史或执行破坏性清理。本阶段已获授权创建首次文档提交，不创建远程仓库或推送。
+- 不提交 bin、obj、IDE 缓存、运行数据库、日志、凭据和本地配置；通过 .gitignore 排除。
+- 不擅自推送、强制覆盖历史或执行破坏性清理。本阶段已获授权创建 feat: create WPF project foundation 提交，不创建远程仓库或推送。
 
 ## AI Agent 工作流程规范
 
@@ -55,4 +55,4 @@
 3. UI 工作先检查 ui-ux-pro-max 的安装与指令，形成设计参数和状态方案，再映射为 WPF 资源与控件。
 4. 按小范围改动实施，不覆盖用户工作；只有明确独立且有收益的工作流才考虑委派。
 5. 执行必要验证，记录未验证项与实际限制，清理本次无用临时文件，并同步相关文档。
-6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前阶段交付文档后停止，不进入编码。
+6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前阶段交付可运行基础工程后停止，不进入业务开发或最终 UI 设计。

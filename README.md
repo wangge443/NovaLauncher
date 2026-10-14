@@ -4,7 +4,19 @@ Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windo
 
 ## 当前状态
 
-项目处于设计与架构初始化阶段。当前仅有规范文档与本地 Git 仓库，没有解决方案、可运行程序、数据库或已安装的项目依赖，也没有构建或运行命令。
+第二阶段基础工程已完成：NovaLauncher.sln 包含 NovaLauncher.App（.NET 9 / WPF），已接入 CommunityToolkit.Mvvm 8.4.2。窗口仅显示 Nova Launcher 和 Initialization Complete；没有业务功能、数据库或最终 UI。
+
+## 构建与运行
+
+需要 Windows 与 .NET SDK 9.0.318（global.json 固定版本）。在仓库根目录执行：
+
+```powershell
+dotnet restore NovaLauncher.sln --locked-mode
+dotnet build NovaLauncher.sln -c Release --no-restore
+dotnet run --project NovaLauncher.App/NovaLauncher.App.csproj -c Release --no-build
+```
+
+已验证 Release 构建无警告和错误；实际窗口的标题与两行文本检查通过，关闭后进程正常退出。项目结构及验证环境见 docs/Architecture.md。
 
 ## 技术方向
 
@@ -30,6 +42,6 @@ Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windo
 
 ## 后续步骤
 
-先评审 Product.md 的首期规划与视觉方案，再确定窗口材质实现及最低 Windows 版本。用户明确启动编码阶段后，才创建 WPF 工程、固定 SDK 与依赖版本，并添加 .gitignore。
+基础工程已就绪。下一阶段按用户授权推进产品功能或视觉设计；先评审 Product.md 的首期规划，并在视觉实现前确定窗口材质方案与最低 Windows 版本。
 
 ui-ux-pro-max 已安装到 Codex 用户技能目录，入口已读取，WPF 检索验证通过。初始化文档以 docs: initialize project documentation 作为首次提交；未关联远程仓库。
