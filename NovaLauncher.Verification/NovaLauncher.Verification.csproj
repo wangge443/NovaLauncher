@@ -9,5 +9,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../NovaLauncher.App/NovaLauncher.App.csproj" />
+    <ProjectReference Include="../NovaLauncher.LaunchProbe/NovaLauncher.LaunchProbe.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 </Project>

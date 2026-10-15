@@ -7,6 +7,10 @@
     <sys:Double x:Key="ApplicationIconSize">72</sys:Double>
     <sys:Double x:Key="ApplicationNameLineHeight">19</sys:Double>
     <sys:Double x:Key="ApplicationNameHeight">38</sys:Double>
+    <sys:Double x:Key="ApplicationDetailsIconSize">32</sys:Double>
+    <Thickness x:Key="ApplicationDetailsPadding">8,12,8,8</Thickness>
+    <Thickness x:Key="ApplicationStatisticsMargin">0,4,0,0</Thickness>
+    <Duration x:Key="LaunchFeedbackDuration">0:0:0.13</Duration>
     <sys:Double x:Key="ApplicationCardLift">1</sys:Double>
     <Thickness x:Key="ApplicationCardMargin">4</Thickness>
     <Thickness x:Key="ApplicationCardPadding">12,16,12,8</Thickness>
@@ -46,6 +50,26 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+    <Style x:Key="ApplicationNameStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+        <Setter Property="LineHeight" Value="{StaticResource ApplicationNameLineHeight}" />
+        <Setter Property="Height" Value="{StaticResource ApplicationNameHeight}" />
+        <Setter Property="ClipToBounds" Value="True" />
+    </Style>
+    <Style x:Key="ApplicationDetailStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="TextAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+        <Setter Property="Height" Value="15" />
     </Style>
     <Style x:Key="CaptionButton" TargetType="Button">
         <Setter Property="Width" Value="48" />

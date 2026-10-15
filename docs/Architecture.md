@@ -2,7 +2,39 @@
 
 ## 当前边界
 
-NovaLauncher.sln 包含 NovaLauncher.App WPF 项目及 NovaLauncher.Verification 可执行验证工程，目标框架为 net9.0-windows。4.1 新增文件导入与卡片显示，数据仅在内存中，不启动应用、不创建数据库。以下 3.x 结构和数据库规划保留为历史/后续设计，当前实现以本节和紧随其后的 4.1 章节为准。
+NovaLauncher.sln 包含 NovaLauncher.App、NovaLauncher.Verification 和仅用于测试的 NovaLauncher.LaunchProbe，目标框架为 net9.0-windows。4.2 在稳定的 4.1 导入链路上增加启动服务与会话统计，不创建数据库。当前实现以 4.2 启动与 4.1 导入章节为准，3.x 为历史记录，SQLite 为后续规划。
+
+## 4.2 Application Launch Pipeline
+
+```text
+ApplicationCard (Button: 单击 / Enter / Space)
+      ↓
+ApplicationCardViewModel.LaunchCommand (每卡片独立 guard)
+      ↓
+IApplicationLaunchService → ApplicationLaunchService (后台 STA)
+      ↓
+EXE → ProcessStartInfo(ExecutablePath, UseShellExecute=true)
+LNK → ProcessStartInfo(SourcePath, UseShellExecute=true) → Windows Shell
+      ↓
+ApplicationLaunchResult
+      ↓
+成功：LauncherApplication with { LastLaunchTime, LaunchCount }
+失败：LaunchFailed → ContentViewModel 轻提示，统计不变
+      ↓
+绑定通知 → Hover / 键盘聚焦信息刷新
+```
+
+App.OnStartup 注入 ApplicationLaunchService，经 ContentViewModel 传递给每张卡片；只增加依赖装配，不修改导入服务、快捷方式解析、图标提取、去重或 Drop 适配。MainWindow、Sidebar、ShellBackground 和 DesktopBackdrop 均未修改。
+
+ApplicationLaunchService 校验启动路径和导入时记录的目标仍存在；EXE 设置 WorkingDirectory 为目标所在目录；LNK 使用原始 SourcePath，不用解析目标替代它，也不覆盖快捷方式内的 Arguments 或 WorkingDirectory。Process.Start 在独立 STA 线程调用，不重定向输出、不等待目标退出；返回的 Process 包装立即 Dispose，仅释放句柄，不终止进程。取消令牌仅阻止尚未提交的启动请求，无法撤回 Shell 已接受的请求。
+
+成功定义为 Process.Start / Shell 请求返回且未抛出异常，不等同于程序完成初始化或持续运行。Shell 复用已有进程时可能返回 null，仍视为请求被接受；相关行为见 [Process.Start 官方文档](https://learn.microsoft.com/dotnet/api/system.diagnostics.process.start)。权限不足、路径失效、Shell 拒绝等异常记录 Trace，返回简洁错误，不向用户显示堆栈。
+
+LauncherApplication 新增 `long LaunchCount` 和 `DateTimeOffset? LastLaunchTime`，默认 0/null；均为不依赖 WPF 的模型字段，**当前仅为会话数据，4.3 将接入 SQLite 持久化**。ApplicationCardViewModel 在成功后以 record with 更新模型快照，LaunchCount +1，LastLaunchTime = DateTimeOffset.Now，并通知绑定。失败保留原值，不记录运行时长。
+
+LaunchCommand 使用 AsyncRelayCommand；IsLaunching 在 await 前设置，同时防护直接 ExecuteAsync 调用。每次请求至少保持 400ms guard，Shell 请求未返回时继续防重；结束后解除，每张卡片互不锁定。关闭应用会取消卡片待执行请求与延迟，解除错误事件订阅。
+
+LaunchTimeFormatter 在显示层将完整时间格式化为“从未 / 刚刚 / N分钟前 / 今天 HH:mm / 昨天 HH:mm / M月d日”，跨年包含年份；进入 Hover/焦点时刷新，停留时每 30 秒刷新，离开或卸载后停止计时器。
 
 ## 4.1 Application Import Pipeline
 
@@ -115,7 +147,7 @@ View 通过 Binding 显示 ViewModel 的状态，通过 ICommand 触发操作。
 
 加载流程：ViewModel 请求应用列表 → Repository 查询 SQLite → 返回模型 → UI 线程更新可观察集合。大型列表后续按实测需要引入分页、虚拟化或图标缓存。
 
-启动流程：用户激活卡片 → LaunchCommand 检查执行状态 → 启动服务校验目标并启动进程 → 返回成功或结构化错误 → ViewModel 更新反馈。首期范围以 Product.md 为准，仅支持本地 exe；快捷方式、URI 和打包应用留待后续扩展，不默认支持任意命令脚本。
+启动流程已在 4.2 实现，见 Application Launch Pipeline；支持已导入 EXE 与原始 LNK，URI、打包应用和任意命令脚本不属于当前范围。
 
 ## 接口职责建议
 

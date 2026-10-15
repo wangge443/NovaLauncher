@@ -1,26 +1,47 @@
 <UserControl x:Class="NovaLauncher.App.Views.ApplicationCardView"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:helpers="clr-namespace:NovaLauncher.App.Helpers"
              Width="{StaticResource ApplicationCardWidth}" Height="{StaticResource ApplicationCardHeight}"
              Margin="{StaticResource ApplicationCardMargin}"
              AutomationProperties.Name="{Binding DisplayName}"
-             MouseEnter="Card_MouseEnter" MouseLeave="Card_MouseLeave">
+             MouseEnter="Card_MouseEnter" MouseLeave="Card_MouseLeave"
+             GotKeyboardFocus="Card_FocusChanged" LostKeyboardFocus="Card_FocusChanged"
+             Loaded="Card_Loaded" Unloaded="Card_Unloaded">
     <UserControl.ToolTip>
         <ToolTip Content="{Binding DisplayName}" />
     </UserControl.ToolTip>
     <Grid Background="Transparent">
         <Grid.RenderTransform><TranslateTransform x:Name="Lift" /></Grid.RenderTransform>
-        <Border Background="{DynamicResource HoverBrush}" CornerRadius="{StaticResource ApplicationCardRadius}"
-                Opacity="0" helpers:HoverFeedback.IsEnabled="True" />
-        <StackPanel Margin="{StaticResource ApplicationCardPadding}" IsHitTestVisible="False">
-            <Image Source="{Binding Icon}" Width="{StaticResource ApplicationIconSize}"
-                   Height="{StaticResource ApplicationIconSize}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
-            <TextBlock Text="{Binding DisplayName}" Margin="0,12,0,0" FontSize="13"
-                       TextAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
-                       LineStackingStrategy="BlockLineHeight" LineHeight="{StaticResource ApplicationNameLineHeight}"
-                       Height="{StaticResource ApplicationNameHeight}" ClipToBounds="True"
-                       AutomationProperties.AutomationId="ApplicationName" />
-        </StackPanel>
+        <Button x:Name="LaunchButton" Command="{Binding LaunchCommand}" Click="LaunchButton_Click"
+                AutomationProperties.Name="{Binding DisplayName}" AutomationProperties.AutomationId="LaunchApplication"
+                AutomationProperties.HelpText="{Binding LastLaunchText}"
+                FocusVisualStyle="{StaticResource FocusRing}" Background="Transparent" BorderThickness="0"
+                HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+            <Button.Template>
+                <ControlTemplate TargetType="Button">
+                    <ContentPresenter />
+                </ControlTemplate>
+            </Button.Template>
+            <Grid Background="Transparent">
+                <Border x:Name="HoverSurface" Background="{DynamicResource HoverBrush}"
+                        CornerRadius="{StaticResource ApplicationCardRadius}" Opacity="0" />
+                <Border x:Name="LaunchFlash" Background="{DynamicResource SelectedBrush}"
+                        CornerRadius="{StaticResource ApplicationCardRadius}" Opacity="0" />
+                <StackPanel x:Name="NormalContent" Margin="{StaticResource ApplicationCardPadding}" IsHitTestVisible="False">
+                    <Image Source="{Binding Icon}" Width="{StaticResource ApplicationIconSize}"
+                           Height="{StaticResource ApplicationIconSize}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock Text="{Binding DisplayName}" Style="{StaticResource ApplicationNameStyle}"
+                               Margin="0,12,0,0" AutomationProperties.AutomationId="ApplicationName" />
+                </StackPanel>
+                <!-- A fixed overlay swaps presentation without changing card/grid measurements. -->
+                <StackPanel x:Name="DetailsContent" Margin="{StaticResource ApplicationDetailsPadding}" Opacity="0" IsHitTestVisible="False">
+                    <Image Source="{Binding Icon}" Width="{StaticResource ApplicationDetailsIconSize}"
+                           Height="{StaticResource ApplicationDetailsIconSize}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+                    <TextBlock Text="{Binding DisplayName}" Style="{StaticResource ApplicationNameStyle}" Margin="0,6,0,0" />
+                    <TextBlock Text="{Binding LastLaunchText}" Style="{StaticResource ApplicationDetailStyle}" Margin="{StaticResource ApplicationStatisticsMargin}" />
+                    <TextBlock Text="{Binding LaunchCountText}" Style="{StaticResource ApplicationDetailStyle}" />
+                </StackPanel>
+            </Grid>
+        </Button>
     </Grid>
 </UserControl>

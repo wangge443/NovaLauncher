@@ -10,15 +10,17 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     private readonly CancellationTokenSource _lifetime = new();
     private readonly CancellationToken _token;
     private readonly IApplicationImportService _importer;
+    private readonly IApplicationLaunchService _launcher;
     private readonly HashSet<string> _targets = new(StringComparer.OrdinalIgnoreCase);
     private bool _isDragOver;
     private bool _isImporting;
     private string? _statusMessage;
     private int _messageVersion;
 
-    public ContentViewModel(IApplicationImportService importer)
+    public ContentViewModel(IApplicationImportService importer, IApplicationLaunchService launcher)
     {
         _importer = importer;
+        _launcher = launcher;
         _token = _lifetime.Token;
     }
 
@@ -51,7 +53,6 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         IsImporting = true;
         _messageVersion++;
         StatusMessage = "正在导入…";
-        int added = 0;
         var notices = new HashSet<string>();
         try
         {
@@ -69,14 +70,14 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
                     notices.Add("该应用已添加");
                     continue;
                 }
-                var card = new ApplicationCardViewModel(application);
+                var card = new ApplicationCardViewModel(application, _launcher);
+                card.LaunchFailed += ShowMessage;
                 _targets.Add(application.ExecutablePath);
                 Applications.Add(card);
                 OnPropertyChanged(nameof(IsEmpty));
-                added++;
             }
-            if (added > 0) notices.Add($"已添加 {added} 个应用");
-            ShowMessage(string.Join("；", notices));
+            if (notices.Count > 0) ShowMessage(string.Join("；", notices));
+            else StatusMessage = null;
         }
         catch (OperationCanceledException) when (_token.IsCancellationRequested) { }
         catch (Exception ex)
@@ -109,5 +110,10 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         if (_token.IsCancellationRequested) return;
         _lifetime.Cancel();
         _lifetime.Dispose();
+        foreach (var card in Applications)
+        {
+            card.LaunchFailed -= ShowMessage;
+            card.Dispose();
+        }
     }
 }

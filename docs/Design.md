@@ -1,6 +1,14 @@
 # Nova Launcher — UI 设计
 
-## 4.1 应用卡片与拖放
+## 4.2 应用启动与状态
+
+卡片外框保持 136 × 148 DIP、原网格间距和两行名称规则。普通状态仍为 72 DIP 图标与名称。Hover 或键盘聚焦时，固定卡片内部用 160ms 淡入的 DetailsContent 替换 NormalContent：32 DIP 图标、名称、10.5 DIP 次要文字“上次启动”和“启动次数”。两层布局都在原固定 Grid 中，不挤动相邻卡片。完整 DisplayName 的 ToolTip 保留。最终收尾将统计区上间距从 6 DIP 收紧为 4 DIP、统计文本高度从 17 DIP 收紧为 15 DIP，沿用 MutedTextBrush，低于 13 DIP 应用名称的视觉层级。Workspace 不再显示“已添加 X 个应用”，保留导入中、重复项及失败提示。
+
+卡片内部使用原生 Button 和 LaunchCommand，单击、Enter/Space 都触发同一命令，沿用 FocusRing；点击反馈为 SelectedBrush 的 130ms 淡出，不显示成功弹窗。系统关闭动画或高对比度时淡入/点击动画立即完成，并保持语义资源。状态时间在进入和停留时更新；未启动显示“从未 / 0”。
+
+本轮沿用已读取的 ui-ux-pro-max 内置检查：稳定布局、原生交互控件、清晰键盘焦点、次级信息层级、减少动画、错误就近反馈。没有重新设计 Sidebar、TitleBar、Window 或背景系统。4.2 运行截图与测试边界见 Development.md。
+
+## 4.1 应用卡片与拖放（历史基线）
 
 保留窗口、Sidebar、TitleBar 和 Background 系统。Workspace 使用 ItemsControl + WrapPanel，滚动区禁用横向滚动，按可用宽度自动换行。卡片 136 × 148 DIP、外边距 4 DIP、圆角 12 DIP，图标 72 DIP；名称采用固定 19 DIP 行高和 38 DIP 文本区域，Wrap + CharacterEllipsis 最多两行，超出省略；短名称居中，不改变卡片高度。Hover 名称或卡片时 ToolTip 显示完整 DisplayName。卡片为展示项，没有点击启动或按钮语义。
 

@@ -4,7 +4,7 @@
 
 1. 阅读 Agent.md、Product.md、Design.md 和 Architecture.md，检查 Git 状态，确认任务范围与已有用户改动。
 2. 把需求转为可验证的行为，明确输入、状态、错误反馈和完成条件。影响产品或架构的决定先同步文档。
-3. UI 设计工作读取 ui-ux-pro-max 的 SKILL.md，只采纳与 Windows 桌面适配的设计建议；当前 4.1 仅增加应用导入与卡片，保持既有外壳。
+3. UI 设计工作读取 ui-ux-pro-max 的 SKILL.md，只采纳与 Windows 桌面适配的设计建议；当前 4.2 增加应用启动与会话统计，保持既有导入流程和外壳。
 4. 用户明确启动编码后，先创建并验证最小 WPF 工程，再按产品用例逐步实现。依赖版本固定，改动保持单一目的。
 5. 运行与改动相称的检查，查看 diff，清理临时文件，更新文档并记录验证结果；未验证事项明确标注。
 6. 在用户授权范围内提交；提交与推送分开，未经授权不推送。
@@ -29,10 +29,49 @@
 | 工程骨架（已完成） | WPF 工程、依赖与资源组织 | 可构建、可打开空壳窗口，MVVM 依赖方向清晰，无业务逻辑进入 View |
 | UI 外壳（已完成） | 自定义标题栏、侧栏、内容占位和截图 | Release 构建、导航与键盘选择、窗口操作、尺寸适配和真实截图检查通过 |
 | 4.1 导入与卡片（已完成） | .exe / .lnk 拖放、名称图标、内存去重和自动换行 | Release 零警告错误、异常与去重验证、真实 WPF/OLE 检查及运行截图；用户已授权验证后提交 |
+| 4.2 启动与状态（已完成） | 单击/键盘启动、会话统计、Hover 信息 | Release 零警告错误，EXE/LNK 真实启动、失败不计数、防重和键盘验证；最终 UI 收尾验证后按用户授权提交 |
 | 首期功能 | Product.md 第一版本用例 | 添加、编辑、移除、搜索、启动及持久化验证通过，失败路径有反馈 |
 | 发布准备 | 发布包和验证记录 | 在目标 Windows 环境完成启动、DPI、键盘、关闭透明效果和重启数据恢复检查 |
 
 后续验证记录应包含日期、提交、环境、检查项、结果与遗留问题。3.x 验证记录及边界见 Design.md / Architecture.md；4.1 使用以下可执行验证工程，不声称运行了 dotnet test。
+
+## 4.2 验证记录（2026-10-15）
+
+基线：4.1 提交 `58bf6dc9d006b504bfce2c2a0869eda963f88a3b`。Windows 11、125% DPI、.NET SDK 9.0.318。Release 构建整个解决方案 **0 warnings / 0 errors**；没有新增 NuGet 包。用户已授权最终 UI 收尾验证后提交：feat: add application launching and session statistics。
+
+复现（需要可见的交互式桌面，测试期间会移动鼠标并操作测试窗口）：
+
+```powershell
+dotnet restore NovaLauncher.sln --locked-mode
+dotnet build NovaLauncher.sln -c Release --no-restore
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --launch
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- docs/screenshots/4.2/import-regression
+```
+
+4.2 通过 **32 项断言**，进程退出码 0：
+
+- 时间格式：从未、刚刚、分钟前、今天、昨天、较早日期。
+- 启动结果确认前不计数；成功更新模型，失败保留原统计；模拟权限异常安全反馈；取消前置请求不创建进程。
+- 同一卡片 30 次快速 Command 请求只提交一次，不同卡片独立；窗口内实际 12 次快速鼠标点击只创建一个进程。
+- 原生鼠标单击真实 Button 启动 EXE；Enter、Space 分别再次启动；计数和本地 LastLaunchTime 更新。
+- 原始 LNK 交给 Shell，探针记录确认保留 `--from-shortcut`、含空格参数与自定义工作目录；计数独立。
+- 删除源 EXE / LNK 后安全失败且统计不变；无效 EXE 被 Windows 拒绝并返回失败。
+- 未启动 Hover 与已启动 Hover、固定卡片高度、800 × 560 / 1400 × 800 DIP 窗口换行；失败用例没有产生额外进程。
+
+测试使用独立的 NovaLauncher.LaunchProbe（仅测试项目，不被 App 引用）作为真实启动目标；探针在临时目录记录实收参数、工作目录与 PID 并立即退出，共确认 5 次有效进程启动。Verification 的异常断言使用可控服务；未实际修改用户权限或执行 UAC 提权，权限不足为模拟覆盖。服务成功只指 Shell 接受请求，不承诺目标程序完成初始化。
+
+原有 4.1 回归 **37 项断言全部通过**，覆盖解析、损坏文件、无图标、去重、真实 OLE 拖放、名称截断和完整 ToolTip、缩放与减少动画。首次真实鼠标验证因用户切换桌面/前台遮挡未命中测试窗口，在用户确认切回后通过；测试增加了指针下窗口校验，不向其他应用发送点击。
+
+截图来自运行中的真实 WPF 窗口 RenderTargetBitmap，不验证实验性 DWM 背景。已检查状态层次和布局，原导入回归截图单独保存，未覆盖 4.1 历史截图。测试结束恢复鼠标位置、环境变量，等待测试探针退出并清理临时文件；生产启动服务不等待目标退出。
+
+- [从未启动 Hover](screenshots/4.2/never-launched.png)
+- [启动后 Hover](screenshots/4.2/launched-hover.png)
+- [删除文件后的错误提示](screenshots/4.2/launch-error.png)
+- [最小窗口 Hover](screenshots/4.2/small-hover.png) · [宽窗口](screenshots/4.2/wide.png)
+
+新增文件：Services/IApplicationLaunchService.cs、ApplicationLaunchService.cs；ViewModels/LaunchTimeFormatter.cs；Verification/LaunchVerification.cs；NovaLauncher.LaunchProbe 项目、Program.cs 与锁文件；4.2 截图。
+
+修改文件：Models/LauncherApplication.cs、ApplicationCardViewModel.cs、ContentViewModel.cs（仅注入启动服务、错误订阅与清理）、ApplicationCardView.xaml/.cs、ShellTheme.xaml、App.xaml.cs；Verification 工程与入口、解决方案；Agent.md、README.md、Product.md、Design.md、Architecture.md、本文。未修改 ApplicationImportService、ShortcutResolver、ApplicationIconService、ContentView 拖放适配、MainWindow、Sidebar、ShellBackground 或 DesktopBackdrop。
 
 ## 4.1 验证记录（2026-10-15）
 
@@ -71,3 +110,6 @@ NovaLauncher.Verification 通过 37 项断言，进程退出码 0：
 
 
 最终名称验收：TextBlock 使用 Wrap、CharacterEllipsis、BlockLineHeight，固定行高 19 DIP、文本区域 38 DIP，最多两行；卡片保持 148 DIP 高度。短名称居中、长名称省略、多个卡片等高、名称区域与卡片 Hover 显示完整 DisplayName 的真实 ToolTip、窗口缩放与自动换行均通过。Release build 0 warnings / 0 errors。
+
+
+4.2 最终 UI 收尾：名称继续使用固定两行区域与省略号，卡片维持 136 × 148 DIP。统计文字 10.5 DIP + MutedTextBrush，上间距 4 DIP、文本高度 15 DIP；删除成功导入数量提示，不改解析、去重、启动服务、400ms guard 或背景。Release build 0 warnings / 0 errors，现有 32 项启动/窗口断言通过，最终 Hover 与窄窗口截图已检查。

@@ -14,7 +14,7 @@ using NovaLauncher.App.Views;
 
 namespace NovaLauncher.Verification;
 
-internal static class Program
+internal static partial class Program
 {
     private static int _checks;
     private static string _fixtures = "";
@@ -23,7 +23,9 @@ internal static class Program
     [STAThread]
     private static int Main(string[] args)
     {
-        _screenshots = Path.GetFullPath(args.FirstOrDefault() ?? "docs/screenshots/4.1");
+        bool launchTests = args.Contains("--launch");
+        _screenshots = Path.GetFullPath(args.FirstOrDefault(arg => !arg.StartsWith("--")) ??
+            (launchTests ? "docs/screenshots/4.2" : "docs/screenshots/4.1"));
         _fixtures = Path.Combine(Path.GetTempPath(), "NovaLauncher-Verification-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_fixtures);
         Directory.CreateDirectory(_screenshots);
@@ -34,7 +36,8 @@ internal static class Program
         {
             try
             {
-                await RunAsync((MainWindow)app.MainWindow);
+                if (launchTests) await RunLaunchAsync((MainWindow)app.MainWindow);
+                else await RunAsync((MainWindow)app.MainWindow);
                 Console.WriteLine($"PASS: {_checks} assertions; screenshots: {_screenshots}");
                 app.Shutdown(0);
             }
@@ -77,7 +80,7 @@ internal static class Program
         string expected = version.FileDescription!.Trim(); // Windows' shared OS product name is not an app name.
         Check(exe!.DisplayName == expected, "EXE product metadata name");
         Check(exe.Icon is { Length: > 0 }, "EXE native icon extracted");
-        var bitmap = (BitmapSource)new ApplicationCardViewModel(exe).Icon;
+        var bitmap = (BitmapSource)new ApplicationCardViewModel(exe, new ApplicationLaunchService()).Icon;
         Check(bitmap.PixelWidth >= 72 && bitmap.IsFrozen, "High-resolution frozen WPF icon");
         var link = (await service.ImportAsync(shortcut, default)).Application;
         Check(link is not null && link.ExecutablePath.Equals(executable, StringComparison.OrdinalIgnoreCase)
@@ -99,9 +102,9 @@ internal static class Program
         File.WriteAllBytes(noIcon, bytes);
         var fallback = (await service.ImportAsync(noIcon, default)).Application;
         Check(fallback is not null && fallback.Icon is null && fallback.DisplayName == "无图标程序", "No resources: filename and default icon fallback");
-        Check(new ApplicationCardViewModel(fallback!).Icon is DrawingImage { IsFrozen: true }, "Default Nova vector icon");
+        Check(new ApplicationCardViewModel(fallback!, new ApplicationLaunchService()).Icon is DrawingImage { IsFrozen: true }, "Default Nova vector icon");
 
-        using (var vm = new ContentViewModel(service))
+        using (var vm = new ContentViewModel(service, new ApplicationLaunchService()))
         {
             await vm.ImportAsync([executable, shortcut, executable.ToUpperInvariant()]);
             Check(vm.Applications.Count == 1 && vm.StatusMessage!.Contains("该应用已添加"), "EXE/LNK and case-insensitive duplicates");
@@ -109,7 +112,7 @@ internal static class Program
             Check(vm.Applications.Count == 2 && vm.StatusMessage!.Contains("不支持此文件类型"), "Mixed batch preserves valid imports and errors");
         }
         var waiting = new WaitingImporter();
-        using (var vm = new ContentViewModel(waiting))
+        using (var vm = new ContentViewModel(waiting, new ApplicationLaunchService()))
         {
             Task first = vm.ImportAsync([executable]);
             await vm.ImportAsync([executable]);
@@ -293,7 +296,7 @@ internal static class Program
         var timeout = Stopwatch.StartNew();
         while (!condition())
         {
-            if (timeout.Elapsed > TimeSpan.FromSeconds(20)) throw new TimeoutException("UI import did not complete");
+            if (timeout.Elapsed > TimeSpan.FromSeconds(20)) throw new TimeoutException("Verification condition did not complete within 20 seconds");
             await Task.Delay(50);
         }
     }

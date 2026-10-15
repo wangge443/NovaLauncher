@@ -16,7 +16,8 @@ public partial class App : Application
         ShellPreferences.Apply(Resources);
         SystemParameters.StaticPropertyChanged += OnSystemPreferencesChanged;
 
-        _content = new ContentViewModel(new ApplicationImportService(new ShortcutResolver(), new ApplicationIconService()));
+        _content = new ContentViewModel(new ApplicationImportService(new ShortcutResolver(), new ApplicationIconService()),
+            new ApplicationLaunchService());
         MainWindow = new MainWindow
         {
             DataContext = new MainWindowViewModel(_content)
