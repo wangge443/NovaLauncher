@@ -1,6 +1,16 @@
 # Nova Launcher — UI 设计
 
-## 3.2 收尾：稳定 UI Shell，Desktop Backdrop 为 Experimental
+## 4.1 应用卡片与拖放
+
+保留窗口、Sidebar、TitleBar 和 Background 系统。Workspace 使用 ItemsControl + WrapPanel，滚动区禁用横向滚动，按可用宽度自动换行。卡片 136 × 148 DIP、外边距 4 DIP、圆角 12 DIP，图标 72 DIP；名称采用固定 19 DIP 行高和 38 DIP 文本区域，Wrap + CharacterEllipsis 最多两行，超出省略；短名称居中，不改变卡片高度。Hover 名称或卡片时 ToolTip 显示完整 DisplayName。卡片为展示项，没有点击启动或按钮语义。
+
+Hover 使用既有 HoverBrush、160ms EaseOut 和 1 DIP 上浮；系统关闭动画或高对比度时不产生上浮。拖入合法类型时 Workspace 轻微高亮边框与背景；取消或移出时复原。不支持文件、失效目标和重复应用显示底部轻提示，4 秒后消失；混合批次仍导入合法项并汇总错误。导入期间显示“正在导入…”，卡片逐个加入；空集合显示原空状态，非空隐藏。
+
+技能检查：读取 ui-ux-pro-max/SKILL.md、quick-reference.md 优先级 1–3 与 pro-rules.md；Python / python3 不可用，py 报告没有安装的 Python，因此采用技能内置规则而非数据库匹配。应用了语义颜色、稳定布局、轻反馈、减少动画和长名称提示。当前按用户限定范围仅开放文件拖放，键盘文件选择入口留待后续授权；未宣称完整无障碍验收。
+
+实际运行截图和复现见 Development.md。以下 3.2 内容保留为历史材质决策记录，其“本轮”指 3.2。
+
+## 3.2 收尾：稳定 UI Shell，Desktop Backdrop 为 Experimental（历史）
 
 当前采用 Windows 11 Minimal Light Glass UI：保留左侧 Logo、六个导航入口、小图标与文字、选中标记和 Hover 动画；右侧改为占满可用空间的 Application Launcher Workspace。本轮只修改 UI Shell，不实现文件拖入、应用启动、文件解析、图标提取、SQLite 或用户系统。
 

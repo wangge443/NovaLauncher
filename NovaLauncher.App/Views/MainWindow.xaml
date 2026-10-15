@@ -70,7 +70,7 @@
                     <ColumnDefinition Width="3*" />
                 </Grid.ColumnDefinitions>
                 <views:SidebarView DataContext="{Binding Sidebar}" AutomationProperties.AutomationId="Sidebar" />
-                <views:ContentView Grid.Column="1" AutomationProperties.AutomationId="LauncherWorkspace" />
+                <views:ContentView Grid.Column="1" DataContext="{Binding Content}" AutomationProperties.AutomationId="LauncherWorkspace" />
                 <GridSplitter Width="8" HorizontalAlignment="Right" VerticalAlignment="Stretch"
                               ResizeDirection="Columns" ResizeBehavior="CurrentAndNext"
                               ShowsPreview="False" DragIncrement="1" KeyboardIncrement="10"

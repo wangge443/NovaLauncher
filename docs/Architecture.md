@@ -2,9 +2,51 @@
 
 ## 当前边界
 
-NovaLauncher.sln 包含单个 NovaLauncher.App WPF 项目，目标框架为 net9.0-windows。第三阶段增加基础 UI 外壳和纯视图导航状态，没有业务功能或数据库。
+NovaLauncher.sln 包含 NovaLauncher.App WPF 项目及 NovaLauncher.Verification 可执行验证工程，目标框架为 net9.0-windows。4.1 新增文件导入与卡片显示，数据仅在内存中，不启动应用、不创建数据库。以下 3.x 结构和数据库规划保留为历史/后续设计，当前实现以本节和紧随其后的 4.1 章节为准。
 
-## 已创建的项目结构
+## 4.1 Application Import Pipeline
+
+```text
+File Drop (ContentView: WPF/OLE FileDrop 适配)
+   ↓
+Validation (.exe / .lnk，存在性)
+   ↓
+Shortcut Resolution (IShellLinkW + IPersistFile，只读)
+   ↓
+Target Validation (绝对路径、.exe、PE ExecutableImage，拒绝 DLL)
+   ↓
+Metadata Extraction (FileVersionInfo / 快捷方式文件名)
+   ↓
+Icon Extraction (SHDefExtractIconW → PNG)
+   ↓
+LauncherApplication
+   ↓
+ContentViewModel (最终目标路径去重，ObservableCollection)
+   ↓
+ApplicationCardViewModel (PNG → frozen ImageSource / Nova 默认图标)
+   ↓
+ApplicationCardView (ItemsControl + WrapPanel)
+```
+
+`LauncherApplication` 包含 Id、DisplayName、ExecutablePath、SourcePath、Icon、SourceType；Icon 是可空 PNG 字节数组，Model 不引用 WPF。SourceType 为 Executable 或 Shortcut。空 Icon 在卡片适配层转换为可缩放的 Nova 默认矢量图标。
+
+服务接口为 IApplicationImportService、IShortcutResolver、IApplicationIconService。App.OnStartup 手动装配服务和 ContentViewModel，再交给 MainWindowViewModel.Content；没有 Service Locator 或新增依赖。ContentView code-behind 仅转换 WPF FileDrop、转交拖放状态和调用 ViewModel，不解析文件或图标；MainWindow 的业务变化只有 Content 绑定。
+
+ApplicationImportService 每次文件导入使用后台 STA 线程，避免磁盘、版本资源与 Shell COM 阻塞 UI。ContentViewModel 在 WPF 上下文 await，逐个更新集合；批次串行，导入期间拒绝新的批次。关闭应用取消令牌，停止等待和后续集合更新；正在执行的同步原生调用不能被强行中断，结束后释放资源。解析失败返回结构化错误并写 Trace，混合批次继续处理其他条目。
+
+EXE 名称优先选择去除首尾空白后的 ProductName，再 FileDescription，再不带扩展名的文件名。空白、控制字符或超过 160 字符的元数据不采用；Windows 工具共享的 Windows Operating System 产品名也不作为应用名。LNK 始终优先使用不带 .lnk 的文件名。
+
+ShortcutResolver 通过 Windows Shell COM 的 IPersistFile.Load(STGM_READ) 和 IShellLinkW.GetPath(SLGP_RAWPATH) 获取路径，展开环境变量；不调用 Resolve，不搜索移动后的目标、不弹窗、不更新快捷方式、不执行目标。COM RCW 在 finally 中释放。空目标、失效目标、非 .exe 或无效 PE 安全失败；快捷方式参数和工作目录本阶段不用于启动，也不持久化。
+
+ApplicationIconService 使用 SHDefExtractIconW 请求 256 像素图标，经 WPF Imaging 复制像素并编码 PNG。HICON 在 finally 中调用 DestroyIcon，无论编码成功与否都释放；转换后的 BitmapImage 使用 OnLoad 脱离流并 Freeze。原始程序只有小图标时仍可能被系统放大，不承诺补出原文件不存在的细节。
+
+去重键是解析并 Path.GetFullPath 规范化后的 ExecutablePath，比较使用 OrdinalIgnoreCase；同目标 EXE / LNK 和大小写差异视为同一个应用。未按文件 ID 合并硬链接、8.3 短路径或其他不同路径别名。没有持久化，重启为空。
+
+原生接口依据：[IShellLinkW.GetPath](https://learn.microsoft.com/en-us/windows/win32/api/shobjidl_core/nf-shobjidl_core-ishelllinkw-getpath)、[SHDefExtractIcon](https://learn.microsoft.com/en-us/windows/win32/api/shlobj_core/nf-shlobj_core-shdefextracticona)。
+
+新增实现：Models/LauncherApplication.cs；Services/IApplicationImportService.cs、ApplicationImportService.cs、ShortcutResolver.cs、ApplicationIconService.cs；ViewModels/ContentViewModel.cs、ApplicationCardViewModel.cs；Views/ApplicationCardView.xaml 与 code-behind。Verification 工程引用 App，复用真实服务和真实窗口，提供无需新增测试框架包的可执行断言与 OLE 验证；不是 dotnet test 工程。
+
+## 3.x 项目结构（历史基线）
 
 ```text
 NovaLauncher.sln
@@ -42,7 +84,7 @@ docs/screenshots/                   # 默认、Hover、最小尺寸截图
 
 Models、Services、Repositories、Data 和 Resources 五个尚无实现的目录通过 .gitkeep 保留；不添加空服务类或占位业务接口。实际数据库仍应写入用户数据目录，不能写入源码 Data 目录。
 
-## 当前 MVVM 与依赖
+## 3.x MVVM 与依赖（历史基线）
 
 App.OnStartup 创建 MainWindowViewModel 并设置 MainWindow.DataContext，再显示主窗口。App.xaml 不使用 StartupUri，避免重复创建窗口；ShutdownMode 为 OnMainWindowClose。
 

@@ -2,7 +2,7 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第三阶段 3.2 原生材质实现：保持已确认布局、MVVM 与独立背景层，接入 DWM Desktop Acrylic 与 fallback；Desktop Backdrop 标记 Experimental，尚未可靠透视壁纸，但不阻塞核心功能开发；本轮只收尾，不开发业务功能、不创建数据库。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第四阶段 4.1：应用拖拽导入与应用卡片，仅支持 .exe / .lnk 解析、内存去重和显示。保持已确认布局、MVVM 与独立背景层；Desktop Backdrop 仍为 Experimental，不研究新透明 API。不实现启动、SQLite、持久化、统计、最近使用、收藏、分类或删除。用户已授权最终收尾：验证名称两行截断、完整 Tooltip 和布局后，以 feat: add application drag and drop import 提交 4.1；不进入 4.2。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
@@ -46,7 +46,7 @@
 - 提交格式为 type(scope): summary，scope 可省略，type 使用 feat、fix、docs、refactor、test、chore 等；示例：docs: initialize project documentation。
 - 每次提交围绕一个明确变更，提交前检查 diff 和相关验证结果；不得夹带无关用户改动。
 - 不提交 bin、obj、IDE 缓存、运行数据库、日志、凭据和本地配置；通过 .gitignore 排除。
-- 不擅自推送、强制覆盖历史或执行破坏性清理。3.2 收尾已获用户授权：验证后以 feat: create launcher UI shell 提交第三阶段全部 UI Shell 修改；不创建远程仓库或推送。
+- 不擅自推送、强制覆盖历史或执行破坏性清理。3.2 提交授权只适用于历史 UI Shell 收尾；4.1 已获用户授权：验证最终收尾后以 feat: add application drag and drop import 提交，不创建远程仓库或推送。
 
 ## AI Agent 工作流程规范
 
@@ -55,4 +55,4 @@
 3. UI 工作先检查 ui-ux-pro-max 的安装与指令，形成设计参数和状态方案，再映射为 WPF 资源与控件。
 4. 按小范围改动实施，不覆盖用户工作；只有明确独立且有收益的工作流才考虑委派。
 5. 执行必要验证，记录未验证项与实际限制，清理本次无用临时文件，并同步相关文档。
-6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前阶段交付 UI 外壳、实际截图与验证结果后停止，不进入业务开发。
+6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前阶段交付 4.1 导入与卡片、实际截图与验证结果后停止，不进入 4.2；按本轮明确授权提交。

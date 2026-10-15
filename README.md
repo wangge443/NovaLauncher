@@ -4,7 +4,7 @@ Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windo
 
 ## 当前状态
 
-第三阶段 3.2 收尾：保留 .NET 9 / WPF / MVVM 和已确认布局，新增官方 DWM Desktop Acrylic 请求与浅色 fallback，删除侧栏底部宣传文字。没有业务功能或新增 NuGet。Release 构建与窗口操作通过，Desktop Backdrop 标记为 Experimental，当前尚未可靠呈现壁纸；统一使用浅白表面与 SolidColor fallback，CustomImage 暂不实现。实验材质不阻塞核心功能开发；详见 Design.md。
+第四阶段 4.1：Workspace 支持拖入 .exe / .lnk，后台解析目标、名称和图标，内存去重并显示自动换行的应用卡片。没有启动、持久化、SQLite、统计、收藏、分类或删除功能，没有新增 NuGet 依赖。保持既有 .NET 9 / WPF / MVVM 和 UI Shell；Desktop Backdrop 仍为 Experimental。验证与截图见 docs/Development.md，已获用户授权完成收尾并提交。
 
 ## 构建与运行
 
@@ -17,6 +17,8 @@ dotnet run --project NovaLauncher.App/NovaLauncher.App.csproj -c Release --no-bu
 ```
 
 已验证 Release 构建无警告和错误，以及实际窗口导航、键盘选择、缩放和标题栏按钮。运行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/Test-UiShell.ps1` 可复现 UI 检查并生成截图；脚本会操作测试窗口。实际截图和验证边界见 [Design.md](docs/Design.md)。
+
+4.1 导入与卡片验证：运行 `dotnet run --project NovaLauncher.Verification -c Release --no-build`，执行服务/状态断言与真实 OLE 拖放，生成 `docs/screenshots/4.1/` 运行截图。需要交互式桌面，运行期间会移动鼠标；结束后恢复位置并清理测试文件。详见 [Development.md](docs/Development.md)。
 
 ## 技术方向
 
@@ -42,6 +44,6 @@ dotnet run --project NovaLauncher.App/NovaLauncher.App.csproj -c Release --no-bu
 
 ## 后续步骤
 
-UI Shell 收尾后可按用户授权开展核心功能。Desktop Backdrop 后续可独立研究，不作为业务开发的前置条件。
+4.1 收尾按用户授权提交；后续阶段等待另行授权；Desktop Backdrop 后续可独立研究，不作为业务开发的前置条件。
 
 ui-ux-pro-max 已安装到 Codex 用户技能目录，入口已读取，WPF 检索验证通过。初始化文档以 docs: initialize project documentation 作为首次提交；未关联远程仓库。

@@ -3,20 +3,23 @@ using System.ComponentModel;
 using NovaLauncher.App.Helpers;
 using NovaLauncher.App.ViewModels;
 using NovaLauncher.App.Views;
+using NovaLauncher.App.Services;
 
 namespace NovaLauncher.App;
 
 public partial class App : Application
 {
+    private ContentViewModel? _content;
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
         ShellPreferences.Apply(Resources);
         SystemParameters.StaticPropertyChanged += OnSystemPreferencesChanged;
 
+        _content = new ContentViewModel(new ApplicationImportService(new ShortcutResolver(), new ApplicationIconService()));
         MainWindow = new MainWindow
         {
-            DataContext = new MainWindowViewModel()
+            DataContext = new MainWindowViewModel(_content)
         };
         MainWindow.Show();
     }
@@ -31,6 +34,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _content?.Dispose();
         SystemParameters.StaticPropertyChanged -= OnSystemPreferencesChanged;
         base.OnExit(e);
     }

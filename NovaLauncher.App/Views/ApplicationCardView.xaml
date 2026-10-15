@@ -1,0 +1,26 @@
+<UserControl x:Class="NovaLauncher.App.Views.ApplicationCardView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:helpers="clr-namespace:NovaLauncher.App.Helpers"
+             Width="{StaticResource ApplicationCardWidth}" Height="{StaticResource ApplicationCardHeight}"
+             Margin="{StaticResource ApplicationCardMargin}"
+             AutomationProperties.Name="{Binding DisplayName}"
+             MouseEnter="Card_MouseEnter" MouseLeave="Card_MouseLeave">
+    <UserControl.ToolTip>
+        <ToolTip Content="{Binding DisplayName}" />
+    </UserControl.ToolTip>
+    <Grid Background="Transparent">
+        <Grid.RenderTransform><TranslateTransform x:Name="Lift" /></Grid.RenderTransform>
+        <Border Background="{DynamicResource HoverBrush}" CornerRadius="{StaticResource ApplicationCardRadius}"
+                Opacity="0" helpers:HoverFeedback.IsEnabled="True" />
+        <StackPanel Margin="{StaticResource ApplicationCardPadding}" IsHitTestVisible="False">
+            <Image Source="{Binding Icon}" Width="{StaticResource ApplicationIconSize}"
+                   Height="{StaticResource ApplicationIconSize}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
+            <TextBlock Text="{Binding DisplayName}" Margin="0,12,0,0" FontSize="13"
+                       TextAlignment="Center" TextWrapping="Wrap" TextTrimming="CharacterEllipsis"
+                       LineStackingStrategy="BlockLineHeight" LineHeight="{StaticResource ApplicationNameLineHeight}"
+                       Height="{StaticResource ApplicationNameHeight}" ClipToBounds="True"
+                       AutomationProperties.AutomationId="ApplicationName" />
+        </StackPanel>
+    </Grid>
+</UserControl>
