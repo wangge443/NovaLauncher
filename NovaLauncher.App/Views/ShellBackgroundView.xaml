@@ -1,0 +1,45 @@
+<UserControl x:Class="NovaLauncher.App.Views.ShellBackgroundView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:NovaLauncher.App.Views"
+             x:Name="BackgroundHost" IsHitTestVisible="False" Focusable="False"
+             AutomationProperties.AutomationId="ShellBackground">
+    <Grid>
+        <Border x:Name="SolidColorBackground" Background="{DynamicResource BackgroundFallbackBrush}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsBackdropActive, ElementName=BackgroundHost}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+        </Border>
+        <!-- CustomImageBackground is reserved; image loading/rendering is not implemented. -->
+        <Border Background="{Binding SolidBackground, ElementName=BackgroundHost}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Mode, ElementName=BackgroundHost}" Value="SolidColor">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+        </Border>
+        <Border>
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Background" Value="{DynamicResource GlassTintBrush}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsBackdropActive, ElementName=BackgroundHost}" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource NativeGlassTintBrush}" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+        </Border>
+    </Grid>
+</UserControl>

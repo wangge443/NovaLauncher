@@ -4,4 +4,4 @@
 
 产品范围见 [docs/Product.md](docs/Product.md)，开发与验收流程见 [docs/Development.md](docs/Development.md)。
 
-涉及 UI/UX 设计时，读取 Codex 用户技能目录中的 `ui-ux-pro-max/SKILL.md`；本机路径与验证记录见 [docs/SkillIntegration.md](docs/SkillIntegration.md)。技能建议不能覆盖 C# / .NET 9 / WPF / MVVM / SQLite 技术栈。当前第三阶段已获授权创建基础 UI 外壳、导航选中态和内容占位；不开发业务功能。
+涉及 UI/UX 设计时，读取 Codex 用户技能目录中的 `ui-ux-pro-max/SKILL.md`；本机路径与验证记录见 [docs/SkillIntegration.md](docs/SkillIntegration.md)。技能建议不能覆盖 C# / .NET 9 / WPF / MVVM / SQLite 技术栈。3.2 已进入收尾：保持已确认布局，Desktop Backdrop 标记 Experimental，不阻塞核心功能开发。本轮不研究新透明 API、不开发业务功能；用户已授权验证后提交第三阶段全部 UI Shell 修改。

@@ -15,7 +15,7 @@
         <shell:WindowChrome CaptionHeight="48" ResizeBorderThickness="6" CornerRadius="12"
                             GlassFrameThickness="0" UseAeroCaptionButtons="False" />
     </shell:WindowChrome.WindowChrome>
-    <Border x:Name="WindowFrame" Background="{DynamicResource BackdropBrush}"
+    <Border x:Name="WindowFrame"
             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
         <Border.Style>
             <Style TargetType="Border">
@@ -33,6 +33,7 @@
                 <RowDefinition Height="48" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
+            <views:ShellBackgroundView Grid.RowSpan="2" />
             <Grid Background="Transparent">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="24,0,0,0">
                     <TextBlock Text="N" Foreground="{DynamicResource AccentBrush}" FontSize="14" FontWeight="Bold" Margin="0,0,12,0" />
@@ -63,13 +64,19 @@
                             AutomationProperties.Name="关闭" AutomationProperties.AutomationId="CloseButton" />
                 </StackPanel>
             </Grid>
-            <Grid Grid.Row="1">
+            <Grid x:Name="ShellLayout" Grid.Row="1" SizeChanged="ShellLayout_SizeChanged">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition x:Name="SidebarColumn" Width="*" MinWidth="210" />
                     <ColumnDefinition Width="3*" />
                 </Grid.ColumnDefinitions>
                 <views:SidebarView DataContext="{Binding Sidebar}" AutomationProperties.AutomationId="Sidebar" />
-                <views:ContentView Grid.Column="1" />
+                <views:ContentView Grid.Column="1" AutomationProperties.AutomationId="LauncherWorkspace" />
+                <GridSplitter Width="8" HorizontalAlignment="Right" VerticalAlignment="Stretch"
+                              ResizeDirection="Columns" ResizeBehavior="CurrentAndNext"
+                              ShowsPreview="False" DragIncrement="1" KeyboardIncrement="10"
+                              Style="{StaticResource SidebarSplitterStyle}" Panel.ZIndex="1"
+                              AutomationProperties.AutomationId="SidebarSplitter"
+                              AutomationProperties.Name="调整侧栏宽度" ToolTip="拖动调整侧栏宽度；方向键微调" />
             </Grid>
         </Grid>
     </Border>

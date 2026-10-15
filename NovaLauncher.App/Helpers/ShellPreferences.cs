@@ -7,8 +7,9 @@ internal static class ShellPreferences
 {
     private static readonly string[] BrushKeys =
     [
-        "WindowBrush", "BackdropBrush", "SidebarBrush", "SurfaceBrush", "BorderBrush",
-        "TextBrush", "MutedTextBrush", "AccentBrush", "SelectedBrush", "HoverBrush", "CloseHoverBrush"
+        "WindowBrush", "BackgroundFallbackBrush", "GlassTintBrush", "SidebarBrush", "BorderBrush",
+        "TextBrush", "MutedTextBrush", "EmptyTextBrush", "EmptyIconBrush", "AccentBrush",
+        "SelectedBrush", "HoverBrush", "CloseHoverBrush"
     ];
 
     public static void Apply(ResourceDictionary resources)
@@ -31,7 +32,7 @@ internal static class ShellPreferences
         {
             resources[key] = key switch
             {
-                "TextBrush" or "MutedTextBrush" or "BorderBrush" => SystemColors.WindowTextBrush,
+                "TextBrush" or "MutedTextBrush" or "EmptyTextBrush" or "EmptyIconBrush" or "BorderBrush" => SystemColors.WindowTextBrush,
                 "AccentBrush" => SystemColors.HotTrackBrush,
                 "HoverBrush" or "CloseHoverBrush" => new SolidColorBrush(SystemColors.WindowTextColor) { Opacity = 0.15 },
                 "SelectedBrush" => new SolidColorBrush(SystemColors.WindowTextColor) { Opacity = 0.1 },

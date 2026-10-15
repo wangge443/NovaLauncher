@@ -2,14 +2,14 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前进入第三阶段：创建深色基础 UI 外壳、自定义标题栏、六项导航与内容占位；不开发业务功能、不创建数据库。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第三阶段 3.2 原生材质实现：保持已确认布局、MVVM 与独立背景层，接入 DWM Desktop Acrylic 与 fallback；Desktop Backdrop 标记 Experimental，尚未可靠透视壁纸，但不阻塞核心功能开发；本轮只收尾，不开发业务功能、不创建数据库。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
 ## 技术栈规范
 
 - 固定使用 C#、.NET 9、WPF、MVVM 和 SQLite；未经用户明确调整，不替换技术栈。
-- 应用项目使用 net9.0-windows 并启用 WPF，SDK 固定为 9.0.318；最低系统版本及材质相关 Windows SDK 在后续视觉阶段确定。
+- 应用项目使用 net9.0-windows 并启用 WPF，SDK 固定为 9.0.318；原生 DWM 背景要求 Windows 11 build 22621+，不支持时回退；未增加 Windows SDK NuGet。
 - MVVM 已使用 CommunityToolkit.Mvvm 8.4.2，并提交依赖锁文件；SQLite 驱动 Microsoft.Data.Sqlite 仍为候选，尚未安装。
 - 新增依赖说明用途、许可证和替代方案；采用明确版本，禁止浮动版本。SDK 版本在创建工程时固定。
 - 应用数据保存到用户本地应用数据目录，不写入安装目录或仓库。
@@ -25,7 +25,7 @@
 
 ## UI 设计规范
 
-- 遵循 docs/Design.md 中的 Windows 11 Minimal Glass UI：深色主题、半透明背景、Acrylic/Mica 风格、左侧导航、右侧大图标和 Hover 动画。
+- 遵循 docs/Design.md 中的 Windows 11 Minimal Light Glass UI：浅色玻璃分层、左侧导航、右侧完整启动工作区和 Hover 动画；原生材质暂未接入时使用明确的实色 fallback。
 - 颜色、间距、圆角和动画参数集中到 ResourceDictionary；使用语义化资源键，避免页面内重复硬编码。
 - 区分系统背景材质与普通透明度；不通过降低整个窗口 Opacity 实现玻璃效果，以免文字和图标一起变淡。
 - 支持键盘焦点、DPI 缩放、高对比度、关闭透明效果和减少动画；不可只用颜色表达状态。
@@ -46,7 +46,7 @@
 - 提交格式为 type(scope): summary，scope 可省略，type 使用 feat、fix、docs、refactor、test、chore 等；示例：docs: initialize project documentation。
 - 每次提交围绕一个明确变更，提交前检查 diff 和相关验证结果；不得夹带无关用户改动。
 - 不提交 bin、obj、IDE 缓存、运行数据库、日志、凭据和本地配置；通过 .gitignore 排除。
-- 不擅自推送、强制覆盖历史或执行破坏性清理。本阶段已获授权创建 feat: create launcher UI shell 提交，不创建远程仓库或推送。
+- 不擅自推送、强制覆盖历史或执行破坏性清理。3.2 收尾已获用户授权：验证后以 feat: create launcher UI shell 提交第三阶段全部 UI Shell 修改；不创建远程仓库或推送。
 
 ## AI Agent 工作流程规范
 

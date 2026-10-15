@@ -4,7 +4,7 @@ Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windo
 
 ## 当前状态
 
-第三阶段基础 UI 外壳已完成：NovaLauncher.sln 包含 NovaLauncher.App（.NET 9 / WPF），使用 CommunityToolkit.Mvvm 8.4.2。已实现深色圆角外壳、自定义标题栏、25% 宽度的六项导航及内容占位；未实现业务功能、数据库或原生 Mica/Acrylic。
+第三阶段 3.2 收尾：保留 .NET 9 / WPF / MVVM 和已确认布局，新增官方 DWM Desktop Acrylic 请求与浅色 fallback，删除侧栏底部宣传文字。没有业务功能或新增 NuGet。Release 构建与窗口操作通过，Desktop Backdrop 标记为 Experimental，当前尚未可靠呈现壁纸；统一使用浅白表面与 SolidColor fallback，CustomImage 暂不实现。实验材质不阻塞核心功能开发；详见 Design.md。
 
 ## 构建与运行
 
@@ -26,7 +26,7 @@ dotnet run --project NovaLauncher.App/NovaLauncher.App.csproj -c Release --no-bu
 | 桌面界面 | WPF |
 | 架构 | MVVM |
 | 本地持久化 | SQLite |
-| 视觉风格 | Windows 11 Minimal Glass UI，深色主题 |
+| 视觉风格 | Windows 11 Minimal Light Glass UI，浅色主题 |
 
 界面目标包括半透明背景、Acrylic/Mica 风格、左侧导航栏、右侧大图标启动区及 Hover 交互动画。首期规划为手动添加、编辑、移除、搜索与启动本地 exe，并使用 SQLite 持久化，具体验收条件见 Product.md。
 
@@ -42,6 +42,6 @@ dotnet run --project NovaLauncher.App/NovaLauncher.App.csproj -c Release --no-bu
 
 ## 后续步骤
 
-基础外壳已就绪。下一阶段按用户授权推进业务页面或原生窗口材质；先评审 Product.md 的功能范围，并在原生材质实现前确定 API 方案与最低 Windows 版本。
+UI Shell 收尾后可按用户授权开展核心功能。Desktop Backdrop 后续可独立研究，不作为业务开发的前置条件。
 
 ui-ux-pro-max 已安装到 Codex 用户技能目录，入口已读取，WPF 检索验证通过。初始化文档以 docs: initialize project documentation 作为首次提交；未关联远程仓库。

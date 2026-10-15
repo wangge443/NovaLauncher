@@ -9,6 +9,12 @@ public partial class MainWindow : Window
         InitializeComponent();
     }
 
+    private void ShellLayout_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        // GridSplitter retains star sizing; enforce the limit again when the window resizes.
+        SidebarColumn.MaxWidth = Math.Max(SidebarColumn.MinWidth, ShellLayout.ActualWidth * 0.35);
+    }
+
     // Window operations belong to the view; no platform controls enter the ViewModel.
     private void Minimize_Click(object sender, RoutedEventArgs e) => SystemCommands.MinimizeWindow(this);
 

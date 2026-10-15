@@ -38,10 +38,8 @@
                     </DataTemplate>
                 </ListBox.ItemTemplate>
             </ListBox>
-            <StackPanel Grid.Row="2" Margin="12,12,0,0">
-                <TextBlock Text="专注你的每一次启程" FontSize="11" Foreground="{DynamicResource MutedTextBrush}" />
-                <TextBlock Text="NOVA  /  YOUR SPACE" FontSize="9" Foreground="{DynamicResource MutedTextBrush}" Margin="0,8,0,0" />
-            </StackPanel>
+            <!-- Reserved for the future user identity area. -->
+            <Border Grid.Row="2" Height="48" />
         </Grid>
     </Border>
 </UserControl>

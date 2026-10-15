@@ -20,7 +20,8 @@ NovaLauncher.App/
 │   ├── MainWindow.xaml
 │   ├── MainWindow.xaml.cs
 │   ├── SidebarView.xaml / .xaml.cs
-│   └── ContentView.xaml / .xaml.cs
+│   ├── ContentView.xaml / .xaml.cs
+│   └── ShellBackgroundView.xaml / .xaml.cs
 ├── ViewModels/
 │   ├── ViewModelBase.cs
 │   ├── MainWindowViewModel.cs
@@ -33,6 +34,7 @@ NovaLauncher.App/
 ├── Themes/ShellTheme.xaml           # 语义画刷、字体、控件模板
 └── Helpers/
     ├── HoverFeedback.cs            # 控件实例级 Hover 反馈
+    ├── DesktopBackdropController.cs # DWM 请求、能力检测与安全回退
     └── ShellPreferences.cs         # 系统动画与高对比度适配
 scripts/Test-UiShell.ps1             # 实际窗口回归与截图
 docs/screenshots/                   # 默认、Hover、最小尺寸截图
@@ -44,13 +46,15 @@ Models、Services、Repositories、Data 和 Resources 五个尚无实现的目�
 
 App.OnStartup 创建 MainWindowViewModel 并设置 MainWindow.DataContext，再显示主窗口。App.xaml 不使用 StartupUri，避免重复创建窗口；ShutdownMode 为 OnMainWindowClose。
 
-ViewModelBase 继承 CommunityToolkit.Mvvm 的 ObservableObject。MainWindowViewModel 暴露 Title 与 Sidebar；SidebarViewModel 持有只读 NavigationItem 列表及可观察 SelectedItem。NavigationItem 为 UI 导航描述，不是业务模型。SidebarView 使用 ListBox 双向绑定选择，ContentView 通过 Sidebar.SelectedItem.Name 更新占位标题，不使用页面路由、数据加载或业务命令。
+ViewModelBase 继承 CommunityToolkit.Mvvm 的 ObservableObject。MainWindowViewModel 暴露 Title 与 Sidebar；SidebarViewModel 持有只读 NavigationItem 列表及可观察 SelectedItem。NavigationItem 为 UI 导航描述，不是业务模型。SidebarView 使用 ListBox 双向绑定选择。3.1 的 ContentView 是完整启动工作区，仅显示静态拖放提示，不再显示导航标题，不使用页面路由、数据加载或业务命令。
 
-MainWindow 使用 WindowChrome 保留原生窗口行为，其 code-behind 仅通过 SystemCommands 执行最小化、最大化/还原及关闭。其余 UserControl 的 code-behind 只初始化视图。App 注册并在退出时解除系统偏好通知；ShellPreferences 只更新资源，HoverFeedback 只负责实例级动画，均不进入 ViewModel。
+MainWindow 使用 WindowChrome 保留原生窗口行为，code-behind 通过 SystemCommands 执行窗口操作，并在布局尺寸变化时限制 SidebarColumn.MaxWidth。GridSplitter 调整现有星号列宽，最小 210 DIP、最大 35%，属于纯视图行为。App 注册并在退出时解除系统偏好通知；ShellPreferences 只更新资源，HoverFeedback 只负责实例级动画，均不进入 ViewModel。
+
+ShellBackgroundView 封装背景呈现，提供 Mode（Desktop / CustomImage / SolidColor）、BackgroundImage（ImageSource）、SolidBackground（Brush）依赖属性。默认 Desktop 通过独立 DesktopBackdropController 请求 DWM Desktop Acrylic；该控制器管理 HWND、系统偏好通知和不透明回退。IsBackdropActive 只表示原生调用成功，不证明实际模糊效果。组件不解析文件、不读取用户设置、不执行图片导入；MainWindow 仅组合背景与前景层。
 
 唯一直接 NuGet 依赖为 [CommunityToolkit.Mvvm 8.4.2](https://www.nuget.org/packages/CommunityToolkit.Mvvm/8.4.2)，采用 MIT 许可，用于复用属性通知及后续命令能力，避免自行维护重复实现；当前目标框架下没有传递包依赖。未添加 DI 容器、SQLite 驱动、导航框架或第三方控件库。
 
-当前使用自定义标题栏、深色画刷、圆角和半透明表面叠加。尚未调用原生 Mica/Acrylic；设计与截图见 Design.md。产品目标为 Windows 11，最低系统版本和材质 API 在后续阶段确定。net9.0-windows 不表示已验证旧版 Windows 的兼容性。
+当前使用自定义标题栏、浅色画刷、圆角和白色半透明表面叠加，已接入官方 DWM Desktop Acrylic（Windows 11 build 22621+）并保留 fallback；本机实际截图仍为均匀灰色，透视验收未通过，根因待定位。详情见 Design.md。net9.0-windows 不表示已验证旧版 Windows 的兼容性。
 
 ## 模块与依赖
 
@@ -107,3 +111,18 @@ View 通过 Binding 显示 ViewModel 的状态，通过 ICommand 触发操作。
 第二阶段验证（2026-10-14）：SDK 9.0.318、WindowsDesktop Runtime 9.0.20；锁定还原通过，Release 构建 0 警告、0 错误。实际启动生成的 exe，通过 Windows UI Automation 确认窗口标题及两行绑定文本均正确；关闭主窗口后进程以退出码 0 结束。此次未验证最终 UI、业务逻辑或发布包。
 
 第三阶段验证（2026-10-14）：Release 构建 0 警告、0 错误；Test-UiShell.ps1 通过六项导航与标题绑定、方向键导航、标题栏原生命中测试、最大化/还原/最小化/关闭、调整窗口大小及 25% 侧栏比例检查。默认与最小尺寸截图已人工检查，最小尺寸六个入口均可见；无新增 NuGet 依赖。
+
+3.2：新增 app.manifest 声明 Windows 10/11 兼容性；NuGet 未变化。Release 构建和原生请求/强制回退两条路径的窗口回归通过，但实际壁纸透视尚未可靠生效，作为 Experimental 保留，不阻塞 UI Shell 收尾或后续核心功能开发。
+
+## 背景架构（3.2 收尾）
+
+```text
+ShellBackground                         # 由 ShellBackgroundView 组合，与 MainWindow 布局分离
+├── DesktopBackdrop                     # Desktop 模式；DesktopBackdropController，Experimental
+├── CustomImageBackground               # CustomImage 模式；仅预留，暂不实现
+└── SolidColorBackground                 # SolidColor 模式；浅白 Surface，也是统一 fallback
+```
+
+以上是背景职责划分，不增加空服务或额外框架。BackgroundMode 固定为 Desktop、CustomImage、SolidColor。Desktop 保留现有 DWM API、Windows 版本检测及失败回退；API 成功不代表壁纸透视生效。CustomImage 的 ImageSource 属性仅为未来输入契约，不加载或呈现图片。SolidColor 在没有输入画刷时使用主题 BackgroundFallbackBrush（#F9FAFC），原生合成目标的回退色读取同一资源，避免重复硬编码。
+
+背景平台逻辑留在 DesktopBackdropController，MVVM 不依赖 HWND；主窗口只组合 ShellBackgroundView 和现有前景。Desktop Backdrop 可以后续研究，但不阻塞核心功能开发。没有新增 NuGet 或业务功能。
