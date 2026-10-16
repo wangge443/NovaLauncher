@@ -2,7 +2,27 @@
 
 ## 当前边界
 
-NovaLauncher.sln 包含 NovaLauncher.App、NovaLauncher.Verification 和仅用于测试的 NovaLauncher.LaunchProbe，目标框架为 net9.0-windows。5.2 新增独立收藏状态与三种工作区筛选模式，保留 5.1 分类结构和 5.0 数据库初始化生命周期。
+NovaLauncher.sln 包含 NovaLauncher.App、NovaLauncher.Verification 和仅用于测试的 NovaLauncher.LaunchProbe，目标框架为 net9.0-windows。5.3 增加 Recent 内存视图与独立排序，保留 5.1 分类、5.2 收藏及现有数据库生命周期，不改变 Schema。
+
+## 5.3 Recent Pipeline
+
+```text
+WorkspaceMode.Home      → All Applications, source order
+WorkspaceMode.Category  → CategoryId filter, source order
+WorkspaceMode.Favorites → IsFavorite filter, source order
+WorkspaceMode.Recent    → LastLaunchTime != null, LastLaunchTime DESC
+
+Application Launch Success → LastLaunchTime updated → PropertyChanged
+    → ContentViewModel (only in Recent) → ICollectionView.Refresh
+    → Recent filter + descending time sort
+    → existing statistics persistence → SQLite → reload after restart
+```
+
+沿用原 ListCollectionView 与完整 Applications；CustomSort 仅在 Recent 生效，比较 DateTimeOffset 的实际时间（不比较格式化字符串），相同时间再按 OrdinalIgnoreCase DisplayName、Guid Id 排序。SelectWorkspace 在 DeferRefresh 内同时设置 CustomSort 与 Filter，由结束延迟作用域触发一次刷新，之后更新空状态通知；不在延迟期间显式调用 Refresh。切换至其他模式清空 CustomSort，恢复源集合顺序，全程不读取 SQLite。
+
+ContentViewModel 为加载/导入的每张卡片订阅 PropertyChanged，只响应 Recent 模式中的 LastLaunchTime 变化，Dispose 时解除订阅。继续使用原启动成功分支更新属性并持久化统计；失败不更新时间，不会重排。Recent 不写 CategoryId/IsFavorite，不新增卡片或时间格式化实现。正常关闭仍等待启动与统计写入，重启由原持久化恢复时间后应用相同筛选与排序。
+
+数据库/Entity/Model/Repository/Migration/Snapshot 均不改。异常时间沿用原仓库逐行恢复策略，跳过损坏记录并给出已有轻提示，其他应用可继续进入 Recent；失效路径仍作为 IsAvailable=false 卡片显示，启动时沿用原错误处理。
 
 ## 5.2 Favorite Pipeline
 

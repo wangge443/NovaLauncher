@@ -14,7 +14,7 @@ public sealed class SidebarViewModel : ViewModelBase
     public ObservableCollection<CategoryViewModel> Categories => CategoryManager.Categories;
     public ObservableCollection<NavigationItem> Items { get; } = [new("首页", "\uE80F")];
     public IReadOnlyList<NavigationItem> FooterItems { get; } =
-        [new("收藏", "\uE734", Mode: WorkspaceMode.Favorites), new("最近使用", "\uE81C"), new("设置", "\uE713")];
+        [new("收藏", "\uE734", Mode: WorkspaceMode.Favorites), new("最近使用", "\uE81C", Mode: WorkspaceMode.Recent), new("设置", "\uE713")];
 
     private NavigationItem _selectedItem;
 

@@ -42,6 +42,7 @@
                     <Style TargetType="Path">
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Mode}" Value="Favorites"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+                            <DataTrigger Binding="{Binding Mode}" Value="Recent"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </Path.Style>
@@ -53,6 +54,17 @@
                         <Setter Property="Visibility" Value="Collapsed" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding Mode}" Value="Favorites"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
+            <TextBlock Text="&#xE81C;" FontFamily="{StaticResource IconFont}" FontSize="32"
+                       Foreground="{DynamicResource EmptyIconBrush}" HorizontalAlignment="Center" Margin="0,0,0,24">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Mode}" Value="Recent"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
                         </Style.Triggers>
                     </Style>
                 </TextBlock.Style>

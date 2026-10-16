@@ -1,5 +1,39 @@
 # Nova Launcher — 开发流程
 
+## 5.3 最终收尾（2026-10-16）
+
+用户已验收最近使用系统，按授权以 `feat: add recent applications view` 提交。最终 Release Build 再次确认 **0 warnings / 0 errors**；重新执行 Recent **22 项**主进程断言及独立 SQLite 重启 **3 项**断言，全部通过。确认非空时间过滤、时间倒序及名称/Id 稳定次级排序、启动后实时重排、离开 Recent 清除旧排序、重启恢复、分类/收藏独立及专属空状态。500 条记录 60 次 ViewModel 模式切换本次约 33 ms，不代表完整 UI 渲染性能。
+
+修改范围仅包含 5.3 视图实现、配套验证、截图与文档；数据库结构和 Migration 未改，无无关修改。此前分类、收藏、启动回归及真实 QQ/微信/记事本启动重启验收均通过，记录见下文。收尾没有再次启动真实用户应用或更改真实启动统计，不开始下一阶段。
+
+## 5.3 最近使用系统（2026-10-16）
+
+稳定基线 `01e83f3f96b48152d939f79aee782d078842b19f`。仅扩展 ContentViewModel 的 Recent 过滤/排序/属性监听、Sidebar 最近使用模式绑定与 ContentView 空状态；复用原卡片、启动成功统计链和 LaunchTimeFormatter。数据库 Schema、Migration/Snapshot、Entity/Model、Repository、收藏/分类服务和背景系统均未修改。**5.3 已通过用户验收，最终收尾提交已获授权。**
+
+最终 Release Build **0 warnings / 0 errors**。Recent **22**、分类 **33**、收藏 **27**、启动 **32**，共 **114 项主进程断言通过**，另含独立重启子进程断言。没有新增依赖。
+
+```powershell
+dotnet build NovaLauncher.sln -c Release --no-restore
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --recent docs/screenshots/5.3
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --categories TestResults/5.3/categories
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --favorites TestResults/5.3/favorites
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --launch TestResults/5.3/launch
+```
+
+Recent 测试覆盖：专属空状态、首次 Home 成功启动后进入 Recent、真实探针 A/B/C/A 顺序及次数、当前 Recent 即时重排、原集合顺序不变、Home 清空排序、直接切换 Category/Favorites、单一导航选中、收藏/分类保持独立、未启动导入不显示、相同实际时间且不同 UTC offset 时名称/Id 稳定次序、独立 WPF 进程恢复精确顺序/时间/次数/分类/收藏、不可用历史条目仍显示、失败启动不改顺序、异常时间逐行恢复而不崩溃。500 条模型记录反复切换 60 次约 **8 ms**，仅衡量 ViewModel/CollectionView，不代表 500 张实际 WPF 卡片渲染性能。
+
+测试发现 WPF 延迟刷新期间不能显式 Refresh，已改为 DeferRefresh 内设置 Filter/CustomSort、结束作用域后通知空状态，最终验证通过。收藏回归曾出现一次原生点击超时，未改生产代码重试后完整通过；启动回归也通过原生鼠标与 Enter/Space，保留输入目标窗口校验。
+
+### 真实应用启动与重启验证
+
+按本次用户明确授权执行 `--real-recent`，先做 SQLite 在线备份。原真实库只有 QQ、微信两条可用应用，为满足三个真实应用验收，通过现有导入服务加入系统记事本（默认未分类、未收藏）。随后使用生产启动命令依次启动 **QQ → 微信 → 记事本**，Recent 显示 **记事本 → 微信 → QQ**；再次启动 QQ，立即显示 **QQ → 记事本 → 微信**。完全关闭测试中的 Nova Launcher 后创建新的生产 App 进程，恢复完全相同的顺序、时间、次数、分类和收藏。启动成功遵循现有 Shell 接受请求语义，不表示第三方应用完成登录或加载。
+
+真实首次运行子进程 **8 项**、重启子进程 **3 项**断言通过，父进程 **2 项**退出码检查通过。QQ/微信分类及收藏保持原值；真实启动按设计增加 LaunchCount 并更新时间，不伪造历史。保留新增记事本记录，未删除用户记录、修改 Schema 或创建 Migration。备份位于 `%LOCALAPPDATA%\NovaLauncher\Data\Backups\nova-before-recent-20261016T151545Z-1c50c54efe2d41f4aa6dd15911d9c612.db`，不纳入 Git。
+
+`--real-recent` 会实际启动用户应用并保存统计，只供明确授权的真实验收；常规回归使用隔离临时库的 `--recent`。本轮未实测混合 DPI、系统高对比度切换、数百卡片实际渲染或断电恢复，不将这些列为已验证。
+
+已检查运行截图：[空状态](screenshots/5.3/recent-empty.png)、[排序](screenshots/5.3/recent-order.png)、[真实 C/B/A](screenshots/5.3/real-recent-cba.png)、[真实 A/C/B](screenshots/5.3/real-recent-acb.png)、[重启后](screenshots/5.3/real-recent-restarted.png)。使用真实 WPF RenderTargetBitmap，非设计稿，不证明 Experimental DWM 合成效果。临时回归截图与夹具已清理，交付截图保留。
+
 ## 5.2 最终收尾（2026-10-16）
 
 用户已验收收藏系统，按授权以 `feat: add application favorites` 提交。最终 Release Build 再次确认 **0 warnings / 0 errors**；重新执行 Migration **30 项**、收藏 **27 项**，另含独立重启子进程 **4 项**，全部通过。确认星标鼠标/键盘操作不启动应用、Home/Category/Favorites 筛选互斥、空收藏页面及保存失败状态正确。

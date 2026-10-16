@@ -1,5 +1,11 @@
 # Nova Launcher — UI 设计
 
+## 5.3 最近使用交互
+
+Recent 复用原 ApplicationCardView，大图标、名称、收藏星标、分类弱入口、Hover 统计与 LaunchTimeFormatter 均不改；Sidebar 继续原 E81C 图标、Active 背景与 Accent 条。仅新增专属空状态：32 DIP 同款时钟图标，20 DIP 主文案“最近还没有启动过应用”，12 DIP 辅助文字“启动应用后，它会出现在这里”，沿用 EmptyIconBrush/EmptyTextBrush/MutedTextBrush 和现有居中留白。
+
+按已读取 ui-ux-pro-max 的一致图标、语义颜色、稳定卡片尺寸与明确空状态规则检查，没有创建第二套卡片或改动 Sidebar/背景设计。本机 Python 仍不可用，本轮依据技能内置规则，不声称完成检索。真实 WPF 截图：[空状态](screenshots/5.3/recent-empty.png)、[真实 C/B/A](screenshots/5.3/real-recent-cba.png)、[真实 A/C/B](screenshots/5.3/real-recent-acb.png)、[重启后的顺序](screenshots/5.3/real-recent-restarted.png)。
+
 ## 5.2 收藏交互
 
 沿用 136×148 DIP 卡片与现有大图标、名称、Hover 统计布局。右上独立 FavoriteButton：28×28 DIP 桌面鼠标点击区、16 DIP Segoe Fluent E734/E735 空心/实心星标、6 DIP 圆角。未收藏默认 MutedTextBrush 与 0.45 图标透明度，Hover/键盘焦点完整显示；已收藏 AccentBrush 实心星标常显。Pressed 使用 SelectedBrush，聚焦保留 FocusRing，原生 Button 支持 Tab/Enter/Space。没有额外弹跳、旋转或成功 Toast，已有卡片 Hover 动画保持减少动画规则。

@@ -114,7 +114,7 @@ internal static partial class Program
         navigation.SelectedItem = shell.Sidebar.Items[0];
         Check(vm.FilteredApplications.Cast<object>().Count() == 2, "Home shows all applications");
         var footer = Descendants<ListBox>(sidebar).First(x => x.ItemsSource == shell.Sidebar.FooterItems);
-        footer.SelectedItem = shell.Sidebar.FooterItems[1];
+        footer.SelectedItem = shell.Sidebar.FooterItems[2];
         Check(vm.SelectedCategory is null && vm.FilteredApplications.Cast<object>().Count() == 2, "Placeholder navigation retains all-app behavior");
         navigation.SelectedItem = game;
         Check(footer.SelectedItem is null && vm.SelectedCategory == game, "Top and footer navigation share a single selection");
