@@ -9,6 +9,7 @@ public sealed record LauncherApplication(
 {
     public bool IsAvailable { get; init; } = true;
     public Guid? CategoryId { get; init; }
+    public bool IsFavorite { get; init; }
     public long LaunchCount { get; init; }
     public DateTimeOffset? LastLaunchTime { get; init; }
 }

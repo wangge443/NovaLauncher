@@ -34,7 +34,7 @@ internal static partial class Program
         using (var db = new LauncherDbContextFactory(oldPaths).CreateDbContext())
         {
             Check(await db.Applications.AllAsync(x => x.CategoryId == null), "Existing applications start uncategorized");
-            Check((await db.Database.GetAppliedMigrationsAsync()).Count() == 2 && !db.Database.HasPendingModelChanges(), "Both migrations applied; snapshot matches model");
+            Check((await db.Database.GetAppliedMigrationsAsync()).SequenceEqual(db.Database.GetMigrations()) && !db.Database.HasPendingModelChanges(), "All migrations applied; snapshot matches model");
         }
         for (int index = 0; index < 3; index++) await Initializer(oldPaths).InitializeAsync(default);
         Check((await CategoryStore(oldPaths).GetAllAsync(default)).Select(x => x.Name).SequenceEqual(["游戏", "应用"]), "Default ordinary categories created exactly once");
@@ -114,7 +114,7 @@ internal static partial class Program
         navigation.SelectedItem = shell.Sidebar.Items[0];
         Check(vm.FilteredApplications.Cast<object>().Count() == 2, "Home shows all applications");
         var footer = Descendants<ListBox>(sidebar).First(x => x.ItemsSource == shell.Sidebar.FooterItems);
-        footer.SelectedItem = shell.Sidebar.FooterItems[0];
+        footer.SelectedItem = shell.Sidebar.FooterItems[1];
         Check(vm.SelectedCategory is null && vm.FilteredApplications.Cast<object>().Count() == 2, "Placeholder navigation retains all-app behavior");
         navigation.SelectedItem = game;
         Check(footer.SelectedItem is null && vm.SelectedCategory == game, "Top and footer navigation share a single selection");

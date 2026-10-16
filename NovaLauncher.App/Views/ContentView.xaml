@@ -37,7 +37,26 @@
             </StackPanel.Style>
             <Path Data="M 16,0 L 16,32 M 0,16 L 32,16" Stroke="{DynamicResource EmptyIconBrush}"
                   StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                  Width="32" Height="32" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,24" />
+                  Width="32" Height="32" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,24">
+                <Path.Style>
+                    <Style TargetType="Path">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Mode}" Value="Favorites"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Path.Style>
+            </Path>
+            <TextBlock Text="&#xE734;" FontFamily="{StaticResource IconFont}" FontSize="32"
+                       Foreground="{DynamicResource EmptyIconBrush}" HorizontalAlignment="Center" Margin="0,0,0,24">
+                <TextBlock.Style>
+                    <Style TargetType="TextBlock">
+                        <Setter Property="Visibility" Value="Collapsed" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding Mode}" Value="Favorites"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </TextBlock.Style>
+            </TextBlock>
             <TextBlock Text="{Binding EmptyTitle}" FontSize="20" TextAlignment="Center"
                        Foreground="{DynamicResource EmptyTextBrush}" AutomationProperties.AutomationId="DropHint" />
             <TextBlock Text="{Binding EmptyHint}" FontSize="12" TextAlignment="Center"

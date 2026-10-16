@@ -15,6 +15,7 @@ public interface IApplicationPersistenceService
     Task<string?> AddAsync(LauncherApplication application, CancellationToken token);
     Task SaveStatisticsAsync(LauncherApplication application);
     Task<string?> SetCategoryAsync(Guid applicationId, Guid? categoryId, CancellationToken token);
+    Task<string?> SetFavoriteAsync(Guid applicationId, bool isFavorite, CancellationToken token);
     Task FlushAsync();
 }
 
@@ -46,7 +47,7 @@ public sealed class ApplicationPersistenceService(
                         icon, (ApplicationSourceType)record.SourceType)
                     {
                         LaunchCount = record.LaunchCount, LastLaunchTime = record.LastLaunchTime,
-                        IsAvailable = available, CategoryId = record.CategoryId
+                        IsAvailable = available, CategoryId = record.CategoryId, IsFavorite = record.IsFavorite
                     });
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
@@ -78,7 +79,8 @@ public sealed class ApplicationPersistenceService(
                 Id = application.Id, DisplayName = application.DisplayName, ExecutablePath = application.ExecutablePath,
                 SourcePath = application.SourcePath, SourceType = (int)application.SourceType,
                 LaunchCount = application.LaunchCount, LastLaunchTime = application.LastLaunchTime,
-                DateAdded = DateTimeOffset.UtcNow, IconCachePath = cache.PathFor(application.Id)
+                DateAdded = DateTimeOffset.UtcNow, IconCachePath = cache.PathFor(application.Id),
+                CategoryId = application.CategoryId, IsFavorite = application.IsFavorite
             }, token);
             await cache.WriteAsync(application.Id, application.Icon, CancellationToken.None);
             return null;
@@ -119,6 +121,21 @@ public sealed class ApplicationPersistenceService(
         {
             Trace.TraceError("Application category update failed: {0}", ex);
             return "分类修改失败";
+        }
+    }
+
+    public async Task<string?> SetFavoriteAsync(Guid applicationId, bool isFavorite, CancellationToken token)
+    {
+        try
+        {
+            await repository.UpdateFavoriteAsync(applicationId, isFavorite, token);
+            return null;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+        catch (Exception ex)
+        {
+            Trace.TraceError("Application favorite update failed: {0}", ex);
+            return "收藏状态保存失败";
         }
     }
 

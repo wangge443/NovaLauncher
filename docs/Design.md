@@ -1,5 +1,13 @@
 # Nova Launcher — UI 设计
 
+## 5.2 收藏交互
+
+沿用 136×148 DIP 卡片与现有大图标、名称、Hover 统计布局。右上独立 FavoriteButton：28×28 DIP 桌面鼠标点击区、16 DIP Segoe Fluent E734/E735 空心/实心星标、6 DIP 圆角。未收藏默认 MutedTextBrush 与 0.45 图标透明度，Hover/键盘焦点完整显示；已收藏 AccentBrush 实心星标常显。Pressed 使用 SelectedBrush，聚焦保留 FocusRing，原生 Button 支持 Tab/Enter/Space。没有额外弹跳、旋转或成功 Toast，已有卡片 Hover 动画保持减少动画规则。
+
+分类弱入口移至左上，与星标和中心图标错开；分类浮层及业务保持原样。收藏专属空状态采用 32 DIP 空心星形、“还没有收藏应用”及弱辅助文字“点击应用卡片上的星标即可收藏”。Sidebar 结构、宽度、背景系统不变。
+
+使用 ui-ux-pro-max 的原生独立操作区、可见焦点、动态图标标签、语义画刷和稳定布局规则；本机 Python 不可用，未运行成功技能检索。已检查实际 WPF 截图：[Hover](screenshots/5.2/favorites-hover.png)、[收藏页](screenshots/5.2/favorites-page.png)、[空收藏](screenshots/5.2/favorites-empty.png)、[真实 QQ 重启](screenshots/5.2/real-favorite-restarted.png)。
+
 ## 5.1 分类交互
 
 沿用 Windows 11 Minimal Light UI、44 DIP 导航项、小图标、左侧选中指示及既有语义画刷。首页后动态显示数据库分类，默认游戏/应用沿用原图标，自定义项使用 Segoe Fluent 文件夹图标；名称省略并提供完整 Tooltip。“新建分类”采用独立 SidebarActionButtonStyle：44 DIP 行高、0/2 DIP 外边距、18/12 DIP 左右内边距、30 DIP 图标列、18 DIP Fluent Plus 图标和 14 DIP 文字，内容居中，整行可点击。默认沿用 MutedTextBrush 并以 0.97 内容透明度稍降权重；Hover 使用同款 8 DIP 圆角浅色背景、TextBrush 和完整内容不透明度，Pressed 叠加 SelectedBrush 反馈。按钮没有 Accent 选中条，不参与导航选择，始终位于所有分类之后，与下方收藏/最近使用保留 12 DIP 分组间距。点击继续展开已有内联编辑区，显式名称标签、24 字符输入、创建/取消；Enter 提交，Esc 取消。重复错误就近保留，同时复用已有 Toast。

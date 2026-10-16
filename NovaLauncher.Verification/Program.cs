@@ -24,6 +24,10 @@ internal static partial class Program
     private static int Main(string[] args)
     {
         if (args.Contains("--inspect-db")) return InspectDatabase();
+        if (args.Contains("--real-favorites")) return VerifyRealFavoritesAsync().GetAwaiter().GetResult();
+        if (args.Length == 2 && args[0] == "--favorite-restart") return RunFavoriteWindow(args[1], false, false);
+        if (args.Length == 2 && args[0] == "--favorite-real-set") return RunFavoriteWindow(args[1], true, true);
+        if (args.Length == 2 && args[0] == "--favorite-real-check") return RunFavoriteWindow(args[1], true, false);
         if (args.Contains("--migrations")) return RunMigrationTestsAsync().GetAwaiter().GetResult();
         if (args.Contains("--real-migration")) return VerifyRealMigrationAsync().GetAwaiter().GetResult();
         if (args.Contains("--real-categories")) return VerifyRealCategoriesAsync().GetAwaiter().GetResult();
@@ -35,6 +39,7 @@ internal static partial class Program
         bool persistenceTests = args.Contains("--persistence");
         bool toastTests = args.Contains("--toast");
         bool categoryTests = args.Contains("--categories");
+        bool favoriteTests = args.Contains("--favorites");
         _screenshots = Path.GetFullPath(args.FirstOrDefault(arg => !arg.StartsWith("--")) ??
             (persistenceTests ? "docs/screenshots/4.3" : launchTests ? "docs/screenshots/4.2" : "docs/screenshots/4.1"));
         _fixtures = Path.Combine(Path.GetTempPath(), "NovaLauncher-Verification-" + Guid.NewGuid().ToString("N"));
@@ -47,7 +52,8 @@ internal static partial class Program
         {
             try
             {
-                if (categoryTests) await RunCategoriesAsync((MainWindow)app.MainWindow);
+                if (favoriteTests) await RunFavoritesAsync((MainWindow)app.MainWindow);
+                else if (categoryTests) await RunCategoriesAsync((MainWindow)app.MainWindow);
                 else if (toastTests) await RunToastAsync((MainWindow)app.MainWindow);
                 else if (persistenceTests) await RunPersistenceAsync((MainWindow)app.MainWindow);
                 else if (launchTests) await RunLaunchAsync((MainWindow)app.MainWindow);

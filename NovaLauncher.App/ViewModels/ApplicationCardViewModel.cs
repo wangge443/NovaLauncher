@@ -28,6 +28,13 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
     public IAsyncRelayCommand LaunchCommand { get; }
     public event Action<string>? LaunchFailed;
     public event Action? CategoryChanged;
+    public event Action? FavoriteChanged;
+    public bool IsFavorite => Application.IsFavorite;
+    public string FavoriteGlyph => IsFavorite ? "\uE735" : "\uE734";
+    public string FavoriteActionName => $"{(IsFavorite ? "取消收藏" : "收藏")} {DisplayName}";
+    private bool _isSavingFavorite;
+    public bool IsSavingFavorite { get => _isSavingFavorite; private set => SetProperty(ref _isSavingFavorite, value); }
+    public IAsyncRelayCommand ToggleFavoriteCommand { get; }
     public Guid? CategoryId => Application.CategoryId;
     public CategoryChoice? CurrentCategoryChoice => CategoryManager?.Choices.FirstOrDefault(x => x.Id == CategoryId);
     public CategoryManagerViewModel? CategoryManager { get; }
@@ -52,6 +59,7 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
         ChangeCategoryCommand = new AsyncRelayCommand<CategoryChoice>(ChangeCategoryAsync);
         _token = _lifetime.Token;
         Application = application;
+        ToggleFavoriteCommand = new AsyncRelayCommand(ToggleFavoriteAsync, () => !_token.IsCancellationRequested);
         LaunchCommand = new AsyncRelayCommand(LaunchAsync, () => !_token.IsCancellationRequested);
         if (application.Icon is { Length: > 0 } bytes)
         {
@@ -71,6 +79,27 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
     }
 
     public void RefreshLaunchTime() => OnPropertyChanged(nameof(LastLaunchText));
+
+    private async Task ToggleFavoriteAsync()
+    {
+        if (IsSavingFavorite || _token.IsCancellationRequested) return;
+        IsSavingFavorite = true;
+        bool next = !IsFavorite;
+        try
+        {
+            string? error = await _persistence.SetFavoriteAsync(Application.Id, next, CancellationToken.None);
+            if (error is not null) { _toast?.Show("收藏状态保存失败"); return; }
+            // Merge into the latest model so concurrent category/statistics saves remain independent.
+            Application = Application with { IsFavorite = next };
+            OnPropertyChanged(nameof(Application));
+            OnPropertyChanged(nameof(IsFavorite));
+            OnPropertyChanged(nameof(FavoriteGlyph));
+            OnPropertyChanged(nameof(FavoriteActionName));
+            FavoriteChanged?.Invoke();
+        }
+        catch (Exception ex) { Trace.TraceError("Favorite save failed: {0}", ex); _toast?.Show("收藏状态保存失败"); }
+        finally { IsSavingFavorite = false; }
+    }
 
     private async Task ChangeCategoryAsync(CategoryChoice? choice)
     {
@@ -140,6 +169,7 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
         _lifetime.Cancel();
         _lifetime.Dispose();
         LaunchCommand.NotifyCanExecuteChanged();
+        ToggleFavoriteCommand.NotifyCanExecuteChanged();
     }
 
     // Vector fallback stays sharp at any DPI and never owns a native resource.

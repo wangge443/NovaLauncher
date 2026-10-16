@@ -12,6 +12,7 @@ public sealed class LauncherDbContext(DbContextOptions<LauncherDbContext> option
     {
         var app = builder.Entity<ApplicationEntity>();
         app.HasKey(x => x.Id);
+        app.Property(x => x.IsFavorite).HasDefaultValue(false);
         app.HasOne<Models.Category>().WithMany().HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.SetNull);
         app.HasIndex(x => x.TargetPathKey).IsUnique();
         app.Property(x => x.DisplayName).IsRequired();

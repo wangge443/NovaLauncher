@@ -4,6 +4,7 @@ public sealed class ApplicationEntity
 {
     public Guid Id { get; set; }
     public Guid? CategoryId { get; set; }
+    public bool IsFavorite { get; set; }
     public string DisplayName { get; set; } = "";
     public string ExecutablePath { get; set; } = "";
     public string TargetPathKey { get; set; } = "";

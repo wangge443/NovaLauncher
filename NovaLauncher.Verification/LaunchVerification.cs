@@ -129,7 +129,7 @@ internal static partial class Program
         Check(firstCard.LastLaunchTime is { } timestamp && timestamp >= now && firstCard.LastLaunchText.Contains("刚刚"), "Real launch refreshes local time");
 
         // Use native key events on the real Button to exercise its Enter/Space semantics.
-        Button button = Descendants<Button>(cards[0]).Single();
+        Button button = (Button)cards[0].FindName("LaunchButton");
         Check(button.Focus(), "Launch card accepts keyboard focus");
         LaunchNative.keybd_event(0x0D, 0, 0, UIntPtr.Zero);
         LaunchNative.keybd_event(0x0D, 0, 2, UIntPtr.Zero);

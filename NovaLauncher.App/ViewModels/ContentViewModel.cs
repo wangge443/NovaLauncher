@@ -7,6 +7,8 @@ using NovaLauncher.App.Services;
 
 namespace NovaLauncher.App.ViewModels;
 
+public enum WorkspaceMode { Home, Category, Favorites }
+
 public sealed class ContentViewModel : ViewModelBase, IDisposable
 {
     private readonly CancellationTokenSource _lifetime = new();
@@ -32,8 +34,12 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         _token = _lifetime.Token;
         CategoryManager = new(categories, toast);
         FilteredApplications = new ListCollectionView(Applications);
-        FilteredApplications.Filter = item => SelectedCategory is null ||
-            ((ApplicationCardViewModel)item).CategoryId == SelectedCategory.Id;
+        FilteredApplications.Filter = item => Mode switch
+        {
+            WorkspaceMode.Category => ((ApplicationCardViewModel)item).CategoryId == SelectedCategory?.Id,
+            WorkspaceMode.Favorites => ((ApplicationCardViewModel)item).IsFavorite,
+            _ => true
+        };
     }
 
     public ObservableCollection<ApplicationCardViewModel> Applications { get; } = [];
@@ -43,16 +49,40 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     public CategoryViewModel? SelectedCategory
     {
         get => _selectedCategory;
-        set { if (SetProperty(ref _selectedCategory, value)) RefreshFilter(); }
+        private set => SetProperty(ref _selectedCategory, value);
     }
-    public string EmptyTitle => SelectedCategory is null ? "请将文件拖拽至此" : "此分类暂无应用";
-    public string EmptyHint => SelectedCategory is null ? "支持 .exe 和 .lnk" : "在首页通过卡片上的“分类”添加应用";
+    private WorkspaceMode _mode;
+    public WorkspaceMode Mode { get => _mode; private set => SetProperty(ref _mode, value); }
+    public void SelectWorkspace(WorkspaceMode mode, CategoryViewModel? category = null)
+    {
+        if (mode == WorkspaceMode.Category && category is null) throw new ArgumentNullException(nameof(category));
+        SelectedCategory = mode == WorkspaceMode.Category ? category : null;
+        Mode = mode;
+        RefreshFilter();
+    }
+    public string EmptyTitle => Mode switch
+    {
+        WorkspaceMode.Favorites => "还没有收藏应用",
+        WorkspaceMode.Category => "此分类暂无应用",
+        _ => "请将文件拖拽至此"
+    };
+    public string EmptyHint => Mode switch
+    {
+        WorkspaceMode.Favorites => "点击应用卡片上的星标即可收藏",
+        WorkspaceMode.Category => "在首页通过卡片上的“分类”添加应用",
+        _ => "支持 .exe 和 .lnk"
+    };
     private void RefreshFilter()
     {
         FilteredApplications.Refresh();
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(EmptyTitle));
         OnPropertyChanged(nameof(EmptyHint));
+    }
+    private void RefreshFavorites()
+    {
+        // Home/category membership is unchanged; keep their controls and keyboard focus intact.
+        if (Mode == WorkspaceMode.Favorites) RefreshFilter();
     }
     public IToastService Toast { get; }
     public bool IsEmpty => FilteredApplications.IsEmpty;
@@ -87,6 +117,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         if (_targets.Contains(application.ExecutablePath)) return;
         var card = new ApplicationCardViewModel(application, _launcher, _persistence, CategoryManager, Toast);
         card.CategoryChanged += RefreshFilter;
+        card.FavoriteChanged += RefreshFavorites;
         card.LaunchFailed += ShowMessage;
         _targets.Add(application.ExecutablePath);
         Applications.Add(card);
@@ -99,6 +130,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         await _importTask;
         await (CategoryManager.CreateCommand.ExecutionTask ?? Task.CompletedTask);
         await Task.WhenAll(Applications.Select(card => card.ChangeCategoryCommand.ExecutionTask ?? Task.CompletedTask));
+        await Task.WhenAll(Applications.Select(card => card.ToggleFavoriteCommand.ExecutionTask ?? Task.CompletedTask));
         await Task.WhenAll(Applications.Select(card => card.LaunchCommand.ExecutionTask ?? Task.CompletedTask));
         await _persistence.FlushAsync();
     }
@@ -196,6 +228,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         {
             card.LaunchFailed -= ShowMessage;
             card.CategoryChanged -= RefreshFilter;
+            card.FavoriteChanged -= RefreshFavorites;
             card.Dispose();
         }
     }

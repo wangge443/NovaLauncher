@@ -201,6 +201,43 @@
         </Setter>
     </Style>
     <BooleanToVisibilityConverter x:Key="BooleanVisibility" />
+    <Style x:Key="FavoriteButtonStyle" TargetType="Button">
+        <Setter Property="Width" Value="28" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Surface" Background="Transparent" CornerRadius="6">
+                        <TextBlock x:Name="Star" Text="{Binding FavoriteGlyph}" FontFamily="{StaticResource IconFont}"
+                                   FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center"
+                                   Foreground="{TemplateBinding Foreground}" Opacity="0.45" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsFavorite}" Value="True">
+                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                            <Setter TargetName="Star" Property="Opacity" Value="1" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=UserControl}}" Value="True">
+                            <Setter TargetName="Star" Property="Opacity" Value="1" />
+                        </DataTrigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Star" Property="Opacity" Value="1" />
+                            <Setter TargetName="Surface" Property="Background" Value="{DynamicResource HoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Surface" Property="Background" Value="{DynamicResource HoverBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Surface" Property="Background" Value="{DynamicResource SelectedBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Star" Property="Opacity" Value="0.5" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
     <sys:Double x:Key="CategoryPopupWidth">224</sys:Double>
     <Style x:Key="QuietButton" TargetType="primitives:ButtonBase">
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />

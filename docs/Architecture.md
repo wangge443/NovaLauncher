@@ -2,7 +2,32 @@
 
 ## 当前边界
 
-NovaLauncher.sln 包含 NovaLauncher.App、NovaLauncher.Verification 和仅用于测试的 NovaLauncher.LaunchProbe，目标框架为 net9.0-windows。5.1 在既有 Migrations 生命周期上增加应用分类，保留应用、启动统计及图标缓存。当前分类结构以下文 5.1 为准，数据库初始化沿用 5.0。
+NovaLauncher.sln 包含 NovaLauncher.App、NovaLauncher.Verification 和仅用于测试的 NovaLauncher.LaunchProbe，目标框架为 net9.0-windows。5.2 新增独立收藏状态与三种工作区筛选模式，保留 5.1 分类结构和 5.0 数据库初始化生命周期。
+
+## 5.2 Favorite Pipeline
+
+```text
+Application
+    ├── CategoryId: Guid?
+    └── IsFavorite: bool
+
+WorkspaceMode.Home      → All Applications
+WorkspaceMode.Category  → CategoryId Filter
+WorkspaceMode.Favorites → IsFavorite Filter
+
+FavoriteButton → ToggleFavoriteCommand → ApplicationCardViewModel
+    → ApplicationPersistenceService.SetFavoriteAsync
+    → ApplicationRepository.UpdateFavoriteAsync → SQLite commit
+    → latest Application with IsFavorite → star state → Favorites view refresh
+```
+
+Migration `20261016100247_AddApplicationFavorites` 只对 Applications 增加 IsFavorite，SQLite 定义为 `INTEGER NOT NULL DEFAULT 0`，EF/Entity/Model 映射为 bool。旧 Migration 与 Designer 不改；当前 Snapshot 更新。旧记录及新导入默认 false，原分类、元数据、统计和图标缓存不变。
+
+Repository 每次独立 Context 在后台只更新 IsFavorite 并检查行数，分类仍只更新 CategoryId，统计仍只更新次数/时间。VM 先保存再确认 UI，成功从最新 Application record 合并单一属性，避免并发字段覆盖；失败保留内存状态并显示“收藏状态保存失败”。命令与 VM 保存标志防重入，正常关闭 FlushAsync 等待收藏命令结束，无成功 Toast。
+
+ContentViewModel 保留同一 Applications 与 ListCollectionView，通过 WorkspaceMode switch 选择唯一过滤条件；SelectWorkspace 同步模式和选中分类。Sidebar 仍只有一个 SelectedItem，分类与收藏模式不交叉组合，不重新查询数据库。只有处于 Favorites 时，收藏变更才刷新筛选；Home/Category 的成员不变，保留控件与键盘焦点。Favorites 取消收藏立即消失但不删除源 Card VM。
+
+FavoriteButton、CategoryButton 与 LaunchButton 为兄弟控件，原生 Click/键盘命令不会路由经过启动按钮。View 没有新增数据库操作；星标动态 AutomationProperties.Name 为“收藏/取消收藏 + 应用名”。分类入口移至左上给右上星标留出空间，分类业务不变。
 
 ## 5.1 Category Pipeline
 

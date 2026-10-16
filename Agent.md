@@ -2,7 +2,7 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第五阶段 5.1：应用分类系统，稳定基线为 1a0ecdc1ee3ccfcf4048b60549e661f31ba50624。实现普通分类创建、动态导航、单应用单分类和持久化筛选；通过新 EF Core Migration 扩展 Schema，禁止 EnsureCreated，禁止修改已提交的 InitialApplications。保护真实用户数据，保留 EXE/LNK 导入、启动统计和图标缓存。允许对 Sidebar 和卡片增加轻量分类交互，不改 MainWindow、ShellBackground 或 DesktopBackdrop，后者仍为 Experimental。不开发收藏、最近使用页面、排序、分类图标自定义、分类重命名/删除或复杂右键菜单。5.1 功能与 UI 已通过用户验收，已授权最终收尾提交；不开始下一阶段。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第五阶段 5.2：应用收藏系统，稳定基线为 1dee8c1527dec2725d59ee8e8a8c44cb89cf10bd。新增 IsFavorite、独立收藏按钮与 Home/Category/Favorites 内存筛选，保持 5.1 分类业务、导入、启动统计和图标缓存。Schema 变化必须新增 EF Core Migration，禁止修改旧 Migration、EnsureCreated、删库或重建数据库。真实数据库升级及至少一个应用收藏/重启验证已获用户授权。保持 MainWindow、Sidebar 宽度和背景系统，DesktopBackdrop 仍为 Experimental。不开发最近使用页面、首页聚合、删除/编辑、分类删除/重命名、排序、用户系统、设置或自定义背景。5.2 收藏系统已通过用户验收，已授权最终收尾提交；不开始下一阶段。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
@@ -55,4 +55,4 @@
 3. UI 工作先检查 ui-ux-pro-max 的安装与指令，形成设计参数和状态方案，再映射为 WPF 资源与控件。
 4. 按小范围改动实施，不覆盖用户工作；只有明确独立且有收益的工作流才考虑委派。
 5. 执行必要验证，记录未验证项与实际限制，清理本次无用临时文件，并同步相关文档。
-6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前只完成 5.1 分类系统，提供迁移验证、Build 结果和实际 UI 截图，按用户授权完成最终提交，不开发下一阶段业务。
+6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前只完成 5.2 收藏系统，提供迁移、真实数据库、Build 结果和实际 UI 截图；按用户授权完成最终提交，不开发下一阶段业务。

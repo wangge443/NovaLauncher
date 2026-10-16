@@ -45,9 +45,13 @@
         </Button>
         <!-- Sibling controls prevent category selection from bubbling through the launch button. -->
         <ToggleButton x:Name="CategoryButton" Content="分类" Style="{StaticResource QuietButton}"
-                      HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,2,0" Padding="7,4" Opacity="0"
+                      HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,0,0" Padding="7,4" Opacity="0"
                       IsChecked="{Binding IsCategoryPickerOpen, Mode=TwoWay}" IsEnabled="{Binding CategoryManager.IsReady}"
                       AutomationProperties.Name="选择应用分类" AutomationProperties.AutomationId="ChooseCategory" />
+        <Button x:Name="FavoriteButton" Command="{Binding ToggleFavoriteCommand}" Style="{StaticResource FavoriteButtonStyle}"
+                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,2,0"
+                ToolTip="{Binding FavoriteActionName}" AutomationProperties.Name="{Binding FavoriteActionName}"
+                AutomationProperties.AutomationId="ToggleFavorite" />
         <Popup x:Name="CategoryPopup" PlacementTarget="{Binding ElementName=CategoryButton}" Placement="Bottom"
                IsOpen="{Binding IsCategoryPickerOpen, Mode=TwoWay}" StaysOpen="False" AllowsTransparency="True"
                Opened="CategoryPopup_Opened" Closed="CategoryPopup_Closed">

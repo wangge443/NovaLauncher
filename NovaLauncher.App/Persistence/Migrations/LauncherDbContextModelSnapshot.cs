@@ -68,6 +68,11 @@ namespace NovaLauncher.App.Persistence.Migrations
                     b.Property<string>("IconCachePath")
                         .HasColumnType("TEXT");
 
+                    b.Property<bool>("IsFavorite")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(false);
+
                     b.Property<DateTimeOffset?>("LastLaunchTime")
                         .HasColumnType("TEXT");
 

@@ -12,6 +12,7 @@ public interface IApplicationRepository
     Task UpdateAsync(Guid id, long launchCount, DateTimeOffset? lastLaunchTime, CancellationToken token);
     Task<bool> ExistsAsync(string executablePath, CancellationToken token);
     Task UpdateCategoryAsync(Guid id, Guid? categoryId, CancellationToken token);
+    Task UpdateFavoriteAsync(Guid id, bool isFavorite, CancellationToken token);
 }
 
 public sealed class ApplicationRepository(IDbContextFactory<LauncherDbContext> factory, ApplicationDataPaths paths)
@@ -66,6 +67,14 @@ public sealed class ApplicationRepository(IDbContextFactory<LauncherDbContext> f
         application.SortOrder = (await db.Applications.MaxAsync(x => (long?)x.SortOrder, token) ?? -1) + 1;
         db.Applications.Add(application);
         await db.SaveChangesAsync(token);
+    }, token);
+
+    public Task UpdateFavoriteAsync(Guid id, bool isFavorite, CancellationToken token) => Task.Run(async () =>
+    {
+        using var db = factory.CreateDbContext();
+        int changed = await db.Applications.Where(x => x.Id == id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.IsFavorite, isFavorite), token);
+        if (changed != 1) throw new InvalidOperationException("Application does not exist.");
     }, token);
 
     public Task UpdateCategoryAsync(Guid id, Guid? categoryId, CancellationToken token) => Task.Run(async () =>

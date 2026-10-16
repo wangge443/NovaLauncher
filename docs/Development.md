@@ -1,5 +1,44 @@
 # Nova Launcher — 开发流程
 
+## 5.2 最终收尾（2026-10-16）
+
+用户已验收收藏系统，按授权以 `feat: add application favorites` 提交。最终 Release Build 再次确认 **0 warnings / 0 errors**；重新执行 Migration **30 项**、收藏 **27 项**，另含独立重启子进程 **4 项**，全部通过。确认星标鼠标/键盘操作不启动应用、Home/Category/Favorites 筛选互斥、空收藏页面及保存失败状态正确。
+
+真实库只读检查再次确认 IsFavorite 列及原 QQ/微信启动统计；真实升级全部旧字段、分类和图标完整性及收藏重启保留，已在下文首次升级验证中通过。收尾没有再次修改真实收藏状态。提交内容仅包含本阶段收藏实现、新 Migration、配套验证、截图和文档，旧 Migration 不变，无无关修改。不开始下一阶段。
+
+## 5.2 应用收藏系统（2026-10-16）
+
+基线 `1dee8c1527dec2725d59ee8e8a8c44cb89cf10bd`。新增 `20261016100247_AddApplicationFavorites`，仅增加 Applications.IsFavorite（bool → INTEGER NOT NULL DEFAULT 0）；旧 Migration/Designer 未修改。收藏状态从 Entity 经 Model 到 Card VM 完整映射，独立列保存、提交成功再更新 UI，失败保留原状态并显示 Toast。WorkspaceMode 统一 Home/Category/Favorites，不查询数据库过滤，不改变分类业务。未开始最近使用等其他功能，**5.2 已通过用户验收，最终收尾提交已获授权。**
+
+Release Build：**0 warnings / 0 errors**。六套隔离验证全部通过：收藏 **27**、Migration **30**、分类 **33**、持久化 **25**、启动 **32**、导入/OLE **37**，共 **184 项主进程断言**；另有独立 WPF 重启子进程验证。没有新增应用 NuGet 依赖。
+
+```powershell
+dotnet build NovaLauncher.sln -c Release --no-restore
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --favorites docs/screenshots/5.2
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --migrations
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --categories TestResults/5.2/categories
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --persistence TestResults/5.2/persistence
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --launch TestResults/5.2/launch
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- TestResults/5.2/import
+```
+
+收藏验证覆盖：已有 5.1 库的全部原字段/分类保留及 false 默认值、模型快照、数据库列定义、新导入、原生鼠标收藏/取消收藏不启动、动态无障碍名称、Tab 焦点遍历、原生 Enter/Space、成功无 Toast、三种互斥导航、分类与收藏独立、收藏页取消后即时消失、专属空状态、收藏页导入不自动收藏、SQLite 真实写锁失败与恢复、小窗口布局及独立进程恢复收藏。旧启动套件通过原生鼠标与键盘确认卡片主体仍正常启动测试探针。
+
+测试初始因桌面遮挡安全停止，未向其他窗口发送点击；用户确认桌面准备后继续。实测发现 Home 收藏变更触发不必要的视图刷新会重建控件并丢失焦点，已限定仅 Favorites 收藏变化刷新成员，最终鼠标和键盘验证通过。未实机切换系统高对比度、混合 DPI 或断电测试；没有声称覆盖这些场景。
+
+### 真实数据库验证
+
+按本次用户明确授权执行 `--real-favorites`：先创建 SQLite 在线备份，再通过两个独立生产 App WPF 进程执行升级、QQ 收藏、正常完全关闭、重启和 Favorites 页面检查。升级后所有旧记录默认 false，随后仅将 QQ 的 IsFavorite 改为 true。两次窗口验证均通过，全部旧应用列、CategoryId、所有分类行和图标 PNG SHA-256 保持一致；没有启动 QQ 或微信。
+
+| 应用 | 原 LaunchCount | 原 LastLaunchTime | CategoryId | 验证后 IsFavorite |
+| --- | --- | --- | --- | --- |
+| QQ | 2 | 2026-10-15 06:55:12.358584-08:00 | NULL | true |
+| 微信 | 0 | NULL | NULL | false |
+
+在线备份：`%LOCALAPPDATA%\NovaLauncher\Data\Backups\nova-before-favorites-20261016T100726Z-8a5448360c524890af1a269d92d41410.db`。真实验证父进程 5 项断言、两个子进程分别 5/4 项通过。`--real-favorites` 是首次真实升级验收入口，会修改真实收藏状态，不应作为常规回归重复执行；日常使用隔离的 `--favorites`。
+
+已检查真实 WPF 截图：[默认](screenshots/5.2/favorites-default.png)、[Hover](screenshots/5.2/favorites-hover.png)、[收藏页](screenshots/5.2/favorites-page.png)、[空状态](screenshots/5.2/favorites-empty.png)、[小窗口](screenshots/5.2/favorites-small.png)、[QQ 重启后](screenshots/5.2/real-favorite-restarted.png)。RenderTargetBitmap 截图用于布局检查，不证明 Experimental DWM 效果。临时 EF 工具及重复回归截图收尾清理，保留交付截图及真实数据库备份。
+
 ## 5.1 最终收尾（2026-10-16）
 
 用户已验收分类功能及 Sidebar UI。最终重新执行 Release Build：**0 warnings / 0 errors**；Migration **30 项**、分类 **33 项**主进程断言全部通过，另有独立重启子进程 **3 项**通过。确认动态分类、统一的新建分类入口、分类筛选、应用分类更新与重启持久化正常。测试使用隔离临时数据库，未再次操作真实用户数据库。
