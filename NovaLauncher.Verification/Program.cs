@@ -23,6 +23,10 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Contains("--inspect-db")) return InspectDatabase();
+        if (args.Contains("--migrations")) return RunMigrationTestsAsync().GetAwaiter().GetResult();
+        if (args.Contains("--real-migration")) return VerifyRealMigrationAsync().GetAwaiter().GetResult();
+        if (args.Length == 2 && args[0] == "--migration-window") return RunMigrationWindow(args[1]);
         if (args.Length >= 2 && args[0].StartsWith("--restart-")) return RunRestartProcess(args[0], args[1]);
         bool launchTests = args.Contains("--launch");
         bool persistenceTests = args.Contains("--persistence");

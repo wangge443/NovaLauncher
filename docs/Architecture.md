@@ -2,7 +2,36 @@
 
 ## 当前边界
 
-NovaLauncher.sln 包含 NovaLauncher.App、NovaLauncher.Verification 和仅用于测试的 NovaLauncher.LaunchProbe，目标框架为 net9.0-windows。4.3 在稳定的 4.1 导入与 4.2 启动链路外围接入 EF Core + SQLite、PNG 缓存及恢复。当前持久化行为以 4.3 章节为准；后续 4.2、4.1、3.x 描述保留为历史基线。
+NovaLauncher.sln 包含 NovaLauncher.App、NovaLauncher.Verification 和仅用于测试的 NovaLauncher.LaunchProbe，目标框架为 net9.0-windows。5.0 仅将数据库生命周期升级到 EF Core Migrations，保留 4.3 应用、统计及图标缓存行为，不增加业务表或字段。数据库初始化以以下 5.0 章节为准。
+
+## 5.0 数据库生命周期
+
+```text
+Fresh Install → EF Core Migrations → SQLite
+
+Legacy EnsureCreated DB → Schema Detection → Backup
+    → Baseline Bootstrap → EF Core Migrations → SQLite
+
+已有 __EFMigrationsHistory → EF Core Migrations → SQLite
+```
+
+`EnsureCreated` 正式废弃，生产代码不得再调用它创建或修改 Schema。后续所有分类、收藏、设置或其他结构变化必须新增 Migration，不能编辑已经应用的基线或删库升级。仅隔离验证工程使用 EnsureCreated 重现旧版数据库。
+
+`Persistence/DatabaseInitializationService` 负责整个生命周期；原 Repository.InitializeAsync 委托该服务，App 经既有 Persistence Service 加载入口触发，不把迁移逻辑放入 App、ViewModel 或窗口。初始化在后台执行；每个 Repository 缓存初始化 Task（包括失败），避免导入反复重试。数据库旁的 `nova.db.initialization.lock` 以 FileShare.None 串行化不同进程的完整升级；文件可保留，句柄释放即解锁。占用时立即失败，下一次启动可重试。
+
+固定基线为 `20261016040336_InitialApplications`，由 EF Core 9.0.16 生成 Migration、Designer 和 ModelSnapshot。只定义原有 Applications 的 11 列、主键、TargetPathKey 唯一索引和两个 CHECK 约束，未增加业务结构。
+
+无历史表且非空的库必须精确匹配基线：服务把固定初始 Migration 的 SQL 应用于内存 SQLite，再比较 sqlite_schema 中所有非内部对象的类型、名称及建表/索引 SQL。比较忽略 SQL token 之间的排版空白，保留 token 边界、引号和字符串内容；覆盖列类型、NULL、主键、唯一性、CHECK、默认值及额外对象。即使语义等价但不是受支持的旧版格式，也保守拒绝自动登记；不尝试修复未知 Schema。参考来自不可变基线，不能改为当前 DbContext 模型。
+
+Legacy 检测、备份和历史登记期间持有 SQLite immediate 事务，阻止其他写入。备份从另一只读连接使用 `SqliteConnection.BackupDatabase` 读取已提交快照（包含 WAL），写入 `Data/Backups/nova-before-migrations-<UTC timestamp>-<guid>.db`，CreateNew 防覆盖，并检查 `PRAGMA integrity_check`。备份失败则停止登记；不会删除原库，也不自动覆盖恢复。
+
+兼容且备份成功后，使用 EF `IHistoryRepository.GetCreateScript()` 建立历史表，并通过参数化 INSERT 登记固定 MigrationId / ProductVersion=9.0.16。DDL 与登记在同一事务提交，只用于 Legacy Bootstrap，受控 SQL 集中在初始化服务。之后 `MigrateAsync` 看到基线已应用，跳过 Applications 的 CREATE，只运行待应用迁移。新库直接由 Migrations 建表；已有历史表即使为空也不猜测为 Legacy，正常迁移失败时保留数据。
+
+启动失败通过现有轻提示显示“数据库升级失败，现有数据未被删除”，详细异常写 Trace 和 `Data/migration-errors.log`，不向普通用户显示堆栈。没有自动重试循环；EF SQLite 迁移锁等待设 30 秒取消上限。异常退出后 EF 的 `__EFMigrationsLock` 可能残留锁记录，需要先确认没有运行中的升级再人工检查，应用不会擅自删锁或删库。历史表成功提交后，后续启动不再 Bootstrap 或备份；若在提交前异常退出，下一次启动可安全重试且备份文件不会被覆盖。
+
+新增直接依赖 `Microsoft.EntityFrameworkCore.Design 9.0.16`（MIT，与 Sqlite 同版本，PrivateAssets=all），用于正式生成迁移和快照；设计时 Factory 只创建 Context，不初始化数据库。替代方案是手写 Migration/Snapshot，但容易漂移，故采用官方工具。开发工具 `dotnet-ef 9.0.16` 是工具而非应用依赖；全部 NuGet 传递依赖见锁文件。
+
+官方依据：[Migrations 生命周期](https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/)、[管理迁移及历史登记](https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/managing)、[应用迁移](https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/applying)。
 
 ## 4.3 Persistence Pipeline
 
@@ -21,11 +50,11 @@ Startup → show Window → InitializeAsync → Repository → SQLite
  → Persistence Service + Icon Cache → ContentViewModel → Collection → Card
 ```
 
-新增直接依赖 `Microsoft.EntityFrameworkCore.Sqlite 9.0.16`，适用于 net9.0-windows，EF Core/Microsoft.Data.Sqlite 为 MIT；SQLitePCLRaw 2.1.10 包为 Apache-2.0，SQLite 引擎为公有领域。许可证已核对还原包 nuspec；传递版本均记录于 packages.lock.json。未安装 Design 包或其他 ORM。替代方案是直接使用 Microsoft.Data.Sqlite 编写 SQL，但本阶段按用户要求采用 EF Core。[包与兼容框架](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore.Sqlite/9.0.16)。
+4.3 新增直接依赖 `Microsoft.EntityFrameworkCore.Sqlite 9.0.16`，适用于 net9.0-windows，EF Core/Microsoft.Data.Sqlite 为 MIT；SQLitePCLRaw 2.1.10 包为 Apache-2.0，SQLite 引擎为公有领域。许可证已核对还原包 nuspec；传递版本均记录于 packages.lock.json。Design 包在 5.0 加入，未添加其他 ORM。替代方案是直接使用 Microsoft.Data.Sqlite 编写 SQL，但本项目按用户要求采用 EF Core。[包与兼容框架](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore.Sqlite/9.0.16)。
 
-数据根目录通过 `Environment.SpecialFolder.LocalApplicationData` 获得；本机正式路径为 `C:\Users\王倚烽\AppData\Local\NovaLauncher\Data\nova.db`。首次运行自动创建目录及数据库，无需服务器或 SQL 操作。当前数据库初始化采用 **EnsureCreated**（调用 `EnsureCreatedAsync`），原因是当前处于早期开发阶段，Schema 简单，且没有历史数据库版本。
+数据根目录通过 `Environment.SpecialFolder.LocalApplicationData` 获得；本机正式路径为 `C:\Users\王倚烽\AppData\Local\NovaLauncher\Data\nova.db`。首次运行自动创建目录及数据库，无需服务器或 SQL 操作。4.3 曾采用 EnsureCreated；5.0 已改为上文的 Migrations 生命周期。
 
-**在下一次数据库 Schema 扩展之前，必须切换到 EF Core Migrations。** EnsureCreated 不执行 Schema 升级；切换前须设计备份和既有数据库的迁移基线，不能直接混用 EnsureCreated 与 Migrate，更不能通过删库升级。本轮仅记录迁移要求，不修改数据库架构。[官方限制](https://learn.microsoft.com/en-us/ef/core/managing-schemas/ensure-created)。
+5.0 已完成该迁移前置要求；今后禁止通过 EnsureCreated 修改 Schema，也禁止通过删库升级。[官方限制](https://learn.microsoft.com/en-us/ef/core/managing-schemas/ensure-created)。
 
 真实用户数据仅位于 LOCALAPPDATA，仓库不保存运行数据。`.gitignore` 排除 `*.db`、`*.db-*`（含 WAL、SHM、journal 及其他数据库附属临时文件）和 `**/Cache/Icons/`；验证使用隔离临时目录并清理。
 

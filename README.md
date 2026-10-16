@@ -4,7 +4,7 @@ Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windo
 
 ## 当前状态
 
-第四阶段 4.3：EF Core + SQLite 保存应用、启动次数和时间，重启自动恢复卡片与 PNG 图标缓存。数据位于 %LOCALAPPDATA%\NovaLauncher，保留 EXE/LNK 导入与 Shell 启动链路。Desktop Backdrop 仍为 Experimental。4.3 已通过最终人工验收，按用户授权完成收尾并提交。
+第五阶段前置任务 5.0：数据库已切换到 EF Core Migrations，新库自动建表，旧 EnsureCreated 库先检查结构、备份并登记基线后无损升级。保留应用、启动统计和 PNG 缓存行为，数据位于 %LOCALAPPDATA%\NovaLauncher；未增加新业务功能。Desktop Backdrop 仍为 Experimental。5.0 已通过用户验收，按授权完成收尾提交；验收记录见 docs/Development.md。
 
 ## 构建与运行
 
@@ -44,7 +44,7 @@ dotnet run --project NovaLauncher.App/NovaLauncher.App.csproj -c Release --no-bu
 
 ## 后续步骤
 
-4.1 已提交为 58bf6dc；4.2 已提交为 480f357；4.3 已通过最终人工验收；Desktop Backdrop 后续可独立研究，不作为业务开发的前置条件。
+4.1 已提交为 58bf6dc；4.2 已提交为 480f357；4.3 稳定基线为 5168131。5.0 建立迁移基线，后续 Schema 变化必须新增 Migration，禁止继续使用 EnsureCreated。Desktop Backdrop 后续可独立研究，不作为业务开发的前置条件。
 
 ui-ux-pro-max 已安装到 Codex 用户技能目录，入口已读取，WPF 检索验证通过。初始化文档以 docs: initialize project documentation 作为首次提交；未关联远程仓库。
 

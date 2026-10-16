@@ -1,5 +1,48 @@
 # Nova Launcher — 开发流程
 
+## 5.0 数据库迁移前置任务（2026-10-15）
+
+基线 `5168131f15bbeebe755dc302bf3fbd1dc0924264`。本轮仅升级数据库基础设施，不实现新业务。5.0 已通过用户验收，最终 Release 构建再次确认 0 warnings / 0 errors；修改范围只含迁移基础设施、验证及相关文档，按用户授权提交 `chore: migrate database lifecycle to EF Core migrations`，不开发分类功能。生产 `EnsureCreated` 正式废弃，所有后续 Schema 变化都必须新增 EF Core Migration。完整检测、备份、Baseline Bootstrap 和失败策略见 Architecture.md 的 5.0 章节。
+
+新增 `Microsoft.EntityFrameworkCore.Design 9.0.16`，版本与 Sqlite 一致，MIT / PrivateAssets=all；更新锁文件。基线 `20261016040336_InitialApplications` 与旧 Applications 完全一致，包含 Designer 与 ModelSnapshot；设计时 Factory 不打开或初始化用户库。
+
+常规验证（隔离临时库，不写真实用户数据）：
+
+```powershell
+dotnet restore NovaLauncher.sln --locked-mode
+dotnet build NovaLauncher.sln -c Release --no-restore
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --migrations
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --persistence TestResults/5.0/persistence
+```
+
+最终锁定还原通过，Release Build **0 warnings / 0 errors**；迁移套件 **30 项断言通过**，持久化回归 **25 项断言通过**。`git diff --check` 通过，生产代码没有 EnsureCreated / EnsureDeleted 调用。最终提交已获用户明确授权。
+
+迁移测试覆盖新库/空 Applications、正确历史记录、快照一致、旧库全部字段（非零 LaunchCount、null 与带 offset/小数精度的 LastLaunchTime）、WAL 在线备份、备份无历史表、多次重启只备份一次、索引/类型/CHECK/NULL 不兼容、并发初始化互斥、备份目录失败、初始化失败不重复重试、日志与友好错误、已有空历史表导致真正 Migrate SQL 失败且原行保留。验证临时文件结束后自动清理。
+
+持久化回归 **25 项断言通过**，包括新库启动、EXE/LNK 导入、去重、真实测试进程启动与统计保存、三次独立 WPF 进程关闭/重启、图标缓存、损坏数据及写入失败。使用隔离数据库和测试探针，没有启动 QQ 或微信，也没有改变真实用户启动统计。没有修改 UI 布局，因此没有重新运行鼠标/键盘/OLE 全套视觉回归。
+
+真实库升级已实际执行：`--inspect-db` 只读记录升级前结构与 DisplayName/LaunchCount/LastLaunchTime；`--real-migration` 启动三个独立的生产 App WPF 实例（默认用户数据路径），比较所有数据库列及窗口 ViewModel 卡片信息。**三个实例均通过，原有两行所有字段完全一致，仅产生一次备份，历史表只有一条基线记录。** 第一次完成 Legacy Bootstrap，第二、三次不再备份或重复登记。
+
+| DisplayName | 升级前后 LaunchCount | 升级前后 LastLaunchTime |
+| --- | --- | --- |
+| QQ | 2 | 2026-10-15 06:55:12.358584-08:00 |
+| 微信 | 0 | NULL |
+
+备份位于 `%LOCALAPPDATA%\NovaLauncher\Data\Backups\nova-before-migrations-20261016T0412249790147Z-84ce5e372ba147ebbac520cff2bf3ed0.db`（文件名使用 UTC；本记录日期为用户时区）。原库和备份都不进入 Git。
+
+`--real-migration` 是对真实旧库的一次性验收入口，确实会更新真实数据库，只在明确授权验证时使用；现在真实库已升级，不要为重跑该场景删除历史表或恢复覆盖原库。常规测试使用 `--migrations` 即可。只读检查可执行 `dotnet run --project NovaLauncher.Verification -c Release --no-build -- --inspect-db`。
+
+后续新增迁移：安装固定 `dotnet-ef 9.0.16` 工具（例如 `dotnet tool install --global dotnet-ef --version 9.0.16`），然后执行：
+
+```powershell
+dotnet ef migrations add <Name> --project NovaLauncher.App --output-dir Persistence/Migrations
+dotnet ef migrations has-pending-model-changes --project NovaLauncher.App
+```
+
+审查生成的 Up/Down、Designer 和 Snapshot，执行新库及旧版库升级测试。不得修改固定基线或把 Bootstrap 的参考切换成最新模型；不得直接对尚未 Bootstrap 的真实旧库运行 `dotnet ef database update`。运行时由初始化服务控制升级。初始 Migration 的 Down 是 EF 生成的删表回滚，生产启动不会调用它，不用于保留用户数据的回退。
+
+失败诊断：查看 `Data/migration-errors.log`；保留原库及备份，修复权限/结构问题后重新启动。备份失败不登记历史，事务失败回滚登记；已有历史表则不触发 Legacy 备份。被强杀时若 EF 遗留锁，先确认无升级进程再人工诊断，应用不自动清空锁表。未实测断电、强杀或真实 NTFS 拒绝 ACL；已覆盖隔离目录不可写入情形、SQL 失败、WAL 与并发初始化。
+
 ## 开发流程
 
 1. 阅读 Agent.md、Product.md、Design.md 和 Architecture.md，检查 Git 状态，确认任务范围与已有用户改动。

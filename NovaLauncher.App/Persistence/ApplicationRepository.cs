@@ -17,14 +17,10 @@ public sealed class ApplicationRepository(IDbContextFactory<LauncherDbContext> f
     : IApplicationRepository
 {
     public static string PathKey(string path) => Path.GetFullPath(path).ToUpperInvariant();
+    private readonly DatabaseInitializationService _initialization = new(factory, paths);
 
     // SQLite's async APIs still perform synchronous I/O. Keep the whole operation off the UI thread.
-    public Task InitializeAsync(CancellationToken token) => Task.Run(async () =>
-    {
-        Directory.CreateDirectory(Path.GetDirectoryName(paths.DatabasePath)!);
-        using var db = factory.CreateDbContext();
-        await db.Database.EnsureCreatedAsync(token);
-    }, token);
+    public Task InitializeAsync(CancellationToken token) => _initialization.InitializeAsync(token);
 
     public Task<IReadOnlyList<ApplicationEntity>> GetAllAsync(CancellationToken token) => Task.Run<IReadOnlyList<ApplicationEntity>>(async () =>
     {

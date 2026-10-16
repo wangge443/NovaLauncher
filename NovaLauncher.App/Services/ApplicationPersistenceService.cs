@@ -54,6 +54,10 @@ public sealed class ApplicationPersistenceService(
             return new(applications, applications.Count != records.Count ? "部分应用记录无法读取" : null);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+        catch (DatabaseInitializationException ex)
+        {
+            return new(applications, ex.Message);
+        }
         catch (Exception ex)
         {
             Trace.TraceError("Application database load failed: {0}", ex.GetType().Name);
@@ -83,6 +87,7 @@ public sealed class ApplicationPersistenceService(
         {
             return "该应用已添加";
         }
+        catch (DatabaseInitializationException ex) { return ex.Message; }
         catch (Exception ex)
         {
             Trace.TraceError("Application save failed: {0}", ex.GetType().Name);
