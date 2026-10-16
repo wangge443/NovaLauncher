@@ -105,7 +105,7 @@ internal static partial class Program
         var vm = ((MainWindowViewModel)window.DataContext).Content;
         await vm.ImportAsync([exe, shortcut]);
         await Task.Delay(300);
-        var cards = Descendants<ApplicationCardView>(content).ToArray();
+        var cards = AllCardViews(content);
         Check(cards.Length == 2, "Two launch cards rendered");
         var firstCard = vm.Applications[0];
         var secondCard = vm.Applications[1];
@@ -184,7 +184,7 @@ internal static partial class Program
         window.Height = 560;
         window.UpdateLayout();
         await Task.Delay(200);
-        cards = Descendants<ApplicationCardView>(content).ToArray();
+        cards = AllCardViews(content);
         int rows = cards.Select(card => Math.Round(card.TranslatePoint(new Point(), content).Y)).Distinct().Count();
         point = cards[1].PointToScreen(new Point(60, 60));
         Native.SetCursorPos((int)point.X, (int)point.Y);

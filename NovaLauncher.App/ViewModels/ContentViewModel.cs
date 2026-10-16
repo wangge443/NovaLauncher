@@ -1,5 +1,5 @@
 using System.Collections.ObjectModel;
-using System.Collections;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.IO;
 using System.ComponentModel;
@@ -34,8 +34,10 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         Toast = toast;
         _token = _lifetime.Token;
         CategoryManager = new(categories, toast);
+        Home = new(Applications);
         FilteredApplications = new ListCollectionView(Applications);
         FilteredApplications.Filter = MatchesMode;
+        FilteredApplications.CollectionChanged += FilteredCollectionChanged;
     }
 
     private bool MatchesMode(object item) => Mode switch
@@ -49,6 +51,9 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     public ObservableCollection<ApplicationCardViewModel> Applications { get; } = [];
     public ICollectionView FilteredApplications { get; }
     public CategoryManagerViewModel CategoryManager { get; }
+    public HomeViewModel Home { get; }
+    private bool _isHomeDashboard = true;
+    public bool IsHomeDashboard { get => _isHomeDashboard; private set => SetProperty(ref _isHomeDashboard, value); }
     private CategoryViewModel? _selectedCategory;
     public CategoryViewModel? SelectedCategory
     {
@@ -57,14 +62,15 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     }
     private WorkspaceMode _mode;
     public WorkspaceMode Mode { get => _mode; private set => SetProperty(ref _mode, value); }
-    public void SelectWorkspace(WorkspaceMode mode, CategoryViewModel? category = null)
+    public void SelectWorkspace(WorkspaceMode mode, CategoryViewModel? category = null, bool showHome = true)
     {
         if (mode == WorkspaceMode.Category && category is null) throw new ArgumentNullException(nameof(category));
         SelectedCategory = mode == WorkspaceMode.Category ? category : null;
         Mode = mode;
+        IsHomeDashboard = mode == WorkspaceMode.Home && showHome;
         using (FilteredApplications.DeferRefresh())
         {
-            ((ListCollectionView)FilteredApplications).CustomSort = mode == WorkspaceMode.Recent ? RecentOrder.Instance : null;
+            ((ListCollectionView)FilteredApplications).CustomSort = mode == WorkspaceMode.Recent ? RecentApplicationComparer.Instance : null;
             FilteredApplications.Filter = MatchesMode;
         }
         NotifyEmptyState();
@@ -94,6 +100,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(EmptyTitle));
         OnPropertyChanged(nameof(EmptyHint));
     }
+    private void FilteredCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => OnPropertyChanged(nameof(IsEmpty));
     private void RefreshFavorites()
     {
         // Home/category membership is unchanged; keep their controls and keyboard focus intact.
@@ -105,19 +112,6 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
             RefreshFilter();
     }
 
-    private sealed class RecentOrder : IComparer
-    {
-        public static readonly RecentOrder Instance = new();
-        public int Compare(object? x, object? y)
-        {
-            var left = (ApplicationCardViewModel)x!;
-            var right = (ApplicationCardViewModel)y!;
-            int time = Nullable.Compare(right.LastLaunchTime, left.LastLaunchTime);
-            if (time != 0) return time;
-            int name = StringComparer.OrdinalIgnoreCase.Compare(left.DisplayName, right.DisplayName);
-            return name != 0 ? name : left.Application.Id.CompareTo(right.Application.Id);
-        }
-    }
     public IToastService Toast { get; }
     public bool IsEmpty => FilteredApplications.IsEmpty;
     public bool IsDragOver { get => _isDragOver; private set => SetProperty(ref _isDragOver, value); }
@@ -257,6 +251,8 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     {
         if (_token.IsCancellationRequested) return;
         _lifetime.Cancel();
+        Home.Dispose();
+        FilteredApplications.CollectionChanged -= FilteredCollectionChanged;
         Toast.Dispose();
         _lifetime.Dispose();
         foreach (var card in Applications)

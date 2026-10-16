@@ -24,6 +24,10 @@ internal static partial class Program
     private static int Main(string[] args)
     {
         if (args.Contains("--inspect-db")) return InspectDatabase();
+        if (args.Contains("--real-home")) return VerifyRealHomeAsync().GetAwaiter().GetResult();
+        if (args.Contains("--home-preview")) return RunHomeWindow("", false);
+        if (args.Length == 2 && args[0] == "--home-real-run") return RunHomeWindow(args[1], true);
+        if (args.Length == 2 && args[0] == "--home-real-check") return RunHomeWindow(args[1], false);
         if (args.Contains("--real-recent")) return VerifyRealRecentAsync().GetAwaiter().GetResult();
         if (args.Length == 2 && args[0] == "--recent-restart") return RunRecentWindow(args[1], false, false);
         if (args.Length == 2 && args[0] == "--recent-real-run") return RunRecentWindow(args[1], true, true);
@@ -45,6 +49,7 @@ internal static partial class Program
         bool categoryTests = args.Contains("--categories");
         bool favoriteTests = args.Contains("--favorites");
         bool recentTests = args.Contains("--recent");
+        bool homeTests = args.Contains("--home");
         _screenshots = Path.GetFullPath(args.FirstOrDefault(arg => !arg.StartsWith("--")) ??
             (persistenceTests ? "docs/screenshots/4.3" : launchTests ? "docs/screenshots/4.2" : "docs/screenshots/4.1"));
         _fixtures = Path.Combine(Path.GetTempPath(), "NovaLauncher-Verification-" + Guid.NewGuid().ToString("N"));
@@ -57,7 +62,8 @@ internal static partial class Program
         {
             try
             {
-                if (recentTests) await RunRecentAsync((MainWindow)app.MainWindow);
+                if (homeTests) await RunHomeAsync((MainWindow)app.MainWindow);
+                else if (recentTests) await RunRecentAsync((MainWindow)app.MainWindow);
                 else if (favoriteTests) await RunFavoritesAsync((MainWindow)app.MainWindow);
                 else if (categoryTests) await RunCategoriesAsync((MainWindow)app.MainWindow);
                 else if (toastTests) await RunToastAsync((MainWindow)app.MainWindow);

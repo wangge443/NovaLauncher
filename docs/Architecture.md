@@ -1,5 +1,24 @@
 # Nova Launcher — 架构设计
 
+## 5.4 Home Projections
+
+本节更新当前边界：Home 使用独立 HomeView/HomeViewModel，ContentView 保留拖放、Toast 和空状态外壳，通过模板切换首页与原筛选列表；同一时刻仅实例化当前页面。设置保留原全部列表占位。
+
+~~~text
+Application Collection
+        ↓ Home Projections（共享 ApplicationCardViewModel 引用）
+Home
+├── Recent Applications (Top 6)
+├── Favorite Applications (Top 6)
+└── All Applications（源集合只读包装）
+~~~
+
+HomeViewModel 监听源集合增删、Move、Reset，以及 LastLaunchTime、DisplayName、IsFavorite 属性；Recent 与独立 Recent 页共用 RecentApplicationComparer，按时间倒序、OrdinalIgnoreCase 名称、Guid 排序。Favorite 取源顺序前六个收藏。投影以 Insert/Remove/Move 更新，不复制模型、卡片或查询 SQLite；未变控件保持。当前无可变 SortOrder 卡片属性，顺序由源集合决定，Move 会触发补位。Dispose 解除集合和属性订阅。
+
+ShowRecentCommand/ShowFavoritesCommand 发出导航事件，由 MainWindowViewModel 选择既有 Sidebar 项，沿原导航切换 Workspace。FilteredApplications 集合变化通知空状态，支持源 Reset。
+
+同一 ViewModel 可出现于多个 Section，因此分类 Popup 的打开状态改为每个 ApplicationCardView 本地 ToggleButton 状态，避免同时弹出多个浮层；打开时同步选择、保存后关闭、Esc 及卸载关闭均属视图适配，仍调用原分类命令。分类/收藏/启动持久化服务、Schema、Migration 和依赖均未修改。下文 5.3 及更早章节保留历史架构。
+
 ## 当前边界
 
 NovaLauncher.sln 包含 NovaLauncher.App、NovaLauncher.Verification 和仅用于测试的 NovaLauncher.LaunchProbe，目标框架为 net9.0-windows。5.3 增加 Recent 内存视图与独立排序，保留 5.1 分类、5.2 收藏及现有数据库生命周期，不改变 Schema。

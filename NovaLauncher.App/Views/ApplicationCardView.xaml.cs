@@ -25,7 +25,7 @@ public partial class ApplicationCardView : UserControl
     private void Card_Unloaded(object sender, RoutedEventArgs e)
     {
         _timeRefresh.Stop();
-        if (DataContext is ApplicationCardViewModel card) card.IsCategoryPickerOpen = false;
+        CategoryButton.IsChecked = false;
     }
 
     private void RefreshTime()
@@ -66,24 +66,28 @@ public partial class ApplicationCardView : UserControl
 
     private void CategoryPopup_Opened(object? sender, EventArgs e)
     {
+        CategoryChoices.GetBindingExpression(ListBox.SelectedItemProperty)?.UpdateTarget();
         UpdateInteraction();
         Dispatcher.BeginInvoke(new Action(() => CategoryChoices.Focus()));
     }
     private void CategoryPopup_Closed(object? sender, EventArgs e) => UpdateInteraction();
     private void CategoryPopup_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Escape && DataContext is ApplicationCardViewModel card)
+        if (e.Key == Key.Escape)
         {
-            card.IsCategoryPickerOpen = false;
+            CategoryButton.IsChecked = false;
             CategoryButton.Focus();
             e.Handled = true;
         }
     }
-    private void CategoryChoices_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private async void CategoryChoices_SelectionChanged(object sender, SelectionChangedEventArgs e)
     {
         if (CategoryPopup.IsOpen && CategoryChoices.IsKeyboardFocusWithin &&
             DataContext is ApplicationCardViewModel card && CategoryChoices.SelectedItem is CategoryChoice choice &&
             choice.Id != card.CategoryId && card.ChangeCategoryCommand.CanExecute(choice))
-            card.ChangeCategoryCommand.Execute(choice);
+        {
+            await card.ChangeCategoryCommand.ExecuteAsync(choice);
+            if (card.CategoryId == choice.Id) CategoryButton.IsChecked = false;
+        }
     }
 }

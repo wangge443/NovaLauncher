@@ -39,7 +39,7 @@ public sealed class SidebarViewModel : ViewModelBase
             {
                 if (SetProperty(ref _selectedItem, value))
                 {
-                    _content.SelectWorkspace(value is CategoryViewModel ? WorkspaceMode.Category : value.Mode, value as CategoryViewModel);
+                    _content.SelectWorkspace(value is CategoryViewModel ? WorkspaceMode.Category : value.Mode, value as CategoryViewModel, !value.IsSettings);
                     OnPropertyChanged(nameof(TopSelectedItem));
                     OnPropertyChanged(nameof(FooterSelectedItem));
                 }

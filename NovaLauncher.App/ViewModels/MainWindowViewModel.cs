@@ -6,6 +6,7 @@ public sealed class MainWindowViewModel : ViewModelBase
     {
         Content = content;
         Sidebar = new(content);
+        content.Home.NavigationRequested += mode => Sidebar.SelectedItem = Sidebar.FooterItems.Single(item => item.Mode == mode);
     }
     public ContentViewModel Content { get; }
     public string Title => "Nova Launcher";

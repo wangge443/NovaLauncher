@@ -1,5 +1,31 @@
 # Nova Launcher — 开发流程
 
+## 5.4 最终收尾（2026-10-16）
+
+用户已验收首页聚合，按授权以 `feat: add aggregated home dashboard` 提交。最终 Release Build 再次确认 **0 warnings / 0 errors**，首页专项 **29 项断言**再次全部通过，涵盖独立 HomeView/HomeViewModel、Recent/Favorite Top 6、All 原顺序、三段共享实例、查看全部与 Sidebar 同步、导入投影及空状态。本次 300 张卡片首次布局为 2016 ms。
+
+此前六套回归共 **180 项主进程断言**及真实数据库运行/重启验证已通过，包含首页 OLE 拖入和 SQLite 聚合恢复，详情见下文。本次收尾没有再次启动真实用户应用或更改真实收藏/统计。修改范围仅为 5.4 实现、验证、截图及文档；无数据库 Schema/Migration、依赖或无关修改。临时测试截图已清理，不开始下一阶段。
+
+## 5.4 首页聚合验证（2026-10-16）
+
+稳定基线 b8208d7e62c976f699e6e2fe0a6173bc9ec41475。最终 Release Build **0 warnings / 0 errors**。首页 **29**、分类 **33**、收藏 **27**、最近使用 **22**、启动 **32**、导入/OLE **37**，共 **180 项主进程断言通过**，另含独立重启子进程验证。没有新增依赖或修改 Schema/Migration。5.4 已通过用户验收，最终收尾提交已获授权。
+
+~~~powershell
+dotnet build NovaLauncher.sln -c Release --no-restore
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --home docs/screenshots/5.4
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --categories TestResults/5.4/categories
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --favorites TestResults/5.4/favorites
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --recent TestResults/5.4/recent
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --launch TestResults/5.4/launch
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- TestResults/5.4/import
+~~~
+
+首页验证覆盖四种空/非空组合、Recent/Favorite Top 6 与实时补位、同一 VM 引用、All 原顺序和控件保留、启动重排、分类同步及单一 Popup、两个查看全部实际按钮与 Sidebar 同步、设置占位、导入只进 All、集合删除/Move/Reset 与空状态、一个主 ScrollViewer、窄窗换行、Sidebar 宽度变化和 300 张实际 WPF 卡片布局/滚动。300 张卡片首次布局约 **1.8 秒**，未采用虚拟化，不能视为任意规模性能保证。未实测混合 DPI 或系统高对比度切换。
+
+真实验证 --real-home 先在线备份 SQLite，再由生产 App 启动已有记事本一次，确认首页 Recent 第一；切换记事本收藏后恢复原值，确认 QQ/微信/记事本的分类和收藏保留。关闭后启动独立生产 App，从 SQLite 恢复相同聚合顺序与统计。首次子进程 **5 项**、重启子进程 **3 项**、父进程 **2 项**退出码检查通过。启动按原语义增加实际统计，未伪造时间。备份为 %LOCALAPPDATA%\NovaLauncher\Data\Backups\nova-before-home-20261016T153952Z-f4cb6c845f7844c49a69ec703d04237a.db，不纳入 Git。此入口会真实启动应用和切换收藏，仅限明确授权的验收。
+
+--home-preview 仅加载真实数据并截图，不启动用户应用、不切换收藏；最终样式截图已检查。交付图片见 [真实首页](screenshots/5.4/real-home-preview.png)、[真实重启](screenshots/5.4/real-home-restarted.png)、[空状态](screenshots/5.4/home-empty.png)、[窄窗口](screenshots/5.4/home-small.png)。临时回归图片清理，保留交付截图与用户数据库备份。
+
 ## 5.3 最终收尾（2026-10-16）
 
 用户已验收最近使用系统，按授权以 `feat: add recent applications view` 提交。最终 Release Build 再次确认 **0 warnings / 0 errors**；重新执行 Recent **22 项**主进程断言及独立 SQLite 重启 **3 项**断言，全部通过。确认非空时间过滤、时间倒序及名称/Id 稳定次级排序、启动后实时重排、离开 Recent 清除旧排序、重启恢复、分类/收藏独立及专属空状态。500 条记录 60 次 ViewModel 模式切换本次约 33 ms，不代表完整 UI 渲染性能。

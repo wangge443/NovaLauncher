@@ -1,5 +1,13 @@
 # Nova Launcher — UI 设计
 
+## 5.4 首页信息层级
+
+首页用一个主纵向 ScrollViewer 连续呈现 Recent、Favorite、All，三个区域均复用 ApplicationCardView 与 WrapPanel，自然换行且禁用横向滚动。前两段为空整段折叠；全空沿用现有拖入空状态。Sidebar 设计、宽度与背景系统不变。
+
+标题使用 16 DIP SemiBold、TextBrush；段间距 28 DIP，标题下间距 10 DIP。“查看全部 ›”使用 12 DIP 和 MutedTextBrush，Hover/键盘焦点增强为 TextBrush，沿用 QuietButton 的反馈与焦点样式。颜色、间距和样式集中于 ShellTheme。未添加 Banner、分割线或独立背景面板。
+
+已使用 ui-ux-pro-max 内置一致性、层级、键盘可达和响应布局规则检查。本机 Python 不可用，未声称完成技能数据库检索。实际 WPF 截图：[真实首页](screenshots/5.4/real-home-preview.png)、[空状态](screenshots/5.4/home-empty.png)、[仅全部应用](screenshots/5.4/home-all-only.png)、[多区域](screenshots/5.4/home-sections.png)、[窄窗口滚动](screenshots/5.4/home-small.png)。截图不用于证明 Experimental DWM 合成效果。
+
 ## 5.3 最近使用交互
 
 Recent 复用原 ApplicationCardView，大图标、名称、收藏星标、分类弱入口、Hover 统计与 LaunchTimeFormatter 均不改；Sidebar 继续原 E81C 图标、Active 背景与 Accent 条。仅新增专属空状态：32 DIP 同款时钟图标，20 DIP 主文案“最近还没有启动过应用”，12 DIP 辅助文字“启动应用后，它会出现在这里”，沿用 EmptyIconBrush/EmptyTextBrush/MutedTextBrush 和现有居中留白。
