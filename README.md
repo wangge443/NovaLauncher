@@ -4,7 +4,7 @@ Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windo
 
 ## 当前状态
 
-第五阶段前置任务 5.0：数据库已切换到 EF Core Migrations，新库自动建表，旧 EnsureCreated 库先检查结构、备份并登记基线后无损升级。保留应用、启动统计和 PNG 缓存行为，数据位于 %LOCALAPPDATA%\NovaLauncher；未增加新业务功能。Desktop Backdrop 仍为 Experimental。5.0 已通过用户验收，按授权完成收尾提交；验收记录见 docs/Development.md。
+第五阶段 5.1：支持创建自定义分类、卡片选择分类、动态侧栏筛选及重启恢复，通过独立 EF Core Migration 无损扩展数据库。保留导入、启动统计和 PNG 缓存，数据位于 %LOCALAPPDATA%\NovaLauncher。Desktop Backdrop 仍为 Experimental。本轮不自动提交，验收记录见 docs/Development.md。
 
 ## 构建与运行
 

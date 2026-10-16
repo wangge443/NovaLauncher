@@ -2,7 +2,39 @@
 
 ## 当前边界
 
-NovaLauncher.sln 包含 NovaLauncher.App、NovaLauncher.Verification 和仅用于测试的 NovaLauncher.LaunchProbe，目标框架为 net9.0-windows。5.0 仅将数据库生命周期升级到 EF Core Migrations，保留 4.3 应用、统计及图标缓存行为，不增加业务表或字段。数据库初始化以以下 5.0 章节为准。
+NovaLauncher.sln 包含 NovaLauncher.App、NovaLauncher.Verification 和仅用于测试的 NovaLauncher.LaunchProbe，目标框架为 net9.0-windows。5.1 在既有 Migrations 生命周期上增加应用分类，保留应用、启动统计及图标缓存。当前分类结构以下文 5.1 为准，数据库初始化沿用 5.0。
+
+## 5.1 Category Pipeline
+
+```text
+Category 1 ── * Application
+               CategoryId: Guid? → null means uncategorized
+
+Navigation → SelectedCategory → Filtered Application View
+
+Sidebar editor → CategoryManagerViewModel → CategoryService
+    → CategoryRepository → EF Core → SQLite commit → Category Collection → Sidebar
+
+Card category picker → ChangeCategoryCommand → ApplicationPersistenceService
+    → ApplicationRepository.UpdateCategoryAsync → SQLite commit
+    → latest application model with CategoryId → refresh filtered view
+```
+
+新 Migration：`20261016043853_AddApplicationCategories`。保留已提交 InitialApplications / Designer 不变，仅更新当前 ModelSnapshot。新增 `Categories`：Id TEXT Guid 主键、Name TEXT NOT NULL 唯一索引、CreatedAt TEXT NOT NULL DateTimeOffset、SortOrder INTEGER NOT NULL。Name 有长度 1–24 和 ASCII Trim CHECK，服务先做 .NET Trim 和 UTF-16 长度校验；完全相同名称由 SQLite BINARY 唯一索引拒绝，大小写不同允许。Category 不依赖 WPF。
+
+Applications 新增可空 TEXT CategoryId 与索引，外键引用 Categories.Id，`ON DELETE SET NULL`；本阶段没有分类删除入口，测试在隔离库验证未来删除不会删除应用。EF SQLite 为添加外键执行其标准表重建流程，迁移复制全部旧字段并恢复原有索引/CHECK，不删除数据库文件或重新初始化数据库。旧记录 CategoryId 为 NULL。
+
+同一 Migration 通过 InsertData 创建“游戏”“应用”，采用固定 Guid、固定 CreatedAt 和 SortOrder=0/1，避免设计时值漂移。只在 Migration 首次应用时插入，不使用每次启动 Seed、名称修复或 HasData 更新记录；未来管理这些普通分类时不会被启动逻辑重新创建。自定义分类 Guid.NewGuid，CreatedAt=UtcNow，SortOrder=当前最大值+1，仅用于稳定显示，没有排序交互。
+
+CategoryRepository 提供 GetAllAsync / AddAsync / ExistsByNameAsync，每次操作独立 Context，后台 Task.Run 执行 SQLite I/O；分类服务由 App 注入，不在 View/VM 操作数据库。应用先完成既有数据库初始化与恢复，再加载分类。ApplicationRepository.UpdateCategoryAsync 校验分类存在、检查应用更新行数，数据库外键兜底；只更新 CategoryId。统计更新仍只写次数/时间，因此互不覆盖。
+
+CategoryManagerViewModel 持有 ObservableCollection<CategoryViewModel> 和供卡片共享的 Choices；保存成功才追加，失败不产生幽灵导航。SidebarViewModel 将首页、数据库分类与占位导航分组显示，共享唯一 SelectedItem；两组选择属性把非所属组映射成 null，确保视觉上只选中一项。默认名称沿用游戏/应用图标，其余统一文件夹图标。新建区位于分类和占位导航之间，侧栏整体滚动，保持小窗口可访问。
+
+ContentViewModel 保留完整 Applications 集合，单独建立 ListCollectionView 作为 FilteredApplications。SelectedCategory 与卡片 CategoryChanged 仅刷新本地视图；不重新查询全部应用，不创建新 Card VM，不移除源集合。首页/占位导航清空筛选；分类空状态提示用户从首页分配，拖入任何位置都创建未分类记录。
+
+分类选择按数据库提交成功后再更新内存；等待期间禁用选择列表，失败 Toast“分类修改失败”，重新通知 CurrentCategoryChoice 恢复已提交选择。成功使用最新 Application record with 修改 CategoryId，保留并发启动已更新的统计。新分类保存的重复名称/异常显示“该分类已存在”或“分类保存失败”，错误边界捕获并记录 Trace。窗口正常关闭通过 FlushAsync 等待初始加载、分类创建、分类分配、导入及启动统计写入。
+
+View code-behind 仅适配 Enter/Esc、焦点、Popup 和选择事件到命令；分类入口是 LaunchButton 的兄弟控件，不会透传成启动。无新增 NuGet，无 MessageBox，无直接 ALTER TABLE 或 EnsureCreated 调用。
 
 ## 5.0 数据库生命周期
 
@@ -15,7 +47,7 @@ Legacy EnsureCreated DB → Schema Detection → Backup
 已有 __EFMigrationsHistory → EF Core Migrations → SQLite
 ```
 
-`EnsureCreated` 正式废弃，生产代码不得再调用它创建或修改 Schema。后续所有分类、收藏、设置或其他结构变化必须新增 Migration，不能编辑已经应用的基线或删库升级。仅隔离验证工程使用 EnsureCreated 重现旧版数据库。
+`EnsureCreated` 正式废弃，不得再调用它创建或修改 Schema。所有后续结构变化必须新增 Migration，不能编辑已经应用的基线或删库升级。5.1 将验证夹具也冻结为初始 Migration SQL，不再通过演进中的 DbContext 模型创建所谓旧版数据库。
 
 `Persistence/DatabaseInitializationService` 负责整个生命周期；原 Repository.InitializeAsync 委托该服务，App 经既有 Persistence Service 加载入口触发，不把迁移逻辑放入 App、ViewModel 或窗口。初始化在后台执行；每个 Repository 缓存初始化 Task（包括失败），避免导入反复重试。数据库旁的 `nova.db.initialization.lock` 以 FileShare.None 串行化不同进程的完整升级；文件可保留，句柄释放即解锁。占用时立即失败，下一次启动可重试。
 

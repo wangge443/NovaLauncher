@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
+using System.ComponentModel;
+using System.Windows.Data;
 using NovaLauncher.App.Services;
 
 namespace NovaLauncher.App.ViewModels;
@@ -21,18 +23,39 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     private int _messageVersion;
 
     public ContentViewModel(IApplicationImportService importer, IApplicationLaunchService launcher,
-        IApplicationPersistenceService persistence, IToastService toast)
+        IApplicationPersistenceService persistence, IToastService toast, ICategoryService? categories = null)
     {
         _importer = importer;
         _launcher = launcher;
         _persistence = persistence;
         Toast = toast;
         _token = _lifetime.Token;
+        CategoryManager = new(categories, toast);
+        FilteredApplications = new ListCollectionView(Applications);
+        FilteredApplications.Filter = item => SelectedCategory is null ||
+            ((ApplicationCardViewModel)item).CategoryId == SelectedCategory.Id;
     }
 
     public ObservableCollection<ApplicationCardViewModel> Applications { get; } = [];
+    public ICollectionView FilteredApplications { get; }
+    public CategoryManagerViewModel CategoryManager { get; }
+    private CategoryViewModel? _selectedCategory;
+    public CategoryViewModel? SelectedCategory
+    {
+        get => _selectedCategory;
+        set { if (SetProperty(ref _selectedCategory, value)) RefreshFilter(); }
+    }
+    public string EmptyTitle => SelectedCategory is null ? "请将文件拖拽至此" : "此分类暂无应用";
+    public string EmptyHint => SelectedCategory is null ? "支持 .exe 和 .lnk" : "在首页通过卡片上的“分类”添加应用";
+    private void RefreshFilter()
+    {
+        FilteredApplications.Refresh();
+        OnPropertyChanged(nameof(IsEmpty));
+        OnPropertyChanged(nameof(EmptyTitle));
+        OnPropertyChanged(nameof(EmptyHint));
+    }
     public IToastService Toast { get; }
-    public bool IsEmpty => Applications.Count == 0;
+    public bool IsEmpty => FilteredApplications.IsEmpty;
     public bool IsDragOver { get => _isDragOver; private set => SetProperty(ref _isDragOver, value); }
     public bool IsImporting { get => _isImporting; private set => SetProperty(ref _isImporting, value); }
     public string? StatusMessage { get => _statusMessage; private set => SetProperty(ref _statusMessage, value); }
@@ -47,6 +70,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
             var result = await _persistence.LoadAsync(_token);
             _token.ThrowIfCancellationRequested();
             foreach (var application in result.Applications) AddCard(application);
+            await CategoryManager.InitializeAsync(_token);
             if (result.Error is { } error) ShowMessage(error);
             else StatusMessage = null;
         }
@@ -61,7 +85,8 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     private void AddCard(Models.LauncherApplication application)
     {
         if (_targets.Contains(application.ExecutablePath)) return;
-        var card = new ApplicationCardViewModel(application, _launcher, _persistence);
+        var card = new ApplicationCardViewModel(application, _launcher, _persistence, CategoryManager, Toast);
+        card.CategoryChanged += RefreshFilter;
         card.LaunchFailed += ShowMessage;
         _targets.Add(application.ExecutablePath);
         Applications.Add(card);
@@ -70,7 +95,10 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
 
     public async Task FlushAsync()
     {
+        if (_initialization is not null) await _initialization;
         await _importTask;
+        await (CategoryManager.CreateCommand.ExecutionTask ?? Task.CompletedTask);
+        await Task.WhenAll(Applications.Select(card => card.ChangeCategoryCommand.ExecutionTask ?? Task.CompletedTask));
         await Task.WhenAll(Applications.Select(card => card.LaunchCommand.ExecutionTask ?? Task.CompletedTask));
         await _persistence.FlushAsync();
     }
@@ -167,6 +195,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         foreach (var card in Applications)
         {
             card.LaunchFailed -= ShowMessage;
+            card.CategoryChanged -= RefreshFilter;
             card.Dispose();
         }
     }

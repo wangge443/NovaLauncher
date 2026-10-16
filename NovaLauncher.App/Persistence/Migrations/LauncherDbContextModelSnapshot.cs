@@ -17,10 +17,41 @@ namespace NovaLauncher.App.Persistence.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.16");
 
+            modelBuilder.Entity("NovaLauncher.App.Models.Category", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("SortOrder")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Categories", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Category_Name", "length(Name) BETWEEN 1 AND 24 AND Name = trim(Name)");
+                        });
+                });
+
             modelBuilder.Entity("NovaLauncher.App.Persistence.ApplicationEntity", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CategoryId")
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("DateAdded")
@@ -59,6 +90,8 @@ namespace NovaLauncher.App.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CategoryId");
+
                     b.HasIndex("TargetPathKey")
                         .IsUnique();
 
@@ -68,6 +101,14 @@ namespace NovaLauncher.App.Persistence.Migrations
 
                             t.HasCheckConstraint("CK_Application_Values", "LaunchCount >= 0 AND SourceType IN (0, 1)");
                         });
+                });
+
+            modelBuilder.Entity("NovaLauncher.App.Persistence.ApplicationEntity", b =>
+                {
+                    b.HasOne("NovaLauncher.App.Models.Category", null)
+                        .WithMany()
+                        .HasForeignKey("CategoryId")
+                        .OnDelete(DeleteBehavior.SetNull);
                 });
 #pragma warning restore 612, 618
         }

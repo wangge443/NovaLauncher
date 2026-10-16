@@ -2,7 +2,7 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第五阶段前置任务 5.0：从 EnsureCreated 安全升级至 EF Core Migrations，稳定基线为 5168131f15bbeebe755dc302bf3fbd1dc0924264。保护真实用户数据库，保留 4.1 导入、4.2 启动和 4.3 持久化链路。不得修改 MainWindow、Sidebar、ShellBackground 或 DesktopBackdrop，后者仍为 Experimental。不实现收藏、分类、设置、用户表、删除、编辑或最近使用页面。5.0 已通过用户验收，按授权完成最终 Release 构建、范围检查并提交 chore: migrate database lifecycle to EF Core migrations；不开发分类功能。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第五阶段 5.1：应用分类系统，稳定基线为 1a0ecdc1ee3ccfcf4048b60549e661f31ba50624。实现普通分类创建、动态导航、单应用单分类和持久化筛选；通过新 EF Core Migration 扩展 Schema，禁止 EnsureCreated，禁止修改已提交的 InitialApplications。保护真实用户数据，保留 EXE/LNK 导入、启动统计和图标缓存。允许对 Sidebar 和卡片增加轻量分类交互，不改 MainWindow、ShellBackground 或 DesktopBackdrop，后者仍为 Experimental。不开发收藏、最近使用页面、排序、分类图标自定义、分类重命名/删除或复杂右键菜单。5.1 功能与 UI 已通过用户验收，已授权最终收尾提交；不开始下一阶段。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
@@ -55,4 +55,4 @@
 3. UI 工作先检查 ui-ux-pro-max 的安装与指令，形成设计参数和状态方案，再映射为 WPF 资源与控件。
 4. 按小范围改动实施，不覆盖用户工作；只有明确独立且有收益的工作流才考虑委派。
 5. 执行必要验证，记录未验证项与实际限制，清理本次无用临时文件，并同步相关文档。
-6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前阶段只收尾 5.0，并按用户授权提交；不开发下一阶段业务。
+6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前只完成 5.1 分类系统，提供迁移验证、Build 结果和实际 UI 截图，按用户授权完成最终提交，不开发下一阶段业务。

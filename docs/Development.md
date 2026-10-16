@@ -1,5 +1,52 @@
 # Nova Launcher — 开发流程
 
+## 5.1 最终收尾（2026-10-16）
+
+用户已验收分类功能及 Sidebar UI。最终重新执行 Release Build：**0 warnings / 0 errors**；Migration **30 项**、分类 **33 项**主进程断言全部通过，另有独立重启子进程 **3 项**通过。确认动态分类、统一的新建分类入口、分类筛选、应用分类更新与重启持久化正常。测试使用隔离临时数据库，未再次操作真实用户数据库。
+
+提交范围仅包含 5.1 分类实现、新 Migration、Sidebar 微调、配套验证、截图与文档，无无关修改；按授权使用 `feat: add application categories` 提交，不开始下一阶段。
+
+## 5.1 Sidebar 微调验证（2026-10-16）
+
+本次生产代码仅调整 SidebarView.xaml 与 ShellTheme.xaml 的操作行布局及样式；其余应用源码与微调前的 SHA256 清单一致。验证程序仅增加默认与 Hover 截图采集，并同步设计说明。未修改数据库、Migration、分类业务、筛选、卡片分类浮层、Sidebar 宽度或背景系统。
+
+Release build 为 **0 warnings / 0 errors**；现有分类验证 **33 项断言通过**，退出码 0，使用隔离临时数据库。已检查真实 WPF 窗口截图：[默认状态](screenshots/5.1/sidebar-refinement/sidebar-action-default.png)、[Hover 状态](screenshots/5.1/sidebar-refinement/sidebar-action-hover.png)。UI 与分类功能已通过用户验收，最终提交已获授权。
+
+## 5.1 应用分类系统（2026-10-16）
+
+基线 `1a0ecdc1ee3ccfcf4048b60549e661f31ba50624`。本轮实现分类创建、动态侧栏、应用分类分配及本地筛选，未开发收藏、最近使用页面、排序、重命名/删除或复杂菜单。**已通过用户验收，按授权完成最终收尾提交。** 未新增 NuGet；InitialApplications 与其 Designer 保持不变。
+
+新增 Migration `20261016043853_AddApplicationCategories`：Categories 的 Id/Name/CreatedAt/SortOrder，Name 唯一索引及校验，Applications 可空 CategoryId、索引与 SetNull 外键。默认“游戏”“应用”通过本 Migration 一次性 InsertData 创建为普通记录，重启不 Seed。新导入默认未分类。迁移验证夹具改为固定基线 SQL，整个解决方案不再调用 EnsureCreated。
+
+复现（常规验证使用隔离临时数据库；UI 套件需交互式桌面，屏幕截图需允许屏幕访问）：
+
+```powershell
+dotnet restore NovaLauncher.sln --locked-mode
+dotnet build NovaLauncher.sln -c Release --no-restore
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --migrations
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --categories docs/screenshots/5.1
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --persistence TestResults/5.1/persistence
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --launch TestResults/5.1/launch
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- TestResults/5.1/import
+```
+
+已验证：迁移套件 **30 项**，分类套件 **33 项**（另含独立 WPF 子进程中的 3 项），持久化 **25 项**，启动/交互 **32 项**，导入/真实 OLE/卡片回归 **37 项**，五个套件共 **157 项**主进程断言通过。锁定还原通过，最终 Release Build **0 warnings / 0 errors**。迁移覆盖全新库、Legacy Bootstrap 到最新版本和已有 5.0 历史表升级；分类覆盖默认幂等、空白/过长/重复名称、数据库唯一约束、Trim、Enter/Esc、即时 Sidebar 更新、游戏及自定义分类筛选、未分类、已有 Card VM 复用、上下导航单一选择、实际 Popup 选择不启动应用、独立进程重启分类与图标恢复、无效 CategoryId、数据库写锁失败后保持原分类/无幽灵分类，以及 SetNull 行为。
+
+测试发现上下两组 ListBox 使用同一选择属性会残留视觉选中态，已改为分别映射当前唯一选择并通过验证。真实 Popup 使用独立 HWND，RenderTargetBitmap 只画主窗口；因此额外以屏幕捕获保存包含浮层的完整图。沙箱内屏幕捕获不可用，获工具权限后实际捕获通过。分类 UI 键盘输入使用真实控件的 WPF routed key events；原启动回归使用原生鼠标和 Enter/Space，不声称全部新交互均为人工点击验收。
+
+真实数据库升级已完成：验证命令 `--real-categories` 先为 `%LOCALAPPDATA%\NovaLauncher\Data\nova.db` 创建 SQLite 在线备份，再启动两个独立的生产 App 进程。两次启动均确认所有旧字段逐值一致、默认分类各一条、现有 CategoryId=NULL、原图标仍显示、两条 Migration 已应用；PNG 文件 SHA-256 升级前后完全相同。没有启动 QQ/微信，也没有给真实应用分配测试分类。
+
+| 应用 | 升级前后 LaunchCount | 升级前后 LastLaunchTime | 新 CategoryId |
+| --- | --- | --- | --- |
+| QQ | 2 | 2026-10-15 06:55:12.358584-08:00 | NULL |
+| 微信 | 0 | NULL | NULL |
+
+本次真实升级备份：`%LOCALAPPDATA%\NovaLauncher\Data\Backups\nova-before-categories-20261016T045508Z-58c282d6ddd644e499fe559449c8161d.db`。这是明确授权的真实升级验收备份，不表示每次正常 Migration 启动都备份；不写入仓库。`--real-categories` 会使用真实用户目录，只用于明确授权的验证，常规回归使用 `--categories`。
+
+截图已检查：[真实用户升级后](screenshots/5.1/real-upgraded.png)、[新建分类](screenshots/5.1/new-category.png)、[重复提示](screenshots/5.1/duplicate-category.png)、[游戏筛选](screenshots/5.1/games-filter.png)、[分类浮层](screenshots/5.1/category-picker-desktop.png)、[最小窗口](screenshots/5.1/categories-small.png)。卡片保持 136×148 DIP，名称两行、原统计和 Hover 层级保留。范围与关系见 Product.md / Architecture.md，视觉与技能使用见 Design.md。
+
+边界：没有实机修改 NTFS ACL、断电/强杀、跨进程实时同步分类或系统高对比度设置；已覆盖数据库写锁导致的真实写入失败、无效外键及重启。后续删除仅验证外键语义，本阶段没有删除 UI。临时工具、验证数据和无用回归截图在收尾清理，保留本阶段交付截图。
+
 ## 5.0 数据库迁移前置任务（2026-10-15）
 
 基线 `5168131f15bbeebe755dc302bf3fbd1dc0924264`。本轮仅升级数据库基础设施，不实现新业务。5.0 已通过用户验收，最终 Release 构建再次确认 0 warnings / 0 errors；修改范围只含迁移基础设施、验证及相关文档，按用户授权提交 `chore: migrate database lifecycle to EF Core migrations`，不开发分类功能。生产 `EnsureCreated` 正式废弃，所有后续 Schema 变化都必须新增 EF Core Migration。完整检测、备份、Baseline Bootstrap 和失败策略见 Architecture.md 的 5.0 章节。

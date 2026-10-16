@@ -4,6 +4,8 @@ using System.Text.Json;
 using System.Windows;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using NovaLauncher.App.Persistence;
 using NovaLauncher.App.ViewModels;
 
@@ -40,7 +42,7 @@ internal static partial class Program
     private static string Rows(string path)
     {
         using var connection = OpenDatabase(path, true);
-        return Query(connection, "SELECT * FROM Applications ORDER BY Id;");
+        return Query(connection, "SELECT Id, DisplayName, ExecutablePath, TargetPathKey, SourcePath, SourceType, LaunchCount, LastLaunchTime, DateAdded, SortOrder, IconCachePath FROM Applications ORDER BY Id;");
     }
 
     private static int InspectDatabase()
@@ -54,23 +56,26 @@ internal static partial class Program
     private static int BackupCount(ApplicationDataPaths paths) => Directory.Exists(paths.BackupsDirectory)
         ? Directory.GetFiles(paths.BackupsDirectory, "*.db").Length : 0;
 
-    private static async Task SeedLegacyAsync(ApplicationDataPaths paths)
+    private static async Task SeedLegacyAsync(ApplicationDataPaths paths, bool withHistory = false)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(paths.DatabasePath)!);
         using var db = new LauncherDbContextFactory(paths).CreateDbContext();
-        // Test-only recreation of the 4.3 EnsureCreated database. Production never calls this API.
-        await db.Database.EnsureCreatedAsync();
+        // Freeze the legacy fixture at 4.3, independent of future model changes.
+        await db.Database.ExecuteSqlRawAsync(withHistory ? db.GetService<IMigrator>()
+            .GenerateScript(Migration.InitialDatabase, DatabaseInitializationService.BaselineMigration) : LegacyCreateScript(db));
         for (int index = 0; index < 3; index++)
-            db.Applications.Add(new ApplicationEntity
-            {
-                Id = Guid.NewGuid(), DisplayName = "Legacy 应用 " + index,
-                ExecutablePath = $@"C:\Legacy\{index}.exe", SourcePath = $@"C:\Legacy\{index}.exe",
-                TargetPathKey = $@"C:\LEGACY\{index}.EXE", LaunchCount = index * 7,
-                LastLaunchTime = index == 0 ? null : new DateTimeOffset(2026, 10, 14, 12, 34, 56, TimeSpan.FromHours(-8)).AddTicks(index),
-                DateAdded = DateTimeOffset.UtcNow, SortOrder = index
-            });
-        await db.SaveChangesAsync();
+        {
+            Guid id = Guid.NewGuid();
+            string name = "Legacy 应用 " + index;
+            string path = $@"C:\Legacy\{index}.exe";
+            string key = path.ToUpperInvariant();
+            DateTimeOffset? time = index == 0 ? null : new DateTimeOffset(2026, 10, 14, 12, 34, 56, TimeSpan.FromHours(-8)).AddTicks(index);
+            await db.Database.ExecuteSqlInterpolatedAsync($"INSERT INTO Applications (Id, DisplayName, ExecutablePath, SourcePath, TargetPathKey, SourceType, LaunchCount, LastLaunchTime, DateAdded, SortOrder) VALUES ({id}, {name}, {path}, {path}, {key}, 0, {index * 7}, {time}, {DateTimeOffset.UtcNow}, {index})");
+        }
     }
+
+    private static string LegacyCreateScript(LauncherDbContext db) => db.GetService<IMigrator>()
+        .GenerateScript(Migration.InitialDatabase, DatabaseInitializationService.BaselineMigration) + "\nDROP TABLE __EFMigrationsHistory;";
 
     private static DatabaseInitializationService Initializer(ApplicationDataPaths paths) =>
         new(new LauncherDbContextFactory(paths), paths);
@@ -92,7 +97,7 @@ internal static partial class Program
             await Initializer(fresh).InitializeAsync(default);
             using (var db = new LauncherDbContextFactory(fresh).CreateDbContext())
             {
-                Check((await db.Database.GetAppliedMigrationsAsync()).SequenceEqual([DatabaseInitializationService.BaselineMigration]), "Fresh database applies baseline exactly once");
+                Check((await db.Database.GetAppliedMigrationsAsync()).SequenceEqual(db.Database.GetMigrations()), "Fresh database applies migrations exactly once");
                 Check(await db.Applications.CountAsync() == 0, "Fresh Applications exists and is empty");
                 Check(!db.Database.HasPendingModelChanges(), "Snapshot matches current model");
             }
@@ -121,7 +126,7 @@ internal static partial class Program
             for (int index = 0; index < 3; index++) await Initializer(legacy).InitializeAsync(default);
             Check(BackupCount(legacy) == 1 && Rows(legacy.DatabasePath) == before, "Repeated independent initialization preserves data and single backup");
             using (var db = new LauncherDbContextFactory(legacy).CreateDbContext())
-                Check((await db.Database.GetAppliedMigrationsAsync()).SequenceEqual([DatabaseInitializationService.BaselineMigration]), "Legacy history has only baseline");
+                Check((await db.Database.GetAppliedMigrationsAsync()).SequenceEqual(db.Database.GetMigrations()), "Legacy history contains baseline and subsequent migrations");
 
             var mismatch = new ApplicationDataPaths(Path.Combine(root, "mismatch"));
             await SeedLegacyAsync(mismatch);
@@ -148,7 +153,7 @@ internal static partial class Program
                 Directory.CreateDirectory(Path.GetDirectoryName(changed.DatabasePath)!);
                 using (var db = new LauncherDbContextFactory(changed).CreateDbContext())
                 {
-                    string sql = db.Database.GenerateCreateScript().Replace(oldSql, newSql, StringComparison.Ordinal);
+                    string sql = LegacyCreateScript(db).Replace(oldSql, newSql, StringComparison.Ordinal);
                     await db.Database.ExecuteSqlRawAsync(sql);
                 }
                 await ExpectFailureAsync(Initializer(changed), "Schema mismatch rejected: " + name);
@@ -245,7 +250,7 @@ internal static partial class Program
                 Check(records.Count == vm.Applications.Count && records.All(record => vm.Applications.Any(card =>
                     card.Application.Id == record.Id && card.DisplayName == record.DisplayName &&
                     card.LaunchCount == record.LaunchCount && card.LastLaunchTime == record.LastLaunchTime)), "Visible cards retain names, launch counts and exact timestamps");
-                Check((await db.Database.GetAppliedMigrationsAsync()).SequenceEqual([DatabaseInitializationService.BaselineMigration]), "Real database baseline history correct");
+                Check((await db.Database.GetAppliedMigrationsAsync()).SequenceEqual(db.Database.GetMigrations()), "Real database migration history correct");
                 app.MainWindow.Close();
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); app.Shutdown(1); }

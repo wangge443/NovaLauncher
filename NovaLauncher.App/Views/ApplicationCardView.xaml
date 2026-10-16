@@ -43,5 +43,33 @@
                 </StackPanel>
             </Grid>
         </Button>
+        <!-- Sibling controls prevent category selection from bubbling through the launch button. -->
+        <ToggleButton x:Name="CategoryButton" Content="分类" Style="{StaticResource QuietButton}"
+                      HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,2,0" Padding="7,4" Opacity="0"
+                      IsChecked="{Binding IsCategoryPickerOpen, Mode=TwoWay}" IsEnabled="{Binding CategoryManager.IsReady}"
+                      AutomationProperties.Name="选择应用分类" AutomationProperties.AutomationId="ChooseCategory" />
+        <Popup x:Name="CategoryPopup" PlacementTarget="{Binding ElementName=CategoryButton}" Placement="Bottom"
+               IsOpen="{Binding IsCategoryPickerOpen, Mode=TwoWay}" StaysOpen="False" AllowsTransparency="True"
+               Opened="CategoryPopup_Opened" Closed="CategoryPopup_Closed">
+            <Border Background="{DynamicResource WindowBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
+                    CornerRadius="10" Padding="10" Width="{StaticResource CategoryPopupWidth}" KeyDown="CategoryPopup_KeyDown">
+                <StackPanel>
+                    <TextBlock Text="移动到分类" FontSize="12" Margin="8,4,8,8" Foreground="{DynamicResource MutedTextBrush}" />
+                    <ListBox x:Name="CategoryChoices" ItemsSource="{Binding CategoryManager.Choices}" DisplayMemberPath="Name"
+                             SelectedItem="{Binding CurrentCategoryChoice, Mode=OneWay}" MaxHeight="240"
+                             SelectionChanged="CategoryChoices_SelectionChanged" Background="Transparent" BorderThickness="0"
+                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" ItemContainerStyle="{StaticResource CategoryChoiceStyle}"
+                             AutomationProperties.Name="目标分类">
+                        <ListBox.Style>
+                            <Style TargetType="ListBox">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsChangingCategory}" Value="True"><Setter Property="IsEnabled" Value="False" /></DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ListBox.Style>
+                    </ListBox>
+                </StackPanel>
+            </Border>
+        </Popup>
     </Grid>
 </UserControl>

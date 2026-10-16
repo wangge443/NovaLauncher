@@ -15,8 +15,13 @@ public partial class App : Application
     private bool _closeReady;
 
     public App() { }
-    public App(IApplicationPersistenceService persistence) => Persistence = persistence;
+    public App(IApplicationPersistenceService persistence, ICategoryService? categories = null)
+    {
+        Persistence = persistence;
+        Categories = categories;
+    }
     private IApplicationPersistenceService? Persistence { get; }
+    private ICategoryService? Categories { get; }
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -28,7 +33,8 @@ public partial class App : Application
         var persistence = Persistence ?? new ApplicationPersistenceService(
             new ApplicationRepository(new LauncherDbContextFactory(paths), paths), new ApplicationIconCache(paths, icons));
         _content = new ContentViewModel(new ApplicationImportService(new ShortcutResolver(), icons),
-            new ApplicationLaunchService(), persistence, new ToastService());
+            new ApplicationLaunchService(), persistence, new ToastService(),
+            Categories ?? (Persistence is null ? new CategoryService(new CategoryRepository(new LauncherDbContextFactory(paths))) : null));
         MainWindow = new MainWindow
         {
             DataContext = new MainWindowViewModel(_content)

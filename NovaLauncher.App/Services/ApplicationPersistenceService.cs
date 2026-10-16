@@ -14,6 +14,7 @@ public interface IApplicationPersistenceService
     Task<ApplicationLoadResult> LoadAsync(CancellationToken token);
     Task<string?> AddAsync(LauncherApplication application, CancellationToken token);
     Task SaveStatisticsAsync(LauncherApplication application);
+    Task<string?> SetCategoryAsync(Guid applicationId, Guid? categoryId, CancellationToken token);
     Task FlushAsync();
 }
 
@@ -45,7 +46,7 @@ public sealed class ApplicationPersistenceService(
                         icon, (ApplicationSourceType)record.SourceType)
                     {
                         LaunchCount = record.LaunchCount, LastLaunchTime = record.LastLaunchTime,
-                        IsAvailable = available
+                        IsAvailable = available, CategoryId = record.CategoryId
                     });
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
@@ -103,6 +104,21 @@ public sealed class ApplicationPersistenceService(
             _writes.Add(write);
             _ = write.ContinueWith(completed => { lock (_sync) _writes.Remove(completed); }, TaskScheduler.Default);
             return write;
+        }
+    }
+
+    public async Task<string?> SetCategoryAsync(Guid applicationId, Guid? categoryId, CancellationToken token)
+    {
+        try
+        {
+            await repository.UpdateCategoryAsync(applicationId, categoryId, token);
+            return null;
+        }
+        catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
+        catch (Exception ex)
+        {
+            Trace.TraceError("Application category update failed: {0}", ex);
+            return "分类修改失败";
         }
     }
 

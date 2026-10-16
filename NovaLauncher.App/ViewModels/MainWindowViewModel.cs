@@ -1,9 +1,14 @@
 namespace NovaLauncher.App.ViewModels;
 
-public sealed class MainWindowViewModel(ContentViewModel content) : ViewModelBase
+public sealed class MainWindowViewModel : ViewModelBase
 {
-    public ContentViewModel Content { get; } = content;
+    public MainWindowViewModel(ContentViewModel content)
+    {
+        Content = content;
+        Sidebar = new(content);
+    }
+    public ContentViewModel Content { get; }
     public string Title => "Nova Launcher";
 
-    public SidebarViewModel Sidebar { get; } = new();
+    public SidebarViewModel Sidebar { get; }
 }

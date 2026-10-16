@@ -1,5 +1,17 @@
 # Nova Launcher — UI 设计
 
+## 5.1 分类交互
+
+沿用 Windows 11 Minimal Light UI、44 DIP 导航项、小图标、左侧选中指示及既有语义画刷。首页后动态显示数据库分类，默认游戏/应用沿用原图标，自定义项使用 Segoe Fluent 文件夹图标；名称省略并提供完整 Tooltip。“新建分类”采用独立 SidebarActionButtonStyle：44 DIP 行高、0/2 DIP 外边距、18/12 DIP 左右内边距、30 DIP 图标列、18 DIP Fluent Plus 图标和 14 DIP 文字，内容居中，整行可点击。默认沿用 MutedTextBrush 并以 0.97 内容透明度稍降权重；Hover 使用同款 8 DIP 圆角浅色背景、TextBrush 和完整内容不透明度，Pressed 叠加 SelectedBrush 反馈。按钮没有 Accent 选中条，不参与导航选择，始终位于所有分类之后，与下方收藏/最近使用保留 12 DIP 分组间距。点击继续展开已有内联编辑区，显式名称标签、24 字符输入、创建/取消；Enter 提交，Esc 取消。重复错误就近保留，同时复用已有 Toast。
+
+Sidebar 微调截图：[默认](screenshots/5.1/sidebar-refinement/sidebar-action-default.png)、[Hover](screenshots/5.1/sidebar-refinement/sidebar-action-hover.png)。本次仅更改 Sidebar XAML 与新增操作项样式，未更改分类业务、筛选、数据库、Migration、卡片浮层、侧栏宽度或背景系统；继续采用已读取技能中的一致图标、稳定点击区域、语义颜色和键盘焦点规则。
+
+卡片仍为 136×148 DIP，不改变图标、名称或统计区布局。右上“分类”为独立 ToggleButton，Hover、键盘聚焦或浮层打开时显示；Tab 可到达，不依赖鼠标悬停。按钮与主启动按钮为兄弟控件，选择分类不会启动应用。Popup 宽 224 DIP、圆角 10、浅色实底、34 DIP 列表项、高度上限 240 后滚动，包含“未分类”及共享分类列表，左侧指示当前选择。Esc 关闭并返回按钮焦点，点击外部关闭，保存期间禁用列表。动画沿用 HoverDuration 和减少动画规则。
+
+本轮读取 `ui-ux-pro-max/SKILL.md`、quick-reference 的键盘/交互/布局规则与 pro-rules；本机 Python/python3/py 无可用解释器，采用技能内置规则，没有声称完成数据库检索。遵循可见焦点、原生控件、显式标签、错误就近显示、稳定尺寸和统一图标；未更改 MainWindow、背景或侧栏宽度系统。
+
+实际运行截图：[新建分类](screenshots/5.1/new-category.png)、[重复分类](screenshots/5.1/duplicate-category.png)、[游戏筛选](screenshots/5.1/games-filter.png)、[分类浮层（实际屏幕）](screenshots/5.1/category-picker-desktop.png)、[浮层细节](screenshots/5.1/category-picker-detail.png)、[最小窗口](screenshots/5.1/categories-small.png)、[真实 QQ/微信迁移后](screenshots/5.1/real-upgraded.png)。窗口截图来自运行中的 WPF，浮层整体图使用屏幕捕获，不是设计稿；其余 RenderTargetBitmap 图不用于证明 Experimental DWM 效果。
+
 ## 4.3 重复导入 Toast
 
 重复导入显示 Workspace 右下角“该应用已添加”。ToastView 位于 Canvas 覆盖层，外边距沿用 WorkspacePadding，不参与卡片区域测量、不拦截鼠标、不获取焦点。使用 WindowBrush、TextBrush、BorderBrush、12 DIP 圆角和 16×10 DIP 内边距，最大宽度 320 DIP。约 2 秒后消失，淡入淡出沿用 HoverDuration（160ms，系统减少动画/高对比度时为 0）。连续重复导入刷新同一条 Toast 的计时，不叠加窗口或队列。

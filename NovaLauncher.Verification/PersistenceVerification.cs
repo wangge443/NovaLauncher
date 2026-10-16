@@ -22,6 +22,7 @@ internal static partial class Program
         public Task<ApplicationLoadResult> LoadAsync(CancellationToken token) => Task.FromResult(new ApplicationLoadResult([]));
         public Task<string?> AddAsync(LauncherApplication application, CancellationToken token) => Task.FromResult<string?>(null);
         public Task SaveStatisticsAsync(LauncherApplication application) => Task.CompletedTask;
+        public Task<string?> SetCategoryAsync(Guid applicationId, Guid? categoryId, CancellationToken token) => Task.FromResult<string?>(null);
         public Task FlushAsync() => Task.CompletedTask;
     }
 

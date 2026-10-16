@@ -27,12 +27,29 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
     public bool IsLaunching { get => _isLaunching; private set => SetProperty(ref _isLaunching, value); }
     public IAsyncRelayCommand LaunchCommand { get; }
     public event Action<string>? LaunchFailed;
+    public event Action? CategoryChanged;
+    public Guid? CategoryId => Application.CategoryId;
+    public CategoryChoice? CurrentCategoryChoice => CategoryManager?.Choices.FirstOrDefault(x => x.Id == CategoryId);
+    public CategoryManagerViewModel? CategoryManager { get; }
+    private readonly IToastService? _toast;
+    private bool _isCategoryPickerOpen;
+    private bool _isChangingCategory;
+    public bool IsChangingCategory { get => _isChangingCategory; private set => SetProperty(ref _isChangingCategory, value); }
+    public bool IsCategoryPickerOpen
+    {
+        get => _isCategoryPickerOpen;
+        set { SetProperty(ref _isCategoryPickerOpen, value); OnPropertyChanged(nameof(CurrentCategoryChoice)); }
+    }
+    public IAsyncRelayCommand<CategoryChoice> ChangeCategoryCommand { get; }
 
     public ApplicationCardViewModel(LauncherApplication application, IApplicationLaunchService launcher,
-        IApplicationPersistenceService persistence)
+        IApplicationPersistenceService persistence, CategoryManagerViewModel? categoryManager = null, IToastService? toast = null)
     {
         _launcher = launcher;
         _persistence = persistence;
+        CategoryManager = categoryManager;
+        _toast = toast;
+        ChangeCategoryCommand = new AsyncRelayCommand<CategoryChoice>(ChangeCategoryAsync);
         _token = _lifetime.Token;
         Application = application;
         LaunchCommand = new AsyncRelayCommand(LaunchAsync, () => !_token.IsCancellationRequested);
@@ -54,6 +71,29 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
     }
 
     public void RefreshLaunchTime() => OnPropertyChanged(nameof(LastLaunchText));
+
+    private async Task ChangeCategoryAsync(CategoryChoice? choice)
+    {
+        if (choice is null || IsChangingCategory || _token.IsCancellationRequested) return;
+        if (choice.Id == CategoryId) { IsCategoryPickerOpen = false; return; }
+        IsChangingCategory = true;
+        try
+        {
+            string? error = await _persistence.SetCategoryAsync(Application.Id, choice.Id, CancellationToken.None);
+            if (error is null)
+            {
+                Application = Application with { CategoryId = choice.Id };
+                OnPropertyChanged(nameof(Application));
+                OnPropertyChanged(nameof(CategoryId));
+                OnPropertyChanged(nameof(CurrentCategoryChoice));
+                IsCategoryPickerOpen = false;
+                CategoryChanged?.Invoke();
+            }
+            else _toast?.Show(error);
+        }
+        catch (Exception ex) { Trace.TraceError("Category change failed: {0}", ex); _toast?.Show("分类修改失败"); }
+        finally { IsChangingCategory = false; OnPropertyChanged(nameof(CategoryId)); OnPropertyChanged(nameof(CurrentCategoryChoice)); }
+    }
 
     private async Task LaunchAsync()
     {

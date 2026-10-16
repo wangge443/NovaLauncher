@@ -26,11 +26,15 @@ internal static partial class Program
         if (args.Contains("--inspect-db")) return InspectDatabase();
         if (args.Contains("--migrations")) return RunMigrationTestsAsync().GetAwaiter().GetResult();
         if (args.Contains("--real-migration")) return VerifyRealMigrationAsync().GetAwaiter().GetResult();
+        if (args.Contains("--real-categories")) return VerifyRealCategoriesAsync().GetAwaiter().GetResult();
+        if (args.Length == 2 && args[0] == "--category-real-window") return RunRealCategoryWindow(args[1]);
+        if (args.Length == 2 && args[0] == "--category-restart") return RunCategoryRestart(args[1]);
         if (args.Length == 2 && args[0] == "--migration-window") return RunMigrationWindow(args[1]);
         if (args.Length >= 2 && args[0].StartsWith("--restart-")) return RunRestartProcess(args[0], args[1]);
         bool launchTests = args.Contains("--launch");
         bool persistenceTests = args.Contains("--persistence");
         bool toastTests = args.Contains("--toast");
+        bool categoryTests = args.Contains("--categories");
         _screenshots = Path.GetFullPath(args.FirstOrDefault(arg => !arg.StartsWith("--")) ??
             (persistenceTests ? "docs/screenshots/4.3" : launchTests ? "docs/screenshots/4.2" : "docs/screenshots/4.1"));
         _fixtures = Path.Combine(Path.GetTempPath(), "NovaLauncher-Verification-" + Guid.NewGuid().ToString("N"));
@@ -43,7 +47,8 @@ internal static partial class Program
         {
             try
             {
-                if (toastTests) await RunToastAsync((MainWindow)app.MainWindow);
+                if (categoryTests) await RunCategoriesAsync((MainWindow)app.MainWindow);
+                else if (toastTests) await RunToastAsync((MainWindow)app.MainWindow);
                 else if (persistenceTests) await RunPersistenceAsync((MainWindow)app.MainWindow);
                 else if (launchTests) await RunLaunchAsync((MainWindow)app.MainWindow);
                 else await RunAsync((MainWindow)app.MainWindow);

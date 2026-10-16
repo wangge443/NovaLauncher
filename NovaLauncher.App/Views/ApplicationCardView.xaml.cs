@@ -22,7 +22,11 @@ public partial class ApplicationCardView : UserControl
     private void Card_MouseLeave(object sender, MouseEventArgs e) => UpdateInteraction();
     private void Card_FocusChanged(object sender, KeyboardFocusChangedEventArgs e) => UpdateInteraction();
     private void Card_Loaded(object sender, RoutedEventArgs e) => UpdateInteraction();
-    private void Card_Unloaded(object sender, RoutedEventArgs e) => _timeRefresh.Stop();
+    private void Card_Unloaded(object sender, RoutedEventArgs e)
+    {
+        _timeRefresh.Stop();
+        if (DataContext is ApplicationCardViewModel card) card.IsCategoryPickerOpen = false;
+    }
 
     private void RefreshTime()
     {
@@ -31,7 +35,7 @@ public partial class ApplicationCardView : UserControl
 
     private void UpdateInteraction()
     {
-        bool active = IsMouseOver || IsKeyboardFocusWithin;
+        bool active = IsMouseOver || IsKeyboardFocusWithin || CategoryPopup.IsOpen;
         var duration = (Duration)FindResource("HoverDuration");
         double offset = active && duration.HasTimeSpan && duration.TimeSpan > TimeSpan.Zero
             ? -(double)FindResource("ApplicationCardLift") : 0;
@@ -42,6 +46,8 @@ public partial class ApplicationCardView : UserControl
         HoverSurface.BeginAnimation(OpacityProperty, new DoubleAnimation(active ? 1 : 0, duration));
         NormalContent.BeginAnimation(OpacityProperty, new DoubleAnimation(active ? 0 : 1, duration));
         DetailsContent.BeginAnimation(OpacityProperty, new DoubleAnimation(active ? 1 : 0, duration));
+        CategoryButton.BeginAnimation(OpacityProperty, new DoubleAnimation(active ? 1 : 0, duration));
+        CategoryButton.IsHitTestVisible = active;
         if (active && IsLoaded)
         {
             RefreshTime();
@@ -56,5 +62,28 @@ public partial class ApplicationCardView : UserControl
         var duration = SystemParameters.ClientAreaAnimation && !SystemParameters.HighContrast
             ? (Duration)FindResource("LaunchFeedbackDuration") : new Duration(TimeSpan.Zero);
         LaunchFlash.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0, duration));
+    }
+
+    private void CategoryPopup_Opened(object? sender, EventArgs e)
+    {
+        UpdateInteraction();
+        Dispatcher.BeginInvoke(new Action(() => CategoryChoices.Focus()));
+    }
+    private void CategoryPopup_Closed(object? sender, EventArgs e) => UpdateInteraction();
+    private void CategoryPopup_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape && DataContext is ApplicationCardViewModel card)
+        {
+            card.IsCategoryPickerOpen = false;
+            CategoryButton.Focus();
+            e.Handled = true;
+        }
+    }
+    private void CategoryChoices_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (CategoryPopup.IsOpen && CategoryChoices.IsKeyboardFocusWithin &&
+            DataContext is ApplicationCardViewModel card && CategoryChoices.SelectedItem is CategoryChoice choice &&
+            choice.Id != card.CategoryId && card.ChangeCategoryCommand.CanExecute(choice))
+            card.ChangeCategoryCommand.Execute(choice);
     }
 }
