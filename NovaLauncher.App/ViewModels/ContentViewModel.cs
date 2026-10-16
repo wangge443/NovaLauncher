@@ -11,24 +11,69 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     private readonly CancellationToken _token;
     private readonly IApplicationImportService _importer;
     private readonly IApplicationLaunchService _launcher;
+    private readonly IApplicationPersistenceService _persistence;
+    private Task? _initialization;
+    private Task _importTask = Task.CompletedTask;
     private readonly HashSet<string> _targets = new(StringComparer.OrdinalIgnoreCase);
     private bool _isDragOver;
     private bool _isImporting;
     private string? _statusMessage;
     private int _messageVersion;
 
-    public ContentViewModel(IApplicationImportService importer, IApplicationLaunchService launcher)
+    public ContentViewModel(IApplicationImportService importer, IApplicationLaunchService launcher,
+        IApplicationPersistenceService persistence, IToastService toast)
     {
         _importer = importer;
         _launcher = launcher;
+        _persistence = persistence;
+        Toast = toast;
         _token = _lifetime.Token;
     }
 
     public ObservableCollection<ApplicationCardViewModel> Applications { get; } = [];
+    public IToastService Toast { get; }
     public bool IsEmpty => Applications.Count == 0;
     public bool IsDragOver { get => _isDragOver; private set => SetProperty(ref _isDragOver, value); }
     public bool IsImporting { get => _isImporting; private set => SetProperty(ref _isImporting, value); }
     public string? StatusMessage { get => _statusMessage; private set => SetProperty(ref _statusMessage, value); }
+
+    public Task InitializeAsync() => _initialization ??= LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        try
+        {
+            StatusMessage = "正在加载应用…";
+            var result = await _persistence.LoadAsync(_token);
+            _token.ThrowIfCancellationRequested();
+            foreach (var application in result.Applications) AddCard(application);
+            if (result.Error is { } error) ShowMessage(error);
+            else StatusMessage = null;
+        }
+        catch (OperationCanceledException) when (_token.IsCancellationRequested) { }
+        catch (Exception ex)
+        {
+            Trace.TraceError("Application loading failed: {0}", ex.GetType().Name);
+            ShowMessage("无法加载应用");
+        }
+    }
+
+    private void AddCard(Models.LauncherApplication application)
+    {
+        if (_targets.Contains(application.ExecutablePath)) return;
+        var card = new ApplicationCardViewModel(application, _launcher, _persistence);
+        card.LaunchFailed += ShowMessage;
+        _targets.Add(application.ExecutablePath);
+        Applications.Add(card);
+        OnPropertyChanged(nameof(IsEmpty));
+    }
+
+    public async Task FlushAsync()
+    {
+        await _importTask;
+        await Task.WhenAll(Applications.Select(card => card.LaunchCommand.ExecutionTask ?? Task.CompletedTask));
+        await _persistence.FlushAsync();
+    }
 
     public bool PreviewDrop(IEnumerable<string> paths)
     {
@@ -46,7 +91,13 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
 
     public void EndDrag() => IsDragOver = false;
 
-    public async Task ImportAsync(IEnumerable<string> paths)
+    public Task ImportAsync(IEnumerable<string> paths)
+    {
+        if (IsImporting || _token.IsCancellationRequested) return Task.CompletedTask;
+        return _importTask = ImportCoreAsync(paths);
+    }
+
+    private async Task ImportCoreAsync(IEnumerable<string> paths)
     {
         EndDrag();
         if (IsImporting || _token.IsCancellationRequested) return;
@@ -56,6 +107,8 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         var notices = new HashSet<string>();
         try
         {
+            await InitializeAsync();
+            _token.ThrowIfCancellationRequested();
             foreach (string path in paths)
             {
                 var result = await _importer.ImportAsync(path, _token);
@@ -67,14 +120,14 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
                 }
                 if (_targets.Contains(application.ExecutablePath))
                 {
-                    notices.Add("该应用已添加");
+                    Toast.Show("该应用已添加");
                     continue;
                 }
-                var card = new ApplicationCardViewModel(application, _launcher);
-                card.LaunchFailed += ShowMessage;
-                _targets.Add(application.ExecutablePath);
-                Applications.Add(card);
-                OnPropertyChanged(nameof(IsEmpty));
+                string? error = await _persistence.AddAsync(application, _token);
+                _token.ThrowIfCancellationRequested();
+                if (error == "该应用已添加") { Toast.Show(error); continue; }
+                if (error is not null) { notices.Add(error); continue; }
+                AddCard(application);
             }
             if (notices.Count > 0) ShowMessage(string.Join("；", notices));
             else StatusMessage = null;
@@ -109,6 +162,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     {
         if (_token.IsCancellationRequested) return;
         _lifetime.Cancel();
+        Toast.Dispose();
         _lifetime.Dispose();
         foreach (var card in Applications)
         {

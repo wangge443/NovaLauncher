@@ -1,5 +1,11 @@
 # Nova Launcher — UI 设计
 
+## 4.3 重复导入 Toast
+
+重复导入显示 Workspace 右下角“该应用已添加”。ToastView 位于 Canvas 覆盖层，外边距沿用 WorkspacePadding，不参与卡片区域测量、不拦截鼠标、不获取焦点。使用 WindowBrush、TextBrush、BorderBrush、12 DIP 圆角和 16×10 DIP 内边距，最大宽度 320 DIP。约 2 秒后消失，淡入淡出沿用 HoverDuration（160ms，系统减少动画/高对比度时为 0）。连续重复导入刷新同一条 Toast 的计时，不叠加窗口或队列。
+
+遵循 ui-ux-pro-max 内置的就近反馈、稳定布局、语义颜色和减少动画准则；本机 Python 不可用，使用已读取规则，不声称完成检索。当前仅重复导入接入 Toast，其他状态提示保留原行为。
+
 ## 4.2 应用启动与状态
 
 卡片外框保持 136 × 148 DIP、原网格间距和两行名称规则。普通状态仍为 72 DIP 图标与名称。Hover 或键盘聚焦时，固定卡片内部用 160ms 淡入的 DetailsContent 替换 NormalContent：32 DIP 图标、名称、10.5 DIP 次要文字“上次启动”和“启动次数”。两层布局都在原固定 Grid 中，不挤动相邻卡片。完整 DisplayName 的 ToolTip 保留。最终收尾将统计区上间距从 6 DIP 收紧为 4 DIP、统计文本高度从 17 DIP 收紧为 15 DIP，沿用 MutedTextBrush，低于 13 DIP 应用名称的视觉层级。Workspace 不再显示“已添加 X 个应用”，保留导入中、重复项及失败提示。

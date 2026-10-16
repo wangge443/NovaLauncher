@@ -35,6 +35,39 @@
 
 后续验证记录应包含日期、提交、环境、检查项、结果与遗留问题。3.x 验证记录及边界见 Design.md / Architecture.md；4.1 使用以下可执行验证工程，不声称运行了 dotnet test。
 
+## 4.3 验证记录（2026-10-15）
+
+最终收尾：用户已确认 4.3 通过最终人工验收，并授权提交 `feat: persist applications with SQLite`。未再修改数据库架构；Architecture.md 已明确当前使用 EnsureCreated、下一次 Schema 扩展前必须切换到 EF Core Migrations。检查仓库无运行数据库或已跟踪的用户图标缓存，git check-ignore 确认 nova.db、WAL、SHM、journal、其他 db-* 附属文件及 Cache/Icons 均被排除。最终 Release build 为 **0 warnings / 0 errors**。以下“不自动提交”描述为此前交付时的历史边界，以本次授权为准。
+
+提交前 Toast 修正：`dotnet run --project NovaLauncher.Verification -c Release --no-build -- --toast docs/screenshots/4.3/toast`，**11 项断言通过**、退出码 0。使用隔离 SQLite 库和真实 OLE 拖放，覆盖首次 EXE 添加、同 EXE 重复、同目标 LNK 重复、2 秒自动淡出、连续拖拽重置计时、单实例 Toast、释放时取消计时、不抢焦点、不拦截鼠标、显示/隐藏前后卡片位置尺寸一致。Release build **0 warnings / 0 errors**。已检查[实际 Toast 截图](screenshots/4.3/toast/duplicate-toast.png)。本次未重新运行完整持久化/启动套件，以下 94 项为前次 4.3 验证记录；Toast 修正不修改这些业务实现。仍不自动提交。
+
+基线 `480f357eb95fb74b1dc3cb7b88237b3389620dba`。本轮不自动提交。新增 EF Core SQLite 9.0.16 与锁文件，使用 EnsureCreated；详细 schema、许可证、Context 生命周期及升级限制见 Architecture.md 的 4.3 章节。
+
+Windows 11、125% DPI、SDK 9.0.318。锁定还原通过，最终解决方案 Release build **0 warnings / 0 errors**。自动断言：持久化 **25 项**、原导入/卡片 **37 项**、原启动/交互 **32 项**，共 **94 项**，三个验证命令均退出码 0。
+
+```powershell
+dotnet restore NovaLauncher.sln --locked-mode
+dotnet build NovaLauncher.sln -c Release --no-restore
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --persistence
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- docs/screenshots/4.3/import-regression
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --launch docs/screenshots/4.3/launch-regression
+```
+
+持久化验证使用 `%TEMP%\NovaLauncher-Verification-<guid>` 下隔离数据库、PNG 缓存和测试探针，不写正式用户库。正式路径计算验证为 `%LOCALAPPDATA%\NovaLauncher\Data\nova.db`。所有 WPF 验证窗口通过构造注入隔离 Persistence Service，业务默认路径没有环境变量覆盖。临时文件在测试结束后清理。
+
+- 首次启动创建 Data/nova.db 和 Cache/Icons；EXE/LNK 导入后数据库有记录，三个应用恢复且顺序稳定。
+- 三次独立 WPF 进程启动：首次导入并启动测试程序、正常关闭；第二次恢复卡片、PNG、LaunchCount 和完整 LastLaunchTime，并再次启动 LNK；第三次在 EXE 被删除后启动，记录保留且 IsAvailable=false。首次进程在 LNK 请求在途时关闭，验证 App 退出前等待统计写入。
+- 同目标 EXE/LNK、大小写重复不增加记录；绕过 VM 直接向 Repository 插入仍被唯一索引拒绝。旧统计快照不覆盖新次数。
+- 删除/破坏 PNG 后重新提取；缓存目录被文件占用导致写失败时，数据库和内存图标仍可用。
+- 单条时间值损坏时，其余记录继续加载；整个数据库损坏和数据目录不可创建时返回轻提示；保存失败无幽灵卡片。统计写入失败不发 LaunchFailed、不回滚成功次数。
+- 原 4.1 回归使用真实 OLE CF_HDROP，经 View → VM → 新 SQLite 链路；原 4.2 回归使用实际鼠标、Enter、Space，验证 EXE 工作目录、LNK 参数/工作目录、快速点击保护与失败不计数。测试前检查输入目标窗口，未向其他应用发送点击。
+
+实际截图已人工检查：[恢复卡片](screenshots/4.3/restored.png)、[启动后 Hover](screenshots/4.3/launch-regression/launched-hover.png)。固定卡片尺寸、两行名称、统计弱层级、自动换行保持不变；未新增“已添加 X 个应用”提示。截图使用运行窗口 RenderTargetBitmap，不证明 Experimental DWM 透明效果。
+
+边界：交互是自动驱动真实桌面窗口，不宣称用户手工 Explorer 拖放验收；未实机修改 NTFS ACL 来复现拒绝写权限，已验证不可创建目录、损坏库和缓存写失败。未测试断电、强杀进程、多实例统计合并或后续 schema 升级。正常关闭会等待在途任务，强制终止不能保证未提交数据。
+
+独立进程测试曾发现 Closing 中同步再次 Close 的 WPF 重入异常，已改为 Dispatcher 延后关闭并通过重验。新增 .gitignore 的 db-journal 和 Cache/Icons 排除项。未修改 ApplicationImportService、ShortcutResolver、ApplicationIconService、ApplicationLaunchService、ContentView 拖放适配、MainWindow、Sidebar 或背景系统。
+
 ## 4.2 验证记录（2026-10-15）
 
 基线：4.1 提交 `58bf6dc9d006b504bfce2c2a0869eda963f88a3b`。Windows 11、125% DPI、.NET SDK 9.0.318。Release 构建整个解决方案 **0 warnings / 0 errors**；没有新增 NuGet 包。用户已授权最终 UI 收尾验证后提交：feat: add application launching and session statistics。

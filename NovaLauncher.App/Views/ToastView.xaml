@@ -1,0 +1,12 @@
+<UserControl x:Class="NovaLauncher.App.Views.ToastView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             IsHitTestVisible="False" Focusable="False" Visibility="Hidden" Opacity="0">
+    <Border Background="{DynamicResource WindowBrush}" BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1" CornerRadius="{StaticResource ApplicationCardRadius}"
+            Padding="{StaticResource ToastPadding}" MaxWidth="{StaticResource ToastMaxWidth}">
+        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13"
+                   Foreground="{DynamicResource TextBrush}" AutomationProperties.AutomationId="WorkspaceToast"
+                   AutomationProperties.LiveSetting="Polite" />
+    </Border>
+</UserControl>

@@ -4,25 +4,53 @@ using NovaLauncher.App.Helpers;
 using NovaLauncher.App.ViewModels;
 using NovaLauncher.App.Views;
 using NovaLauncher.App.Services;
+using NovaLauncher.App.Persistence;
 
 namespace NovaLauncher.App;
 
 public partial class App : Application
 {
     private ContentViewModel? _content;
+    private bool _closing;
+    private bool _closeReady;
+
+    public App() { }
+    public App(IApplicationPersistenceService persistence) => Persistence = persistence;
+    private IApplicationPersistenceService? Persistence { get; }
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
         ShellPreferences.Apply(Resources);
         SystemParameters.StaticPropertyChanged += OnSystemPreferencesChanged;
 
-        _content = new ContentViewModel(new ApplicationImportService(new ShortcutResolver(), new ApplicationIconService()),
-            new ApplicationLaunchService());
+        var paths = ApplicationDataPaths.Default;
+        var icons = new ApplicationIconService();
+        var persistence = Persistence ?? new ApplicationPersistenceService(
+            new ApplicationRepository(new LauncherDbContextFactory(paths), paths), new ApplicationIconCache(paths, icons));
+        _content = new ContentViewModel(new ApplicationImportService(new ShortcutResolver(), icons),
+            new ApplicationLaunchService(), persistence, new ToastService());
         MainWindow = new MainWindow
         {
             DataContext = new MainWindowViewModel(_content)
         };
         MainWindow.Show();
+        MainWindow.Closing += OnWindowClosing;
+        _ = _content.InitializeAsync();
+    }
+
+    private async void OnWindowClosing(object? sender, CancelEventArgs e)
+    {
+        if (_closeReady || _content is null) return;
+        e.Cancel = true;
+        if (_closing) return;
+        _closing = true;
+        MainWindow.IsEnabled = false;
+        try { await _content.FlushAsync(); }
+        finally
+        {
+            // Flush may complete synchronously; defer Close until the current Closing event has returned.
+            _ = Dispatcher.BeginInvoke(new Action(() => { _closeReady = true; MainWindow.Close(); }));
+        }
     }
 
     private void OnSystemPreferencesChanged(object? sender, PropertyChangedEventArgs e)

@@ -6,5 +6,8 @@
 *.db
 *.db-shm
 *.db-wal
+*.db-journal
+*.db-*
+**/Cache/Icons/
 *.log
 TestResults/

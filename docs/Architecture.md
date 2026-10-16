@@ -2,9 +2,71 @@
 
 ## 当前边界
 
-NovaLauncher.sln 包含 NovaLauncher.App、NovaLauncher.Verification 和仅用于测试的 NovaLauncher.LaunchProbe，目标框架为 net9.0-windows。4.2 在稳定的 4.1 导入链路上增加启动服务与会话统计，不创建数据库。当前实现以 4.2 启动与 4.1 导入章节为准，3.x 为历史记录，SQLite 为后续规划。
+NovaLauncher.sln 包含 NovaLauncher.App、NovaLauncher.Verification 和仅用于测试的 NovaLauncher.LaunchProbe，目标框架为 net9.0-windows。4.3 在稳定的 4.1 导入与 4.2 启动链路外围接入 EF Core + SQLite、PNG 缓存及恢复。当前持久化行为以 4.3 章节为准；后续 4.2、4.1、3.x 描述保留为历史基线。
 
-## 4.2 Application Launch Pipeline
+## 4.3 Persistence Pipeline
+
+重复导入 UX：App 为每个 Workspace 注入 `IToastService / ToastService`，ContentViewModel 暴露 Toast 状态。内存去重和持久化层返回重复结果均调用 Show；Service 管理通知文本、可观察 IsOpen 和可取消的 2 秒计时，连续通知替换内容并重新计时，Workspace 释放时取消任务。服务在 UI 同步上下文使用；ToastView 仅负责透明度动画和可见性，ContentView.xaml.cs 不含通知文案或逻辑。覆盖层 Canvas 不占布局空间。当前只接入重复导入，接口可供后续错误通知复用；未修改表结构、Repository、缓存或统计链路。
+
+```text
+Drop → ApplicationImportService → LauncherApplication
+ → ApplicationPersistenceService.AddAsync → ApplicationRepository.AddAsync
+ → EF Core → SQLite commit → PNG Cache → ObservableCollection → ApplicationCard
+
+Application Launch → successful result → Model Launch Statistics
+ → ApplicationPersistenceService.SaveStatisticsAsync
+ → ApplicationRepository.UpdateAsync → SQLite
+
+Startup → show Window → InitializeAsync → Repository → SQLite
+ → Persistence Service + Icon Cache → ContentViewModel → Collection → Card
+```
+
+新增直接依赖 `Microsoft.EntityFrameworkCore.Sqlite 9.0.16`，适用于 net9.0-windows，EF Core/Microsoft.Data.Sqlite 为 MIT；SQLitePCLRaw 2.1.10 包为 Apache-2.0，SQLite 引擎为公有领域。许可证已核对还原包 nuspec；传递版本均记录于 packages.lock.json。未安装 Design 包或其他 ORM。替代方案是直接使用 Microsoft.Data.Sqlite 编写 SQL，但本阶段按用户要求采用 EF Core。[包与兼容框架](https://www.nuget.org/packages/Microsoft.EntityFrameworkCore.Sqlite/9.0.16)。
+
+数据根目录通过 `Environment.SpecialFolder.LocalApplicationData` 获得；本机正式路径为 `C:\Users\王倚烽\AppData\Local\NovaLauncher\Data\nova.db`。首次运行自动创建目录及数据库，无需服务器或 SQL 操作。当前数据库初始化采用 **EnsureCreated**（调用 `EnsureCreatedAsync`），原因是当前处于早期开发阶段，Schema 简单，且没有历史数据库版本。
+
+**在下一次数据库 Schema 扩展之前，必须切换到 EF Core Migrations。** EnsureCreated 不执行 Schema 升级；切换前须设计备份和既有数据库的迁移基线，不能直接混用 EnsureCreated 与 Migrate，更不能通过删库升级。本轮仅记录迁移要求，不修改数据库架构。[官方限制](https://learn.microsoft.com/en-us/ef/core/managing-schemas/ensure-created)。
+
+真实用户数据仅位于 LOCALAPPDATA，仓库不保存运行数据。`.gitignore` 排除 `*.db`、`*.db-*`（含 WAL、SHM、journal 及其他数据库附属临时文件）和 `**/Cache/Icons/`；验证使用隔离临时目录并清理。
+
+`Applications` 表结构：
+
+| 字段 | SQLite 类型与约束 |
+| --- | --- |
+| Id | TEXT，Guid，主键 |
+| DisplayName | TEXT NOT NULL |
+| ExecutablePath / SourcePath | TEXT NOT NULL，CHECK 非空白 |
+| TargetPathKey | TEXT NOT NULL，CHECK 非空白，唯一索引 |
+| SourceType | INTEGER NOT NULL，CHECK IN (0,1)，Executable / Shortcut |
+| LaunchCount | INTEGER NOT NULL，CHECK >= 0 |
+| LastLaunchTime | TEXT NULL，DateTimeOffset（保留 offset） |
+| DateAdded | TEXT NOT NULL，UTC DateTimeOffset |
+| SortOrder | INTEGER NOT NULL，导入时分配，加载排序 |
+| IconCachePath | TEXT NULL，受管理 PNG 路径 |
+
+TargetPathKey 在 Repository 写入时统一由最终目标 `Path.GetFullPath(...).ToUpperInvariant()` 生成。数据库唯一索引防止 EXE/LNK 同目标和大小写重复，包括绕过 UI 或并发写入。没有合并硬链接或其他路径别名；SQLite 原生 NOCASE 仅覆盖 ASCII，故使用独立规范化键。排序相同时以 Id 稳定排序。
+
+`LauncherDbContextFactory : IDbContextFactory<LauncherDbContext>` 只持有路径，每次 Repository 操作创建并 using 释放 Context；无全局 Context。查询 AsNoTracking，统计用条件 ExecuteUpdate，只更新次数和时间，旧快照不能覆盖较新次数。Repository 提供 InitializeAsync / GetAllAsync / AddAsync / UpdateAsync / ExistsAsync。SQLite 驱动的 async 实际仍执行同步 I/O，因此 Repository 将整个操作放入 Task.Run，不阻塞 Dispatcher。[官方 async 说明](https://learn.microsoft.com/en-us/dotnet/standard/data/sqlite/async)。
+
+App 手动装配 Factory → Repository → Persistence Service → ContentViewModel；VM/View 不访问数据库。App 先显示窗口，再异步恢复；导入等待初始加载完成，数据库成功后才加卡片，保存失败显示轻提示。损坏数据库不删除、不重建覆盖，窗口仍能打开。单条实体转换失败会逐行隔离读取，其余有效条目继续加载；错误记 Trace。目标文件不存在时保留记录和卡片，IsAvailable=false，启动仍由原服务校验路径并提示。
+
+启动成功先更新 Model 并通知绑定，再保存统计；写入错误独立 Trace，不发 LaunchFailed，不回滚成功次数。正常窗口关闭先等待在途导入/启动与统计写入，再异步关闭窗口，避免 Closing 事件重入；不改变 MainWindow 文件或启动服务。强杀进程/断电不能保证尚未提交的数据。多实例统计合并暂不实现。
+
+## 4.3 Icon Cache Pipeline
+
+```text
+Executable → 原 ApplicationIconService / SHDefExtractIconW
+ → PNG bytes → Cache/Icons/<application-id:N>.png
+ → IconCachePath → SQLite
+
+Restart → managed cache path → PNG decode validation
+ → missing/corrupt/unreadable: extract target icon again → rewrite PNG
+ → extraction fails: null Icon → default Nova vector icon
+```
+
+根目录为 `%LOCALAPPDATA%\NovaLauncher\Cache\Icons`，使用 Guid 文件名避免同名 exe 和非法字符冲突。DB 不保存 WPF 对象、HICON 或 PNG blob。读取只接受该 Id 对应的受管理路径，不跟随库中任意外部路径。缓存目录、读写、PNG 解码和重提取均在后台；缓存失败记录 Trace，不撤销已成功保存的应用记录。DB 预先记录确定性缓存路径，后续启动可修复缺失文件。图标提取及 HICON 释放原实现保持不变。
+
+## 4.2 Application Launch Pipeline（历史基线）
 
 ```text
 ApplicationCard (Button: 单击 / Enter / Space)
@@ -36,7 +98,7 @@ LaunchCommand 使用 AsyncRelayCommand；IsLaunching 在 await 前设置，同�
 
 LaunchTimeFormatter 在显示层将完整时间格式化为“从未 / 刚刚 / N分钟前 / 今天 HH:mm / 昨天 HH:mm / M月d日”，跨年包含年份；进入 Hover/焦点时刷新，停留时每 30 秒刷新，离开或卸载后停止计时器。
 
-## 4.1 Application Import Pipeline
+## 4.1 Application Import Pipeline（历史基线）
 
 ```text
 File Drop (ContentView: WPF/OLE FileDrop 适配)

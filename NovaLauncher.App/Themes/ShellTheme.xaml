@@ -34,6 +34,8 @@
     <Duration x:Key="HoverDuration">0:0:0.16</Duration>
     <CornerRadius x:Key="SurfaceRadius">16</CornerRadius>
     <Thickness x:Key="WorkspacePadding">24</Thickness>
+    <Thickness x:Key="ToastPadding">16,10</Thickness>
+    <sys:Double x:Key="ToastMaxWidth">320</sys:Double>
     <FontFamily x:Key="AppFont">Microsoft YaHei UI, Segoe UI</FontFamily>
     <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
 

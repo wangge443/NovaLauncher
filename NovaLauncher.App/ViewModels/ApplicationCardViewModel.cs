@@ -12,11 +12,13 @@ namespace NovaLauncher.App.ViewModels;
 public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
 {
     private readonly IApplicationLaunchService _launcher;
+    private readonly IApplicationPersistenceService _persistence;
     private readonly CancellationTokenSource _lifetime = new();
     private readonly CancellationToken _token;
     private bool _isLaunching;
     public LauncherApplication Application { get; private set; }
     public string DisplayName => Application.DisplayName;
+    public bool IsAvailable => Application.IsAvailable;
     public ImageSource Icon { get; }
     public long LaunchCount => Application.LaunchCount;
     public DateTimeOffset? LastLaunchTime => Application.LastLaunchTime;
@@ -26,9 +28,11 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
     public IAsyncRelayCommand LaunchCommand { get; }
     public event Action<string>? LaunchFailed;
 
-    public ApplicationCardViewModel(LauncherApplication application, IApplicationLaunchService launcher)
+    public ApplicationCardViewModel(LauncherApplication application, IApplicationLaunchService launcher,
+        IApplicationPersistenceService persistence)
     {
         _launcher = launcher;
+        _persistence = persistence;
         _token = _lifetime.Token;
         Application = application;
         LaunchCommand = new AsyncRelayCommand(LaunchAsync, () => !_token.IsCancellationRequested);
@@ -69,6 +73,9 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
                 OnPropertyChanged(nameof(LastLaunchTime));
                 OnPropertyChanged(nameof(LaunchCountText));
                 RefreshLaunchTime();
+                // Persistence has a separate error boundary: a launched application remains a success.
+                try { await _persistence.SaveStatisticsAsync(Application); }
+                catch (Exception ex) { Trace.TraceError("Statistics persistence failed: {0}", ex.GetType().Name); }
             }
             else LaunchFailed?.Invoke(result.Error ?? "无法启动该应用");
         }

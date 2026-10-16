@@ -7,7 +7,7 @@ public sealed record LauncherApplication(
     Guid Id, string DisplayName, string ExecutablePath, string SourcePath,
     byte[]? Icon, ApplicationSourceType SourceType)
 {
-    // Session-only in 4.2; model values can be persisted without UI types in 4.3.
+    public bool IsAvailable { get; init; } = true;
     public long LaunchCount { get; init; }
     public DateTimeOffset? LastLaunchTime { get; init; }
 }

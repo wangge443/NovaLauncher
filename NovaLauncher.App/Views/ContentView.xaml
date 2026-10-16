@@ -69,5 +69,10 @@
             </TextBlock.Style>
         </TextBlock>
         </Grid>
+        <!-- Canvas overlays contribute no desired size and never move the card grid. -->
+        <Canvas Margin="{StaticResource WorkspacePadding}" IsHitTestVisible="False" Panel.ZIndex="10">
+            <views:ToastView Canvas.Right="0" Canvas.Bottom="0" DataContext="{Binding Toast}"
+                             IsOpen="{Binding IsOpen}" />
+        </Canvas>
     </Grid>
 </UserControl>

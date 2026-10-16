@@ -62,8 +62,8 @@ internal static partial class Program
         Check(!LaunchTimeFormatter.Format(noon.AddDays(-3), noon).Contains(':'), "Older date without full timestamp");
 
         var fake = new ControlledLauncher();
-        using (var card = new ApplicationCardViewModel(model!, fake))
-        using (var other = new ApplicationCardViewModel(shortcutModel!, fake))
+        using (var card = new ApplicationCardViewModel(model!, fake, new MemoryPersistence()))
+        using (var other = new ApplicationCardViewModel(shortcutModel!, fake, new MemoryPersistence()))
         {
             Check(card.LaunchCount == 0 && card.LastLaunchTime is null, "Initial model statistics");
             Task first = card.LaunchCommand.ExecuteAsync(null);

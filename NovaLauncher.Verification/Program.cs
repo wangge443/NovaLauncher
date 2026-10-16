@@ -23,20 +23,25 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length >= 2 && args[0].StartsWith("--restart-")) return RunRestartProcess(args[0], args[1]);
         bool launchTests = args.Contains("--launch");
+        bool persistenceTests = args.Contains("--persistence");
+        bool toastTests = args.Contains("--toast");
         _screenshots = Path.GetFullPath(args.FirstOrDefault(arg => !arg.StartsWith("--")) ??
-            (launchTests ? "docs/screenshots/4.2" : "docs/screenshots/4.1"));
+            (persistenceTests ? "docs/screenshots/4.3" : launchTests ? "docs/screenshots/4.2" : "docs/screenshots/4.1"));
         _fixtures = Path.Combine(Path.GetTempPath(), "NovaLauncher-Verification-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(_fixtures);
         Directory.CreateDirectory(_screenshots);
         Point originalCursor = Native.CursorPosition();
-        var app = new NovaLauncher.App.App();
+        var app = new NovaLauncher.App.App(CreatePersistence(Path.Combine(_fixtures, "window-data")));
         app.InitializeComponent();
         app.Startup += (_, _) => app.Dispatcher.BeginInvoke(new Action(async () =>
         {
             try
             {
-                if (launchTests) await RunLaunchAsync((MainWindow)app.MainWindow);
+                if (toastTests) await RunToastAsync((MainWindow)app.MainWindow);
+                else if (persistenceTests) await RunPersistenceAsync((MainWindow)app.MainWindow);
+                else if (launchTests) await RunLaunchAsync((MainWindow)app.MainWindow);
                 else await RunAsync((MainWindow)app.MainWindow);
                 Console.WriteLine($"PASS: {_checks} assertions; screenshots: {_screenshots}");
                 app.Shutdown(0);
@@ -80,7 +85,7 @@ internal static partial class Program
         string expected = version.FileDescription!.Trim(); // Windows' shared OS product name is not an app name.
         Check(exe!.DisplayName == expected, "EXE product metadata name");
         Check(exe.Icon is { Length: > 0 }, "EXE native icon extracted");
-        var bitmap = (BitmapSource)new ApplicationCardViewModel(exe, new ApplicationLaunchService()).Icon;
+        var bitmap = (BitmapSource)new ApplicationCardViewModel(exe, new ApplicationLaunchService(), new MemoryPersistence()).Icon;
         Check(bitmap.PixelWidth >= 72 && bitmap.IsFrozen, "High-resolution frozen WPF icon");
         var link = (await service.ImportAsync(shortcut, default)).Application;
         Check(link is not null && link.ExecutablePath.Equals(executable, StringComparison.OrdinalIgnoreCase)
@@ -102,17 +107,17 @@ internal static partial class Program
         File.WriteAllBytes(noIcon, bytes);
         var fallback = (await service.ImportAsync(noIcon, default)).Application;
         Check(fallback is not null && fallback.Icon is null && fallback.DisplayName == "无图标程序", "No resources: filename and default icon fallback");
-        Check(new ApplicationCardViewModel(fallback!, new ApplicationLaunchService()).Icon is DrawingImage { IsFrozen: true }, "Default Nova vector icon");
+        Check(new ApplicationCardViewModel(fallback!, new ApplicationLaunchService(), new MemoryPersistence()).Icon is DrawingImage { IsFrozen: true }, "Default Nova vector icon");
 
-        using (var vm = new ContentViewModel(service, new ApplicationLaunchService()))
+        using (var vm = new ContentViewModel(service, new ApplicationLaunchService(), new MemoryPersistence(), new ToastService()))
         {
             await vm.ImportAsync([executable, shortcut, executable.ToUpperInvariant()]);
-            Check(vm.Applications.Count == 1 && vm.StatusMessage!.Contains("该应用已添加"), "EXE/LNK and case-insensitive duplicates");
+            Check(vm.Applications.Count == 1 && vm.Toast.IsOpen && vm.Toast.Message == "该应用已添加", "EXE/LNK and case-insensitive duplicates");
             await vm.ImportAsync([text, noIcon]);
             Check(vm.Applications.Count == 2 && vm.StatusMessage!.Contains("不支持此文件类型"), "Mixed batch preserves valid imports and errors");
         }
         var waiting = new WaitingImporter();
-        using (var vm = new ContentViewModel(waiting, new ApplicationLaunchService()))
+        using (var vm = new ContentViewModel(waiting, new ApplicationLaunchService(), new MemoryPersistence(), new ToastService()))
         {
             Task first = vm.ImportAsync([executable]);
             await vm.ImportAsync([executable]);

@@ -4,7 +4,7 @@ Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windo
 
 ## 当前状态
 
-第四阶段 4.2：保留 .exe / .lnk 拖拽导入，新增单击、Enter/Space 启动；卡片 Hover/键盘聚焦显示上次启动时间和次数。统计仅在会话内保存，4.3 再接入 SQLite。LNK 通过原始快捷方式交给 Windows Shell，保留参数与工作目录。没有新增 NuGet 或其他业务功能。Desktop Backdrop 仍为 Experimental，未修改窗口与背景实现；本阶段已获用户授权完成最终 UI 收尾并提交。
+第四阶段 4.3：EF Core + SQLite 保存应用、启动次数和时间，重启自动恢复卡片与 PNG 图标缓存。数据位于 %LOCALAPPDATA%\NovaLauncher，保留 EXE/LNK 导入与 Shell 启动链路。Desktop Backdrop 仍为 Experimental。4.3 已通过最终人工验收，按用户授权完成收尾并提交。
 
 ## 构建与运行
 
@@ -44,9 +44,11 @@ dotnet run --project NovaLauncher.App/NovaLauncher.App.csproj -c Release --no-bu
 
 ## 后续步骤
 
-4.1 已提交为 58bf6dc；4.2 最终收尾验证后按用户授权提交；Desktop Backdrop 后续可独立研究，不作为业务开发的前置条件。
+4.1 已提交为 58bf6dc；4.2 已提交为 480f357；4.3 已通过最终人工验收；Desktop Backdrop 后续可独立研究，不作为业务开发的前置条件。
 
 ui-ux-pro-max 已安装到 Codex 用户技能目录，入口已读取，WPF 检索验证通过。初始化文档以 docs: initialize project documentation 作为首次提交；未关联远程仓库。
 
 
 4.2 验证：先构建解决方案，再执行 `dotnet run --project NovaLauncher.Verification -c Release --no-build -- --launch`。该模式通过独立的 NovaLauncher.LaunchProbe 测试程序验证真实进程启动、快捷方式配置与卡片交互，不启动用户应用；测试输出写入临时目录并在退出时清理。
+
+4.3 验证：`dotnet run --project NovaLauncher.Verification -c Release --no-build -- --persistence`。使用隔离临时数据库，包含独立 WPF 进程关闭/重启恢复与异常测试；不会写入真实用户数据库。
