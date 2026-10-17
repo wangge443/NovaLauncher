@@ -41,35 +41,6 @@
                      Background="Transparent" BorderThickness="0" Padding="0"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
                      ItemContainerStyle="{StaticResource NavigationItemStyle}" ItemTemplate="{StaticResource NavigationTemplate}" />
-            <StackPanel DataContext="{Binding CategoryManager}" Margin="{StaticResource NavigationGroupSpacing}">
-                <Button Style="{StaticResource SidebarActionButtonStyle}"
-                        IsEnabled="{Binding IsReady}" Command="{Binding BeginCreateCommand}" Click="BeginCategory_Click"
-                        AutomationProperties.AutomationId="NewCategory" AutomationProperties.Name="新建分类">
-                    <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="{StaticResource NavigationIconSlot}" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="{StaticResource NavigationIconSize}"
-                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
-                        <TextBlock Grid.Column="1" Text="新建分类" FontSize="{StaticResource NavigationTextSize}" Margin="{StaticResource NavigationLabelMargin}"
-                                   Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
-                    </Grid>
-                </Button>
-                <Border Background="{DynamicResource WindowBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                        CornerRadius="8" Padding="10" Margin="8,6,0,0" Visibility="{Binding IsEditing, Converter={StaticResource BooleanVisibility}}">
-                    <StackPanel>
-                        <TextBlock Text="分类名称" FontSize="{StaticResource SecondaryTextSize}" Margin="0,0,0,6" />
-                        <TextBox x:Name="CategoryNameEditor" Text="{Binding NewName, UpdateSourceTrigger=PropertyChanged}" MaxLength="24"
-                                 KeyDown="CategoryEditor_KeyDown" AutomationProperties.Name="分类名称" AutomationProperties.AutomationId="CategoryNameEditor"
-                                 Padding="6" Background="{DynamicResource WindowBrush}" Foreground="{DynamicResource TextBrush}"
-                                 BorderBrush="{DynamicResource BorderBrush}" FontFamily="{StaticResource AppFont}" FontSize="{StaticResource ApplicationNameSize}" />
-                        <TextBlock Text="{Binding Error}" TextWrapping="Wrap" FontSize="11" Margin="0,4,0,0"
-                                   AutomationProperties.LiveSetting="Polite" />
-                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">
-                            <Button Content="取消" Command="{Binding CancelCreateCommand}" Style="{StaticResource QuietButton}" />
-                            <Button Content="创建" Command="{Binding CreateCommand}" Style="{StaticResource QuietButton}" Foreground="{DynamicResource AccentBrush}" />
-                        </StackPanel>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
             <ListBox ItemsSource="{Binding FooterItems}" SelectedItem="{Binding FooterSelectedItem, Mode=TwoWay}"
                      Background="Transparent" BorderThickness="0" Padding="0" ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      AutomationProperties.Name="其他导航" ItemContainerStyle="{StaticResource NavigationItemStyle}"

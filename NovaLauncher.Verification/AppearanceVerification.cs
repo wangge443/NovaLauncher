@@ -121,7 +121,7 @@ internal static partial class Program
         var slider=Descendants<Slider>(settingsView).First(); slider.Focus(); ProfileKey(0x27); await Task.Delay(80);
         Check(vm.OverlayPercent==73,"Slider native Right key updates preview"); await vm.FlushAsync(); vm.OverlayPercent=72; await vm.FlushAsync();
         SaveWindow(window,"appearance-settings.png");
-        Check(Descendants<ScrollViewer>(settingsView).Count()==1,"Appearance retains one Settings scroll viewer");
+        Check(Descendants<ScrollViewer>(settingsView).Count(x=>x.TemplatedParent is not TextBox)==1,"Appearance retains one Settings scroll viewer");
         window.Width=800; window.Height=560; ((ColumnDefinition)window.FindName("SidebarColumn")).Width=new GridLength(280); window.UpdateLayout(); SaveWindow(window,"appearance-small.png");
         await appearance.SetModeAsync(BackgroundMode.DesktopWallpaper);
         Check(!appearance.HasImage && content.Toast.Message=="无法读取桌面壁纸","Missing wallpaper falls back without black window");

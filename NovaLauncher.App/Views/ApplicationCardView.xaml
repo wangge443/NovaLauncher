@@ -6,7 +6,31 @@
              AutomationProperties.Name="{Binding DisplayName}"
              MouseEnter="Card_MouseEnter" MouseLeave="Card_MouseLeave"
              GotKeyboardFocus="Card_FocusChanged" LostKeyboardFocus="Card_FocusChanged"
-             Loaded="Card_Loaded" Unloaded="Card_Unloaded">
+             Loaded="Card_Loaded" Unloaded="Card_Unloaded" PreviewKeyDown="Card_PreviewKeyDown">
+    <UserControl.ContextMenu>
+        <ContextMenu x:Name="CardMenu" Style="{StaticResource ManagementContextMenu}"
+                     DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
+                     Opened="CardMenu_Opened" Closed="CardMenu_Closed" AutomationProperties.Name="应用操作">
+            <MenuItem x:Name="FavoriteMenuItem" Header="{Binding FavoriteMenuText}" Command="{Binding ToggleFavoriteCommand}" AutomationProperties.Name="{Binding FavoriteActionName}">
+                <MenuItem.Icon><TextBlock Text="{Binding FavoriteGlyph}" Style="{StaticResource ManagementIcon}"/></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem x:Name="MoveCategoryMenuItem" Header="移动到分类" ItemsSource="{Binding CategoryManager.Choices}" IsEnabled="{Binding CategoryManager.IsReady}">
+                <MenuItem.Icon><TextBlock Text="&#xE8B7;" Style="{StaticResource ManagementIcon}"/></MenuItem.Icon>
+                <MenuItem.ItemContainerStyle><Style TargetType="MenuItem" BasedOn="{StaticResource ManagementMenuItem}">
+                    <Setter Property="Header" Value="{Binding Name}"/>
+                    <Setter Property="Command" Value="{Binding DataContext.ChangeCategoryCommand, RelativeSource={RelativeSource AncestorType=MenuItem}}"/>
+                    <Setter Property="CommandParameter" Value="{Binding}"/>
+                </Style></MenuItem.ItemContainerStyle>
+            </MenuItem>
+            <Separator Style="{StaticResource ManagementSeparator}"/>
+            <MenuItem x:Name="LocationMenuItem" Header="打开文件位置" Command="{Binding OpenLocationCommand}">
+                <MenuItem.Icon><TextBlock Text="&#xE838;" Style="{StaticResource ManagementIcon}"/></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem x:Name="InfoMenuItem" Header="应用信息" Click="InfoMenu_Click">
+                <MenuItem.Icon><TextBlock Text="&#xE946;" Style="{StaticResource ManagementIcon}"/></MenuItem.Icon>
+            </MenuItem>
+        </ContextMenu>
+    </UserControl.ContextMenu>
     <UserControl.ToolTip>
         <ToolTip Content="{Binding DisplayName}" />
     </UserControl.ToolTip>
@@ -48,36 +72,25 @@
                 </StackPanel>
             </Grid>
         </Button>
-        <!-- Sibling controls prevent category selection from bubbling through the launch button. -->
-        <ToggleButton x:Name="CategoryButton" Content="&#xE8B7;" Style="{StaticResource CardCategoryButton}" ToolTip="选择分类"
-                      HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,0,0" Padding="7,4" Opacity="0"
-                      IsEnabled="{Binding CategoryManager.IsReady}"
-                      AutomationProperties.Name="选择应用分类" AutomationProperties.AutomationId="ChooseCategory" />
-        <Button x:Name="FavoriteButton" Command="{Binding ToggleFavoriteCommand}" Style="{StaticResource FavoriteButtonStyle}"
-                HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,2,0"
-                ToolTip="{Binding FavoriteActionName}" AutomationProperties.Name="{Binding FavoriteActionName}"
-                AutomationProperties.AutomationId="ToggleFavorite" />
-        <Popup x:Name="CategoryPopup" PlacementTarget="{Binding ElementName=CategoryButton}" Placement="Bottom"
-               IsOpen="{Binding IsChecked, ElementName=CategoryButton, Mode=TwoWay}" StaysOpen="False" AllowsTransparency="True"
-               Opened="CategoryPopup_Opened" Closed="CategoryPopup_Closed">
-            <Border Background="{DynamicResource WindowBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
-                    CornerRadius="10" Padding="10" Width="{StaticResource CategoryPopupWidth}" KeyDown="CategoryPopup_KeyDown">
-                <StackPanel>
-                    <TextBlock Text="移动到分类" FontSize="{StaticResource SecondaryTextSize}" Margin="8,4,8,8" Foreground="{DynamicResource MutedTextBrush}" />
-                    <ListBox x:Name="CategoryChoices" ItemsSource="{Binding CategoryManager.Choices}" DisplayMemberPath="Name"
-                             SelectedItem="{Binding CurrentCategoryChoice, Mode=OneWay}" MaxHeight="240"
-                             SelectionChanged="CategoryChoices_SelectionChanged" Background="Transparent" BorderThickness="0"
-                             ScrollViewer.HorizontalScrollBarVisibility="Disabled" ItemContainerStyle="{StaticResource CategoryChoiceStyle}"
-                             AutomationProperties.Name="目标分类">
-                        <ListBox.Style>
-                            <Style TargetType="ListBox">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsChangingCategory}" Value="True"><Setter Property="IsEnabled" Value="False" /></DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </ListBox.Style>
-                    </ListBox>
-                </StackPanel>
+        <Popup x:Name="InfoPopup" PlacementTarget="{Binding ElementName=LaunchButton}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
+               Opened="InfoPopup_Opened" Closed="InfoPopup_Closed">
+            <Border Style="{StaticResource ManagementSurface}" Width="360" Padding="18" KeyDown="Info_KeyDown">
+                <ScrollViewer MaxHeight="420" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+                        <DockPanel Margin="0,0,0,12">
+                            <Button x:Name="CloseInfoButton" DockPanel.Dock="Right" Content="关闭" HorizontalAlignment="Right" Style="{StaticResource SettingsButton}" Click="CloseInfo_Click" AutomationProperties.Name="关闭应用信息"/>
+                            <TextBlock Text="应用信息" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center"/>
+                        </DockPanel>
+                        <TextBlock Text="名称" Style="{StaticResource SettingsDescription}"/><TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap"/>
+                        <TextBlock Text="类型" Style="{StaticResource SettingsDescription}" Margin="0,12,0,0"/><TextBlock Text="{Binding SourceTypeText}"/>
+                        <TextBlock Text="目标路径" Style="{StaticResource SettingsDescription}" Margin="0,12,0,0"/>
+                        <TextBox Text="{Binding TargetPath, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" Foreground="{DynamicResource TextBrush}" Padding="0" AutomationProperties.Name="目标路径"/>
+                        <TextBlock Text="分类" Style="{StaticResource SettingsDescription}" Margin="0,12,0,0"/><TextBlock Text="{Binding CategoryName}" TextWrapping="Wrap"/>
+                        <TextBlock Text="收藏状态" Style="{StaticResource SettingsDescription}" Margin="0,12,0,0"/><TextBlock Text="{Binding FavoriteStatus}"/>
+                        <TextBlock Text="{Binding LaunchCountText}" Margin="0,12,0,0"/>
+                        <TextBlock Text="{Binding LastLaunchText}" Margin="0,4,0,0"/>
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
         </Popup>
     </Grid>

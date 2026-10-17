@@ -17,6 +17,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     private readonly IApplicationImportService _importer;
     private readonly IApplicationLaunchService _launcher;
     private readonly IApplicationPersistenceService _persistence;
+    private readonly IApplicationLocationService? _location;
     private Task? _initialization;
     private Task _importTask = Task.CompletedTask;
     private readonly HashSet<string> _targets = new(StringComparer.OrdinalIgnoreCase);
@@ -26,11 +27,13 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     private int _messageVersion;
 
     public ContentViewModel(IApplicationImportService importer, IApplicationLaunchService launcher,
-        IApplicationPersistenceService persistence, IToastService toast, ICategoryService? categories = null)
+        IApplicationPersistenceService persistence, IToastService toast, ICategoryService? categories = null,
+        IApplicationLocationService? location = null)
     {
         _importer = importer;
         _launcher = launcher;
         _persistence = persistence;
+        _location = location;
         Toast = toast;
         _token = _lifetime.Token;
         CategoryManager = new(categories, toast);
@@ -84,9 +87,9 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     };
     public string EmptyHint => Mode switch
     {
-        WorkspaceMode.Favorites => "点击应用卡片上的星标即可收藏",
+        WorkspaceMode.Favorites => "右键应用卡片即可收藏",
         WorkspaceMode.Recent => "启动应用后，它会出现在这里",
-        WorkspaceMode.Category => "在首页通过卡片上的“分类”添加应用",
+        WorkspaceMode.Category => "右键应用卡片，选择“移动到分类”",
         _ => "支持 .exe 和 .lnk"
     };
     private void RefreshFilter()
@@ -143,7 +146,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     private void AddCard(Models.LauncherApplication application)
     {
         if (_targets.Contains(application.ExecutablePath)) return;
-        var card = new ApplicationCardViewModel(application, _launcher, _persistence, CategoryManager, Toast);
+        var card = new ApplicationCardViewModel(application, _launcher, _persistence, CategoryManager, Toast, _location);
         card.CategoryChanged += RefreshFilter;
         card.FavoriteChanged += RefreshFavorites;
         card.PropertyChanged += CardPropertyChanged;

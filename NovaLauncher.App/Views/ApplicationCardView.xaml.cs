@@ -25,7 +25,8 @@ public partial class ApplicationCardView : UserControl
     private void Card_Unloaded(object sender, RoutedEventArgs e)
     {
         _timeRefresh.Stop();
-        CategoryButton.IsChecked = false;
+        CardMenu.IsOpen = false;
+        InfoPopup.IsOpen = false;
     }
 
     private void RefreshTime()
@@ -35,7 +36,7 @@ public partial class ApplicationCardView : UserControl
 
     private void UpdateInteraction()
     {
-        bool active = IsMouseOver || IsKeyboardFocusWithin || CategoryPopup.IsOpen;
+        bool active = IsMouseOver || IsKeyboardFocusWithin || CardMenu.IsOpen || InfoPopup.IsOpen;
         var duration = (Duration)FindResource("HoverDuration");
         double offset = active && duration.HasTimeSpan && duration.TimeSpan > TimeSpan.Zero
             ? -(double)FindResource("ApplicationCardLift") : 0;
@@ -46,8 +47,6 @@ public partial class ApplicationCardView : UserControl
         HoverSurface.BeginAnimation(OpacityProperty, new DoubleAnimation(active ? 1 : 0, duration));
         NormalContent.BeginAnimation(OpacityProperty, new DoubleAnimation(active ? 0 : 1, duration));
         DetailsContent.BeginAnimation(OpacityProperty, new DoubleAnimation(active ? 1 : 0, duration));
-        CategoryButton.BeginAnimation(OpacityProperty, new DoubleAnimation(active ? 1 : 0, duration));
-        CategoryButton.IsHitTestVisible = active;
         if (active && IsLoaded)
         {
             RefreshTime();
@@ -64,30 +63,44 @@ public partial class ApplicationCardView : UserControl
         LaunchFlash.BeginAnimation(OpacityProperty, new DoubleAnimation(1, 0, duration));
     }
 
-    private void CategoryPopup_Opened(object? sender, EventArgs e)
+    private void Card_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        CategoryChoices.GetBindingExpression(ListBox.SelectedItemProperty)?.UpdateTarget();
-        UpdateInteraction();
-        Dispatcher.BeginInvoke(new Action(() => CategoryChoices.Focus()));
-    }
-    private void CategoryPopup_Closed(object? sender, EventArgs e) => UpdateInteraction();
-    private void CategoryPopup_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Escape)
+        // WPF handles the Apps key on key-up; do not open twice for the same gesture.
+        if (e.Key == Key.F10 && Keyboard.Modifiers == ModifierKeys.Shift)
         {
-            CategoryButton.IsChecked = false;
-            CategoryButton.Focus();
+            CardMenu.PlacementTarget = this;
+            CardMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            CardMenu.IsOpen = true;
             e.Handled = true;
         }
     }
-    private async void CategoryChoices_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void CardMenu_Opened(object sender, RoutedEventArgs e) => UpdateInteraction();
+    private void CardMenu_Closed(object sender, RoutedEventArgs e)
     {
-        if (CategoryPopup.IsOpen && CategoryChoices.IsKeyboardFocusWithin &&
-            DataContext is ApplicationCardViewModel card && CategoryChoices.SelectedItem is CategoryChoice choice &&
-            choice.Id != card.CategoryId && card.ChangeCategoryCommand.CanExecute(choice))
-        {
-            await card.ChangeCategoryCommand.ExecuteAsync(choice);
-            if (card.CategoryId == choice.Id) CategoryButton.IsChecked = false;
-        }
+        CardMenu.Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint;
+        UpdateInteraction();
+    }
+    private void InfoMenu_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        Dispatcher.BeginInvoke(new Action(() => { if (IsLoaded) InfoPopup.IsOpen = true; }));
+    }
+    private void InfoPopup_Opened(object? sender, EventArgs e)
+    {
+        RefreshTime();
+        UpdateInteraction();
+        Dispatcher.BeginInvoke(new Action(() => CloseInfoButton.Focus()));
+    }
+    private void InfoPopup_Closed(object? sender, EventArgs e)
+    {
+        if (IsLoaded) LaunchButton.Focus();
+        UpdateInteraction();
+    }
+    private void CloseInfo_Click(object sender, RoutedEventArgs e) => InfoPopup.IsOpen = false;
+    private void Info_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.Escape) return;
+        InfoPopup.IsOpen = false;
+        e.Handled = true;
     }
 }

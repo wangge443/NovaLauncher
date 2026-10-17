@@ -43,7 +43,8 @@ public partial class App : Application
             new ApplicationRepository(new LauncherDbContextFactory(paths), paths), new ApplicationIconCache(paths, icons));
         _content = new ContentViewModel(new ApplicationImportService(new ShortcutResolver(), icons),
             new ApplicationLaunchService(), persistence, new ToastService(),
-            Categories ?? (Persistence is null ? new CategoryService(new CategoryRepository(new LauncherDbContextFactory(paths))) : null));
+            Categories ?? (Persistence is null ? new CategoryService(new CategoryRepository(new LauncherDbContextFactory(paths))) : null),
+            new ApplicationLocationService());
         _profile = new UserProfileViewModel(Profiles ?? (Persistence is null
             ? new UserProfileService(new UserProfileRepository(new LauncherDbContextFactory(paths)), paths) : null), new AvatarFilePicker(), _content.Toast);
         _settingsService ??= Persistence is null ? new AppSettingsService(new AppSettingsRepository(new LauncherDbContextFactory(paths))) : null;

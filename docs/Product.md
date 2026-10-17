@@ -1,5 +1,13 @@
 # Nova Launcher — 产品定义
 
+## 6.4 分类入口与卡片菜单（当前范围）
+
+Sidebar 仅保留动态分类导航，分类创建迁入 Settings 的“分类管理”Section。列表展示全部现有分类，内联编辑沿用 Trim、1–24 字符、重复校验、Enter 创建、Esc 取消与 Toast；保存成功立即更新 Sidebar，重启恢复。本轮不实现重命名、删除、排序或分类图标编辑。
+
+所有页面共用的 ApplicationCard 移除可见收藏星标和 Hover 分类按钮。右键菜单提供收藏/取消收藏、移动到分类（含未分类）、打开目标程序文件位置、只读应用信息。左键和 Enter/Space 保持启动，右键和菜单操作不启动；支持 Shift+F10、Context Menu 键、方向键、Enter、Esc。Favorites 及 Home 收藏 Section 继续实时更新，空状态改为“右键应用卡片即可收藏”。
+
+基于已验收 6.3，不更改背景实现、主题、Experimental DesktopBackdrop 或数据库 Schema；不自动 commit。详见 [6.4 交付记录](Management-6.4.md)。以下为历史阶段。
+
 ## 6.3 背景与外观（当前范围）
 
 Settings → 外观 → 背景在原单页中展开，支持 Default、DesktopWallpaper、CustomImage；遮罩 20–95%（默认 72%）、模糊 0–30（默认 12）、填充/适应与恢复默认。主题保持 Light。桌面模式读取 Windows 主/系统静态壁纸并提供手动刷新，不捕获动态桌面、其他程序或每显示器独立壁纸。自定义 PNG/JPG/JPEG/BMP 转换为本地 PNG，取消与失败保留旧图，重启恢复；缺失/损坏背景仅会话回退默认。保持 6.2 设置与第五阶段功能，不自动 commit。

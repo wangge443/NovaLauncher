@@ -1,5 +1,25 @@
 # Nova Launcher — 开发流程
 
+## 6.4 最终收尾（2026-10-17）
+
+用户已最终验收，授权提交 `feat: add application context menu and category management`。收尾 Release Build **0 warnings / 0 errors**，使用独立输出目录避免占用运行中的 Nova；管理专项 **46 项断言再次全部通过**，包含 Settings 分类创建与 Sidebar 实时更新、无卡片星标、鼠标/键盘菜单、收藏/分类投影、正常启动、应用信息、Explorer 选中文件和真实数据保护。此前完整 **410 项断言**结果仍适用。
+
+Context Menu 透明度和功能实现未再调整，背景源码、数据库 Schema 与旧数据保持完整。复核仅有本阶段实现、验证、文档与截图，清理本轮临时构建和专项输出；不开始下一阶段。
+
+## 6.4 分类入口与卡片菜单（2026-10-17，待验收）
+
+基于已验收并提交的 6.3（911ee64），分类创建从 Sidebar 迁入 Settings，ApplicationCard 收藏与分类操作迁入统一右键菜单，增加文件位置服务和只读信息浮层。复用原分类/收藏逻辑，数据库 Schema、Migration、6.3 背景实现及 ShellTheme 全部保持不变。本阶段不自动 commit。
+
+最终标准输出目录 Release Build：**0 warnings / 0 errors**。完整 **410 项主进程断言通过**：Management46、Category34、Favorites31、Home29、Settings36、Appearance39、Profile44、Recent22、Launch32、Toast11、Polish19、Migration30、Import/OLE37；另含原分类/收藏/最近使用的独立进程恢复检查。真实 nova.db 的应用/分类/收藏/统计/资料/全部设置/表定义，以及图标、头像、背景文件哈希在专项前后逐项一致；实际创建、收藏、移动与启动使用隔离临时库。
+
+实际原生鼠标右键与菜单点击不触发启动；Shift+F10、Context Menu 键、方向键/Enter/Esc、左键/Enter/Space 启动、分类与收藏实时投影、Settings 内联编辑、菜单和子菜单右下角自动定位均通过。真实 Explorer 成功打开测试 EXE 目录并选中文件，结束仅关闭本次新建的对应目录窗口。无效文件通过命令显示“应用文件不存在”，Shortcut 使用目标程序路径。
+
+Home 300 卡片首次布局 **1819 ms**；背景 Blur12 的 30 次布局 **829 ms**，82 卡片的 30 次滚动 Render yield **76 ms**。这些是墙钟耗时，不代表 GPU FPS；原性能 backlog 保留。未实机覆盖混合 DPI、多屏拔插或高对比度切换。
+
+开发中修正了菜单高对比度资源绑定和 Context Menu 键 KeyDown/KeyUp 重复开关；测试在启动探针后重新激活窗口再发送键盘输入。旧星标/分类按钮测试已迁到菜单，收藏动态文案在菜单重新打开后检查；Settings 单滚动区断言排除 TextBox 模板内部滚动器，未改变页面滚动结构。初期运行中的旧版 Nova 占用默认输出时使用隔离 Release 目录，旧版退出后已完成标准 Release 构建；本轮没有终止用户进程。
+
+ui-ux-pro-max 已读取并按内置规范检查实际截图，Python 缺失，未声称成功检索。工作区只含本阶段实现、验证、文档与九张截图；清理本轮隔离构建和回归临时输出。实现、复现命令及截图见 [6.4 交付记录](Management-6.4.md)。
+
 ## 6.3 背景与外观（2026-10-17，待验收）
 
 完成 Default / DesktopWallpaper / CustomImage、单页背景设置、实时 Blur/Overlay/Fill/Fit、400ms debounce、安全图片存储与 fallback。新增 EF Migration `20261017084703_AddBackgroundAppearance`，旧 Migration 未修改；Theme 保持 Light，DesktopBackdrop 保留 Experimental / Internal。本轮不 commit。实现、限制、备份及截图见 [6.3 交付记录](Appearance-6.3.md)。

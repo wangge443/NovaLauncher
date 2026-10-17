@@ -44,7 +44,8 @@ internal static partial class Program
         var categories = CategoryStore(paths);
         using var vm = new ContentViewModel(new ApplicationImportService(new ShortcutResolver(), new ApplicationIconService()),
             new ApplicationLaunchService(), store, new ToastService(), categories);
-        var shell = new MainWindowViewModel(vm);
+        var settingsService = SettingsService(paths); await vm.InitializeAsync(); await settingsService.LoadAsync();
+        var shell = new MainWindowViewModel(vm, settings: new SettingsViewModel(settingsService, new SettingsDirectoryStub(), paths, vm.Toast));
         window.DataContext = shell;
         await vm.InitializeAsync();
         Check(shell.Sidebar.Categories.Count == 2 && shell.Sidebar.Items.Count == 3, "Sidebar uses loaded category collection");
@@ -54,9 +55,10 @@ internal static partial class Program
         Check((await categories.CreateAsync(new string('长', 25), default)).Error is not null, "Overlong category rejected");
         window.Activate();
         var sidebar = Descendants<SidebarView>(window).Single();
+        shell.Sidebar.OpenSettings(); window.UpdateLayout();
         manager.BeginCreateCommand.Execute(null);
         window.UpdateLayout();
-        var editor = (TextBox)sidebar.FindName("CategoryNameEditor");
+        var editor = (TextBox)Descendants<CategoryManagementView>(window).Single().FindName("CategoryNameEditor");
         Check(editor.Focus(), "Inline editor accepts keyboard focus");
         editor.Text = "  开发工具  ";
         SaveWindow(window, "new-category.png");
@@ -96,17 +98,6 @@ internal static partial class Program
         window.UpdateLayout();
         await Task.Delay(200);
         SaveWindow(window, "games-filter.png");
-        var createAction = Descendants<Button>(sidebar).Single(button =>
-            System.Windows.Automation.AutomationProperties.GetAutomationId(button) == "NewCategory");
-        var idlePoint = window.PointToScreen(new Point(window.ActualWidth - 80, 100));
-        Native.SetCursorPos((int)idlePoint.X, (int)idlePoint.Y);
-        await Task.Delay(220);
-        SaveWindow(window, "sidebar-action-default.png");
-        var actionPoint = createAction.PointToScreen(new Point(createAction.ActualWidth / 2, createAction.ActualHeight / 2));
-        Native.SetCursorPos((int)actionPoint.X, (int)actionPoint.Y);
-        await Task.Delay(220);
-        SaveWindow(window, "sidebar-action-hover.png");
-        Native.SetCursorPos((int)idlePoint.X, (int)idlePoint.Y);
         await first.ChangeCategoryCommand.ExecuteAsync(new(tools.Id, tools.Name));
         Check(vm.FilteredApplications.IsEmpty && vm.Applications.Count == 2, "Moving out refreshes filter without destroying source collection");
         navigation.SelectedItem = tools;
@@ -122,20 +113,16 @@ internal static partial class Program
 
         window.UpdateLayout();
         var cardView = Descendants<ApplicationCardView>(window).First(x => ReferenceEquals(x.DataContext, first));
-        var toggle = (ToggleButton)cardView.FindName("CategoryButton");
-        toggle.Focus();
         await WaitForAsync(() => !vm.Toast.IsOpen);
-        toggle.IsChecked = true;
-        await Task.Delay(220);
-        var popup = (Popup)cardView.FindName("CategoryPopup");
-        var choices = (ListBox)cardView.FindName("CategoryChoices");
-        Check(popup.IsOpen && choices.Items.Count == 4, "Card category flyout includes live custom category and uncategorized");
-        SaveElement((FrameworkElement)popup.Child, "category-picker-detail.png");
+        await OpenCardMenuAsync(cardView, true);
+        var moveMenu = (MenuItem)cardView.FindName("MoveCategoryMenuItem");
+        moveMenu.Focus(); ProfileKey(0x27); await WaitForAsync(() => moveMenu.IsSubmenuOpen);
+        Check(moveMenu.Items.Count == 4, "Category submenu includes live custom category and uncategorized");
         CaptureCategoryWindow(window, "category-picker-desktop.png");
-        choices.Focus();
-        choices.SelectedItem = manager.Choices.Single(x => x.Id == apps.Id);
+        var choice = moveMenu.Items.Cast<CategoryChoice>().Single(x => x.Id == apps.Id);
+        await ActivateMenuAsync((MenuItem)moveMenu.ItemContainerGenerator.ContainerFromItem(choice));
         await WaitForAsync(() => first.CategoryId == apps.Id && !first.IsChangingCategory);
-        Check(!popup.IsOpen && first.LaunchCount == 0, "Flyout selection saves and never launches application");
+        Check(!cardView.ContextMenu.IsOpen && first.LaunchCount == 0, "Category menu saves and never launches application");
         await first.ChangeCategoryCommand.ExecuteAsync(new(null, "未分类"));
         Check(first.CategoryId is null, "Uncategorized clears nullable relation");
         await first.ChangeCategoryCommand.ExecuteAsync(new(tools.Id, tools.Name));

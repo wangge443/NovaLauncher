@@ -46,7 +46,7 @@ internal static partial class Program
         Check(content.Mode == WorkspaceMode.Settings && !flyout.IsOpen, "Profile Flyout enters Settings workspace");
         Check(shell.Sidebar.TopSelectedItem is null && shell.Sidebar.FooterSelectedItem is null, "Settings has no sidebar active item");
         var view = Descendants<SettingsView>(window).Single();
-        Check(Descendants<ScrollViewer>(view).Count() == 1, "Single vertical scroll viewer");
+        Check(Descendants<ScrollViewer>(view).Count(x => x.TemplatedParent is not TextBox) == 1, "Single vertical scroll viewer");
         SaveWindow(window, "settings.png");
         var toggle = (CheckBox)view.FindName("RememberSize");
         toggle.Focus(); ProfileKey(0x20); await Task.Delay(150); await settings.FlushAsync();
@@ -107,7 +107,7 @@ internal static partial class Program
         Check(SettingsExistingState(paths) == before, "All old data and image bytes preserved");
         await WaitForAsync(() => !content.Toast.IsOpen); shell.Sidebar.OpenSettings(); await Task.Delay(150); System.Windows.Input.Keyboard.ClearFocus(); window.Width = 800; window.Height = 560; window.UpdateLayout();
         ((ColumnDefinition)window.FindName("SidebarColumn")).Width = new GridLength(280); window.UpdateLayout();
-        view = Descendants<SettingsView>(window).Single(); var scroll = Descendants<ScrollViewer>(view).Single();
+        view = Descendants<SettingsView>(window).Single(); var scroll = Descendants<ScrollViewer>(view).Single(x => x.TemplatedParent is not TextBox);
         Check(scroll.ScrollableWidth == 0 && scroll.ScrollableHeight > 0, "Minimum window scrolls vertically only");
         SaveWindow(window, "settings-small.png"); scroll.ScrollToEnd(); window.UpdateLayout(); SaveWindow(window, "settings-storage-about.png");
         Check(settings.Version == typeof(SettingsViewModel).Assembly.GetName().Version!.ToString(3), "Version from assembly");

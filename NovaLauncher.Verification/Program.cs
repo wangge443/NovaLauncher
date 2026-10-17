@@ -72,7 +72,7 @@ internal static partial class Program
         {
             try
             {
-                if (appearanceTests) await RunAppearanceAsync((MainWindow)app.MainWindow); else if (settingsTests) await RunSettingsAsync((MainWindow)app.MainWindow); else if (profileTests) await RunProfileAsync((MainWindow)app.MainWindow);
+                if (args.Contains("--management")) await RunManagementAsync((MainWindow)app.MainWindow); else if (appearanceTests) await RunAppearanceAsync((MainWindow)app.MainWindow); else if (settingsTests) await RunSettingsAsync((MainWindow)app.MainWindow); else if (profileTests) await RunProfileAsync((MainWindow)app.MainWindow);
                 else if (polishTests) await RunPolishAsync((MainWindow)app.MainWindow);
                 else if (homeTests) await RunHomeAsync((MainWindow)app.MainWindow);
                 else if (recentTests) await RunRecentAsync((MainWindow)app.MainWindow);

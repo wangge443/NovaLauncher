@@ -1,5 +1,15 @@
 # Nova Launcher — 架构设计
 
+## 6.4 管理入口（当前架构）
+
+Settings 内 CategoryManagementView 绑定窗口 Content.CategoryManager，与 Sidebar 共享同一集合和 CategoryManagerViewModel；创建继续走既有 CategoryService / CategoryRepository，无第二套业务逻辑。菜单直接绑定 ApplicationCardViewModel.ToggleFavoriteCommand / ChangeCategoryCommand，保留现有持久化失败处理与 Home/Category/Favorites 投影刷新。
+
+每个 ApplicationCardView 持有自己的 ContextMenu 与信息 Popup，避免同一 ViewModel 在 Home 多个 Section 中同时弹窗。弹出菜单通过 PlacementTarget.DataContext 绑定卡片，分类子菜单绑定共享 Choices。View 仅处理焦点、键盘、Popup 生命周期和动画；信息读取现有模型，不查询或修改数据库。
+
+IApplicationLocationService 在 App 注入 ContentViewModel，再传给卡片。实现验证目标文件存在并调用 Windows Explorer `/select`；Shortcut 使用模型 ExecutablePath（已解析目标），不打开原始 .lnk 所在目录。异常由服务/命令边界反馈 Toast。新增独立 ManagementStyles.xaml，复用原语义资源，不修改 ShellTheme 或任何背景实现。无 Migration/Schema/依赖变更。
+
+详见 [6.4 交付记录](Management-6.4.md)。以下为历史架构。
+
 ## 6.3 Background Pipeline（当前架构）
 
 Background Source → BackgroundImageStore（OnLoad / Freeze）→ AppearanceService → Blur → White Overlay → ShellBackgroundView → Launcher UI。SettingsViewModel 持有 AppearanceViewModel，后者只调用服务，不处理文件或 Windows API。AppSettingsService/Repository 的原分层不变，新增 20261017084703_AddBackgroundAppearance，仅增加 BackgroundImagePath nullable TEXT、BackgroundOverlayOpacity REAL=0.72、BackgroundBlurRadius REAL=12、BackgroundStretch TEXT=UniformToFill。模式枚举扩展 Default / DesktopWallpaper / CustomImage，Theme 固定 Light。

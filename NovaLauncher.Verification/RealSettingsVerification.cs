@@ -23,7 +23,7 @@ internal static partial class Program
                 _screenshots = Path.GetFullPath("docs/screenshots/6.2"); Directory.CreateDirectory(_screenshots);
                 SaveWindow(app.MainWindow, "real-settings.png");
                 var view = Descendants<NovaLauncher.App.Views.SettingsView>(app.MainWindow).Single();
-                var scroll = Descendants<System.Windows.Controls.ScrollViewer>(view).Single();
+                var scroll = Descendants<System.Windows.Controls.ScrollViewer>(view).Single(x => x.TemplatedParent is not System.Windows.Controls.TextBox);
                 scroll.ScrollToEnd(); await Task.Delay(100); SaveWindow(app.MainWindow, "real-settings-storage.png");
                 app.MainWindow.Close();
             }

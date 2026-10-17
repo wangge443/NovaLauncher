@@ -70,10 +70,10 @@ internal static partial class Program
             Check(ReferenceEquals(AllCardViews(window)[0], allView), "Projection updates keep All Applications controls alive");
             Check(Descendants<ApplicationCardView>(home).Count(x => x.DataContext == first) == 3, "Three views share one existing application ViewModel");
             var copies = Descendants<ApplicationCardView>(home).Where(x => x.DataContext == first).ToArray();
-            ((ToggleButton)copies[0].FindName("CategoryButton")).IsChecked = true;
+            copies[0].ContextMenu.PlacementTarget = copies[0]; copies[0].ContextMenu.IsOpen = true;
             await Task.Delay(150);
-            Check(copies.Count(x => ((Popup)x.FindName("CategoryPopup")).IsOpen) == 1, "Shared card opens only the clicked view's category popup");
-            ((ToggleButton)copies[0].FindName("CategoryButton")).IsChecked = false;
+            Check(copies.Count(x => x.ContextMenu.IsOpen) == 1, "Shared card opens only the clicked view's context menu");
+            copies[0].ContextMenu.IsOpen = false;
             var game = vm.CategoryManager.Categories.First();
             await first.ChangeCategoryCommand.ExecuteAsync(new(game.Id, game.Name));
             Check(copies.All(x => ((ApplicationCardViewModel)x.DataContext).CategoryId == game.Id), "Category state synchronizes across all section copies");

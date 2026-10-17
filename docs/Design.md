@@ -1,5 +1,15 @@
 # Nova Launcher — UI 设计
 
+## 6.4 分类管理与上下文菜单（当前规范）
+
+Settings 分类管理位于外观与启动设置之间，沿用 SettingsRow / SettingsButton、单页滚动和语义颜色。列表每行为图标 + 名称，保留布局扩展位置；新建采用带明确标签与错误提示的内联编辑器。Sidebar 不再出现新建分类入口。
+
+卡片默认只显示图标与名称，Hover 仅展示图标、名称、上次启动及次数；收藏星标与分类按钮全部移除。统一右键菜单采用浅色 Surface、10 DIP 圆角、轻阴影、36 DIP 菜单行、图标与文字、轻分隔线、克制的 Highlight。分类子菜单高度受限并可滚动。只读信息浮层含名称、类型、目标路径、分类、收藏状态、次数、上次启动，长路径换行可选择复制，Esc/关闭按钮/点击外部关闭。
+
+WPF ContextMenu / MenuItem 保留原生键盘导航与屏幕边缘重定位；Shift+F10 使用卡片锚点，Context Menu 键保留 WPF KeyUp 行为，鼠标右键靠近指针。每个卡片 View 独立控制浮层。ui-ux-pro-max 已读取，Python 不可用，按内置键盘、焦点、明确反馈与视觉一致性规则审核实际截图。不更改任何 6.3 背景或 Theme 设计。
+
+详见 [6.4 交付记录](Management-6.4.md)。以下为历史规范。
+
 ## 6.3 背景与可读性（当前规范）
 
 复用 Settings 单一 ScrollViewer，背景区域使用 Expander，内含模式选择、自定义图片按钮、桌面刷新、两个 Slider、显示方式和恢复默认。Default 隐藏图片参数；只有 CustomImage 显示图片按钮，DesktopWallpaper 显示静态壁纸限制和刷新。沿用 SettingsRow/Selector/QuietButton 与语义颜色，Slider 保留原生键盘和自动化语义。

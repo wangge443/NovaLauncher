@@ -13,6 +13,7 @@
     <StackPanel VerticalAlignment="Center"><TextBlock Text="主题"/><TextBlock Text="即将支持" Style="{StaticResource SettingsDescription}"/></StackPanel>
     <Button Grid.Column="1" Content="浅色  ›" Style="{StaticResource SettingsButton}" Command="{Binding AppearanceCommand}" AutomationProperties.Name="主题，浅色，即将支持"/>
    </Grid></Border>
+   <views:CategoryManagementView DataContext="{Binding DataContext.Content.CategoryManager, RelativeSource={RelativeSource AncestorType=Window}}"/>
    <TextBlock Text="启动与窗口" Style="{StaticResource SettingsSectionTitle}" />
    <Border Style="{StaticResource SettingsRow}"><Grid>
     <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>

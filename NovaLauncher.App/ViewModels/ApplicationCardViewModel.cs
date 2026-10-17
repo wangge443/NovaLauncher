@@ -32,6 +32,12 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
     public bool IsFavorite => Application.IsFavorite;
     public string FavoriteGlyph => IsFavorite ? "\uE735" : "\uE734";
     public string FavoriteActionName => $"{(IsFavorite ? "取消收藏" : "收藏")} {DisplayName}";
+    public string FavoriteMenuText => IsFavorite ? "取消收藏" : "收藏";
+    public string FavoriteStatus => IsFavorite ? "已收藏" : "未收藏";
+    public string SourceTypeText => Application.SourceType == ApplicationSourceType.Shortcut ? "Shortcut" : "EXE";
+    public string TargetPath => Application.ExecutablePath;
+    public string CategoryName => CurrentCategoryChoice?.Name ?? "未分类";
+    public IAsyncRelayCommand OpenLocationCommand { get; }
     private bool _isSavingFavorite;
     public bool IsSavingFavorite { get => _isSavingFavorite; private set => SetProperty(ref _isSavingFavorite, value); }
     public IAsyncRelayCommand ToggleFavoriteCommand { get; }
@@ -50,12 +56,22 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
     public IAsyncRelayCommand<CategoryChoice> ChangeCategoryCommand { get; }
 
     public ApplicationCardViewModel(LauncherApplication application, IApplicationLaunchService launcher,
-        IApplicationPersistenceService persistence, CategoryManagerViewModel? categoryManager = null, IToastService? toast = null)
+        IApplicationPersistenceService persistence, CategoryManagerViewModel? categoryManager = null, IToastService? toast = null,
+        IApplicationLocationService? location = null)
     {
         _launcher = launcher;
         _persistence = persistence;
         CategoryManager = categoryManager;
         _toast = toast;
+        OpenLocationCommand = new AsyncRelayCommand(async () =>
+        {
+            try
+            {
+                string? error = location is null ? "无法打开文件位置" : await location.OpenAsync(TargetPath);
+                if (error is not null) _toast?.Show(error);
+            }
+            catch (Exception ex) { Trace.TraceWarning("Application location failed: {0}", ex); _toast?.Show("无法打开文件位置"); }
+        });
         ChangeCategoryCommand = new AsyncRelayCommand<CategoryChoice>(ChangeCategoryAsync);
         _token = _lifetime.Token;
         Application = application;
@@ -95,6 +111,8 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
             OnPropertyChanged(nameof(IsFavorite));
             OnPropertyChanged(nameof(FavoriteGlyph));
             OnPropertyChanged(nameof(FavoriteActionName));
+            OnPropertyChanged(nameof(FavoriteMenuText));
+            OnPropertyChanged(nameof(FavoriteStatus));
             FavoriteChanged?.Invoke();
         }
         catch (Exception ex) { Trace.TraceError("Favorite save failed: {0}", ex); _toast?.Show("收藏状态保存失败"); }
@@ -115,6 +133,7 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
                 OnPropertyChanged(nameof(Application));
                 OnPropertyChanged(nameof(CategoryId));
                 OnPropertyChanged(nameof(CurrentCategoryChoice));
+                OnPropertyChanged(nameof(CategoryName));
                 IsCategoryPickerOpen = false;
                 CategoryChanged?.Invoke();
             }
