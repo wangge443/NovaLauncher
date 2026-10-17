@@ -66,7 +66,7 @@ internal static partial class Program
             window.UpdateLayout();
             SaveWindow(window, "recent-order.png");
             var cardView = Descendants<ApplicationCardView>(window).First(x => x.DataContext == a);
-            Check(cardView.ActualWidth == 136 && cardView.ActualHeight == 148, "Recent reuses existing fixed-size card");
+            Check(cardView.ActualWidth == 136 && cardView.ActualHeight == 136, "Recent reuses existing fixed-size card");
             shell.Sidebar.SelectedItem = shell.Sidebar.Items[0];
             Check(RecentCards(vm).SequenceEqual(sourceOrder) && ((ListCollectionView)vm.FilteredApplications).CustomSort is null, "Home clears Recent sort and restores source order");
             Check(footer.SelectedItem is null, "Leaving Recent clears footer selection");

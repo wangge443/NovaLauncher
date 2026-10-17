@@ -143,7 +143,7 @@ internal static partial class Program
         window.Width = 800;
         window.Height = 560;
         window.UpdateLayout();
-        Check(Descendants<ApplicationCardView>(window).All(x => x.ActualWidth == 136 && x.ActualHeight == 148), "Favorites controls preserve card dimensions at minimum window");
+        Check(Descendants<ApplicationCardView>(window).All(x => x.ActualWidth == 136 && x.ActualHeight == 136), "Favorites controls preserve card dimensions at minimum window");
         SaveWindow(window, "favorites-small.png");
     }
 

@@ -37,7 +37,7 @@
             </StackPanel.Style>
             <Path Data="M 16,0 L 16,32 M 0,16 L 32,16" Stroke="{DynamicResource EmptyIconBrush}"
                   StrokeThickness="1.5" StrokeStartLineCap="Round" StrokeEndLineCap="Round"
-                  Width="32" Height="32" Stretch="Uniform" HorizontalAlignment="Center" Margin="0,0,0,24">
+                  Width="{StaticResource EmptyIconSize}" Height="{StaticResource EmptyIconSize}" Stretch="Uniform" HorizontalAlignment="Center" Margin="{StaticResource EmptyIconSpacing}">
                 <Path.Style>
                     <Style TargetType="Path">
                         <Style.Triggers>
@@ -47,8 +47,8 @@
                     </Style>
                 </Path.Style>
             </Path>
-            <TextBlock Text="&#xE734;" FontFamily="{StaticResource IconFont}" FontSize="32"
-                       Foreground="{DynamicResource EmptyIconBrush}" HorizontalAlignment="Center" Margin="0,0,0,24">
+            <TextBlock Text="&#xE734;" FontFamily="{StaticResource IconFont}" FontSize="{StaticResource EmptyIconSize}"
+                       Foreground="{DynamicResource EmptyIconBrush}" HorizontalAlignment="Center" Margin="{StaticResource EmptyIconSpacing}">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed" />
@@ -58,8 +58,8 @@
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
-            <TextBlock Text="&#xE81C;" FontFamily="{StaticResource IconFont}" FontSize="32"
-                       Foreground="{DynamicResource EmptyIconBrush}" HorizontalAlignment="Center" Margin="0,0,0,24">
+            <TextBlock Text="&#xE81C;" FontFamily="{StaticResource IconFont}" FontSize="{StaticResource EmptyIconSize}"
+                       Foreground="{DynamicResource EmptyIconBrush}" HorizontalAlignment="Center" Margin="{StaticResource EmptyIconSpacing}">
                 <TextBlock.Style>
                     <Style TargetType="TextBlock">
                         <Setter Property="Visibility" Value="Collapsed" />
@@ -69,10 +69,10 @@
                     </Style>
                 </TextBlock.Style>
             </TextBlock>
-            <TextBlock Text="{Binding EmptyTitle}" FontSize="20" TextAlignment="Center"
+            <TextBlock Text="{Binding EmptyTitle}" FontSize="{StaticResource EmptyTitleSize}" TextAlignment="Center"
                        Foreground="{DynamicResource EmptyTextBrush}" AutomationProperties.AutomationId="DropHint" />
-            <TextBlock Text="{Binding EmptyHint}" FontSize="12" TextAlignment="Center"
-                       Foreground="{DynamicResource MutedTextBrush}" Margin="0,10,0,0" />
+            <TextBlock Text="{Binding EmptyHint}" FontSize="{StaticResource SecondaryTextSize}" TextAlignment="Center"
+                       Foreground="{DynamicResource MutedTextBrush}" Margin="{StaticResource EmptyHintSpacing}" />
         </StackPanel>
         <ContentControl Content="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
             <ContentControl.Style>
@@ -98,7 +98,7 @@
             </ContentControl.Style>
         </ContentControl>
         <TextBlock Grid.Row="1" Text="{Binding StatusMessage}" TextWrapping="Wrap"
-                   Foreground="{DynamicResource MutedTextBrush}" FontSize="12" Margin="4,8,4,0"
+                   Foreground="{DynamicResource MutedTextBrush}" FontSize="{StaticResource SecondaryTextSize}" Margin="4,8,4,0"
                    AutomationProperties.AutomationId="ImportStatus" AutomationProperties.LiveSetting="Polite">
             <TextBlock.Style>
                 <Style TargetType="TextBlock">

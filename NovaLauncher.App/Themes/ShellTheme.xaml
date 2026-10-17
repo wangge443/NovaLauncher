@@ -3,9 +3,27 @@
                     xmlns:helpers="clr-namespace:NovaLauncher.App.Helpers"
                     xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
                     xmlns:sys="clr-namespace:System;assembly=System.Runtime">
+    <sys:Double x:Key="SectionTitleSize">16</sys:Double>
+    <sys:Double x:Key="ApplicationNameSize">13</sys:Double>
+    <sys:Double x:Key="SecondaryTextSize">12</sys:Double>
+    <sys:Double x:Key="StatisticsTextSize">10.5</sys:Double>
+    <sys:Double x:Key="NavigationTextSize">14</sys:Double>
+    <sys:Double x:Key="NavigationIconSize">18</sys:Double>
+    <sys:Double x:Key="NavigationRowHeight">44</sys:Double>
+    <GridLength x:Key="NavigationIconSlot">30</GridLength>
+    <Thickness x:Key="NavigationPadding">18,0,12,0</Thickness>
+    <Thickness x:Key="NavigationLabelMargin">10,0,0,0</Thickness>
+    <Thickness x:Key="NavigationGroupSpacing">0,0,0,12</Thickness>
+    <sys:Double x:Key="EmptyIconSize">32</sys:Double>
+    <sys:Double x:Key="EmptyTitleSize">20</sys:Double>
+    <Thickness x:Key="EmptyIconSpacing">0,0,0,20</Thickness>
+    <Thickness x:Key="EmptyHintSpacing">0,8,0,0</Thickness>
+    <Thickness x:Key="ApplicationNameSpacing">0,8,0,0</Thickness>
+    <sys:Double x:Key="ActionTextSize">12</sys:Double>
+    <sys:Double x:Key="SectionHeaderHeight">32</sys:Double>
     <sys:Double x:Key="ApplicationCardWidth">136</sys:Double>
-    <sys:Double x:Key="ApplicationCardHeight">148</sys:Double>
-    <sys:Double x:Key="ApplicationIconSize">72</sys:Double>
+    <sys:Double x:Key="ApplicationCardHeight">136</sys:Double>
+    <sys:Double x:Key="ApplicationIconSize">64</sys:Double>
     <sys:Double x:Key="ApplicationNameLineHeight">19</sys:Double>
     <sys:Double x:Key="ApplicationNameHeight">38</sys:Double>
     <sys:Double x:Key="ApplicationDetailsIconSize">32</sys:Double>
@@ -14,7 +32,7 @@
     <Duration x:Key="LaunchFeedbackDuration">0:0:0.13</Duration>
     <sys:Double x:Key="ApplicationCardLift">1</sys:Double>
     <Thickness x:Key="ApplicationCardMargin">4</Thickness>
-    <Thickness x:Key="ApplicationCardPadding">12,16,12,8</Thickness>
+    <Thickness x:Key="ApplicationCardPadding">12,12,12,8</Thickness>
     <CornerRadius x:Key="ApplicationCardRadius">12</CornerRadius>
     <!-- Native backdrop and opaque fallback use separate white surface overlays. -->
     <SolidColorBrush x:Key="WindowBrush" Color="#F9FAFC" />
@@ -40,6 +58,52 @@
     <FontFamily x:Key="AppFont">Microsoft YaHei UI, Segoe UI</FontFamily>
     <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
 
+    <!-- Retain native ScrollBar/Track behavior, including drag, page commands and automation. -->
+    <sys:Double x:Key="{x:Static SystemParameters.VerticalScrollBarWidthKey}">12</sys:Double>
+    <Style x:Key="ScrollPageButton" TargetType="RepeatButton">
+        <Setter Property="Focusable" Value="False" />
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RepeatButton"><Border Background="Transparent" /></ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style x:Key="ScrollThumb" TargetType="Thumb">
+        <Setter Property="MinHeight" Value="24" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Thumb">
+                    <Grid Background="Transparent">
+                        <Border x:Name="Grip" Width="4" Margin="0,2" CornerRadius="3" Background="{DynamicResource MutedTextBrush}" Opacity="0.4" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsMouseOver, RelativeSource={RelativeSource AncestorType=ScrollBar}}" Value="True">
+                            <Setter TargetName="Grip" Property="Width" Value="6" />
+                            <Setter TargetName="Grip" Property="Opacity" Value="0.75" />
+                        </DataTrigger>
+                        <Trigger Property="IsDragging" Value="True"><Setter TargetName="Grip" Property="Opacity" Value="1" /></Trigger>
+                        <DataTrigger Binding="{Binding Source={x:Static SystemParameters.HighContrast}}" Value="True"><Setter TargetName="Grip" Property="Opacity" Value="1" /></DataTrigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style TargetType="ScrollBar">
+        <Style.Triggers>
+            <Trigger Property="Orientation" Value="Vertical">
+                <Setter Property="Width" Value="12" />
+                <Setter Property="Template">
+                    <Setter.Value>
+                        <ControlTemplate TargetType="ScrollBar">
+                            <Grid Background="Transparent">
+                                <Track x:Name="PART_Track" Orientation="Vertical" IsDirectionReversed="True">
+                                    <Track.DecreaseRepeatButton><RepeatButton Command="ScrollBar.PageUpCommand" Style="{StaticResource ScrollPageButton}" /></Track.DecreaseRepeatButton>
+                                    <Track.Thumb><Thumb Style="{StaticResource ScrollThumb}" /></Track.Thumb>
+                                    <Track.IncreaseRepeatButton><RepeatButton Command="ScrollBar.PageDownCommand" Style="{StaticResource ScrollPageButton}" /></Track.IncreaseRepeatButton>
+                                </Track>
+                            </Grid>
+                        </ControlTemplate>
+                    </Setter.Value>
+                </Setter>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
     <Style TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
@@ -57,7 +121,7 @@
     <Style x:Key="ApplicationNameStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
-        <Setter Property="FontSize" Value="13" />
+        <Setter Property="FontSize" Value="{StaticResource ApplicationNameSize}" />
         <Setter Property="TextAlignment" Value="Center" />
         <Setter Property="TextWrapping" Value="Wrap" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
@@ -69,7 +133,7 @@
     <Style x:Key="ApplicationDetailStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
-        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="FontSize" Value="{StaticResource StatisticsTextSize}" />
         <Setter Property="TextAlignment" Value="Center" />
         <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="Height" Value="15" />
@@ -80,7 +144,7 @@
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="Background" Value="{DynamicResource HoverBrush}" />
         <Setter Property="FontFamily" Value="{StaticResource IconFont}" />
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="{StaticResource ActionTextSize}" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
         <Setter Property="Template">
             <Setter.Value>
@@ -101,7 +165,7 @@
         </Setter>
     </Style>
     <Style x:Key="NavigationItemStyle" TargetType="ListBoxItem">
-        <Setter Property="Height" Value="44" />
+        <Setter Property="Height" Value="{StaticResource NavigationRowHeight}" />
         <Setter Property="Margin" Value="0,2" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
@@ -115,7 +179,7 @@
                         <Border helpers:HoverFeedback.IsEnabled="True" x:Name="Hover" CornerRadius="8" Background="{DynamicResource HoverBrush}" Opacity="0" />
                         <Border IsHitTestVisible="False" x:Name="Indicator" Width="3" Height="18" CornerRadius="2" HorizontalAlignment="Left"
                                 Background="{DynamicResource AccentBrush}" Visibility="Collapsed" />
-                        <ContentPresenter IsHitTestVisible="False" Margin="18,0,12,0" VerticalAlignment="Center" />
+                        <ContentPresenter IsHitTestVisible="False" Margin="{StaticResource NavigationPadding}" VerticalAlignment="Center" />
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsSelected" Value="True">
@@ -139,12 +203,12 @@
         </Style.Triggers>
     </Style>
     <Style x:Key="SidebarActionButtonStyle" TargetType="Button">
-        <Setter Property="Height" Value="44" />
+        <Setter Property="Height" Value="{StaticResource NavigationRowHeight}" />
         <Setter Property="Margin" Value="0,2" />
-        <Setter Property="Padding" Value="18,0,12,0" />
+        <Setter Property="Padding" Value="{StaticResource NavigationPadding}" />
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="{StaticResource NavigationTextSize}" />
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
         <Setter Property="Template">
@@ -243,7 +307,7 @@
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
-        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontSize" Value="{StaticResource ActionTextSize}" />
         <Setter Property="Padding" Value="10,6" />
         <Setter Property="MinHeight" Value="28" />
         <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
@@ -265,34 +329,44 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <Style x:Key="CardCategoryButton" TargetType="ToggleButton" BasedOn="{StaticResource QuietButton}">
+        <Setter Property="Width" Value="28" />
+        <Setter Property="Height" Value="28" />
+        <Setter Property="ContentTemplate">
+            <Setter.Value><DataTemplate><TextBlock Text="{Binding}" FontFamily="{StaticResource IconFont}" FontSize="12"
+                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ToggleButton}}" /></DataTemplate></Setter.Value>
+        </Setter>
+    </Style>
     <Style x:Key="CategoryChoiceStyle" TargetType="ListBoxItem" BasedOn="{StaticResource NavigationItemStyle}">
         <Setter Property="Height" Value="34" />
         <Setter Property="MinHeight" Value="34" />
         <Setter Property="Padding" Value="8,4" />
     </Style>
     <Thickness x:Key="HomeSectionSpacing">0,0,0,28</Thickness>
-    <Thickness x:Key="HomeHeadingSpacing">4,0,4,10</Thickness>
+    <Thickness x:Key="HomeHeadingSpacing">4,0,4,12</Thickness>
     <Style x:Key="HomeSectionTitle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
-        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontSize" Value="{StaticResource SectionTitleSize}" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
     <Style x:Key="HomeViewAllButton" TargetType="Button" BasedOn="{StaticResource QuietButton}">
         <Setter Property="HorizontalAlignment" Value="Right" />
+        <Setter Property="MinHeight" Value="{StaticResource SectionHeaderHeight}" />
+        <Setter Property="MinWidth" Value="88" />
         <Setter Property="Content" Value="查看全部  ›" />
         <Setter Property="ContentTemplate">
             <Setter.Value>
                 <DataTemplate>
-                    <TextBlock Text="{Binding}" FontSize="12"
+                    <TextBlock Text="{Binding}" FontSize="{StaticResource ActionTextSize}"
                                Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                 </DataTemplate>
             </Setter.Value>
         </Setter>
         <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="{DynamicResource TextBrush}" /></Trigger>
-            <Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="Foreground" Value="{DynamicResource TextBrush}" /></Trigger>
+            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="{DynamicResource AccentBrush}" /></Trigger>
+            <Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="Foreground" Value="{DynamicResource AccentBrush}" /></Trigger>
         </Style.Triggers>
     </Style>
 </ResourceDictionary>

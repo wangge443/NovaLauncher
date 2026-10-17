@@ -5,7 +5,7 @@
     <Border Background="{DynamicResource WindowBrush}" BorderBrush="{DynamicResource BorderBrush}"
             BorderThickness="1" CornerRadius="{StaticResource ApplicationCardRadius}"
             Padding="{StaticResource ToastPadding}" MaxWidth="{StaticResource ToastMaxWidth}">
-        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="13"
+        <TextBlock Text="{Binding Message}" TextWrapping="Wrap" FontSize="{StaticResource ApplicationNameSize}"
                    Foreground="{DynamicResource TextBrush}" AutomationProperties.AutomationId="WorkspaceToast"
                    AutomationProperties.LiveSetting="Polite" />
     </Border>

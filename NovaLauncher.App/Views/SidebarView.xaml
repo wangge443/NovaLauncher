@@ -4,10 +4,10 @@
     <UserControl.Resources>
         <DataTemplate x:Key="NavigationTemplate">
             <Grid>
-                <Grid.ColumnDefinitions><ColumnDefinition Width="30" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Icon}" FontFamily="{StaticResource IconFont}" FontSize="18"
+                <Grid.ColumnDefinitions><ColumnDefinition Width="{StaticResource NavigationIconSlot}" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Icon}" FontFamily="{StaticResource IconFont}" FontSize="{StaticResource NavigationIconSize}"
                            Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
-                <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="14" Margin="10,0,0,0" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"
+                <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="{StaticResource NavigationTextSize}" Margin="{StaticResource NavigationLabelMargin}" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"
                            Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=ListBoxItem}}" />
             </Grid>
         </DataTemplate>
@@ -40,26 +40,26 @@
                      Background="Transparent" BorderThickness="0" Padding="0"
                      ScrollViewer.HorizontalScrollBarVisibility="Disabled" ScrollViewer.VerticalScrollBarVisibility="Auto"
                      ItemContainerStyle="{StaticResource NavigationItemStyle}" ItemTemplate="{StaticResource NavigationTemplate}" />
-            <StackPanel DataContext="{Binding CategoryManager}" Margin="0,0,0,12">
+            <StackPanel DataContext="{Binding CategoryManager}" Margin="{StaticResource NavigationGroupSpacing}">
                 <Button Style="{StaticResource SidebarActionButtonStyle}"
                         IsEnabled="{Binding IsReady}" Command="{Binding BeginCreateCommand}" Click="BeginCategory_Click"
                         AutomationProperties.AutomationId="NewCategory" AutomationProperties.Name="新建分类">
                     <Grid>
-                        <Grid.ColumnDefinitions><ColumnDefinition Width="30" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                        <TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="18"
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="{StaticResource NavigationIconSlot}" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                        <TextBlock Text="&#xE710;" FontFamily="{StaticResource IconFont}" FontSize="{StaticResource NavigationIconSize}"
                                    Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
-                        <TextBlock Grid.Column="1" Text="新建分类" FontSize="14" Margin="10,0,0,0"
+                        <TextBlock Grid.Column="1" Text="新建分类" FontSize="{StaticResource NavigationTextSize}" Margin="{StaticResource NavigationLabelMargin}"
                                    Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
                     </Grid>
                 </Button>
                 <Border Background="{DynamicResource WindowBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                         CornerRadius="8" Padding="10" Margin="8,6,0,0" Visibility="{Binding IsEditing, Converter={StaticResource BooleanVisibility}}">
                     <StackPanel>
-                        <TextBlock Text="分类名称" FontSize="12" Margin="0,0,0,6" />
+                        <TextBlock Text="分类名称" FontSize="{StaticResource SecondaryTextSize}" Margin="0,0,0,6" />
                         <TextBox x:Name="CategoryNameEditor" Text="{Binding NewName, UpdateSourceTrigger=PropertyChanged}" MaxLength="24"
                                  KeyDown="CategoryEditor_KeyDown" AutomationProperties.Name="分类名称" AutomationProperties.AutomationId="CategoryNameEditor"
                                  Padding="6" Background="{DynamicResource WindowBrush}" Foreground="{DynamicResource TextBrush}"
-                                 BorderBrush="{DynamicResource BorderBrush}" FontFamily="{StaticResource AppFont}" FontSize="13" />
+                                 BorderBrush="{DynamicResource BorderBrush}" FontFamily="{StaticResource AppFont}" FontSize="{StaticResource ApplicationNameSize}" />
                         <TextBlock Text="{Binding Error}" TextWrapping="Wrap" FontSize="11" Margin="0,4,0,0"
                                    AutomationProperties.LiveSetting="Polite" />
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,4,0,0">

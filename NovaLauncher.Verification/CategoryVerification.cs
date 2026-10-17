@@ -173,7 +173,7 @@ internal static partial class Program
         window.UpdateLayout();
         await Task.Delay(180);
         SaveWindow(window, "categories-small.png");
-        Check(Descendants<ApplicationCardView>(window).All(x => x.ActualWidth == 136 && x.ActualHeight == 148), "Category controls preserve fixed card dimensions at minimum window size");
+        Check(Descendants<ApplicationCardView>(window).All(x => x.ActualWidth == 136 && x.ActualHeight == 136), "Category controls preserve fixed card dimensions at minimum window size");
         window.Width = 1120;
         window.Height = 720;
         await vm.FlushAsync();

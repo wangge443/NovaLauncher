@@ -31,7 +31,9 @@
                 <ItemsControl x:Name="FavoriteApplications" ItemsSource="{Binding FavoriteApplications}" Style="{StaticResource HomeCards}"
                               AutomationProperties.Name="首页收藏" />
             </StackPanel>
-            <TextBlock Text="全部应用" Style="{StaticResource HomeSectionTitle}" Margin="{StaticResource HomeHeadingSpacing}" />
+            <Grid Height="{StaticResource SectionHeaderHeight}" Margin="{StaticResource HomeHeadingSpacing}">
+                <TextBlock Text="全部应用" Style="{StaticResource HomeSectionTitle}" />
+            </Grid>
             <ItemsControl x:Name="AllApplications" ItemsSource="{Binding AllApplications}" Style="{StaticResource HomeCards}"
                           AutomationProperties.AutomationId="ApplicationGrid" AutomationProperties.Name="全部应用" />
         </StackPanel>

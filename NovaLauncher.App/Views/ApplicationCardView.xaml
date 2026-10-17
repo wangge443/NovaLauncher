@@ -31,7 +31,7 @@
                     <Image Source="{Binding Icon}" Width="{StaticResource ApplicationIconSize}"
                            Height="{StaticResource ApplicationIconSize}" Stretch="Uniform" RenderOptions.BitmapScalingMode="HighQuality" />
                     <TextBlock Text="{Binding DisplayName}" Style="{StaticResource ApplicationNameStyle}"
-                               Margin="0,12,0,0" AutomationProperties.AutomationId="ApplicationName" />
+                               Margin="{StaticResource ApplicationNameSpacing}" AutomationProperties.AutomationId="ApplicationName" />
                 </StackPanel>
                 <!-- A fixed overlay swaps presentation without changing card/grid measurements. -->
                 <StackPanel x:Name="DetailsContent" Margin="{StaticResource ApplicationDetailsPadding}" Opacity="0" IsHitTestVisible="False">
@@ -44,7 +44,7 @@
             </Grid>
         </Button>
         <!-- Sibling controls prevent category selection from bubbling through the launch button. -->
-        <ToggleButton x:Name="CategoryButton" Content="分类" Style="{StaticResource QuietButton}"
+        <ToggleButton x:Name="CategoryButton" Content="&#xE8B7;" Style="{StaticResource CardCategoryButton}" ToolTip="选择分类"
                       HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,0,0" Padding="7,4" Opacity="0"
                       IsEnabled="{Binding CategoryManager.IsReady}"
                       AutomationProperties.Name="选择应用分类" AutomationProperties.AutomationId="ChooseCategory" />
@@ -58,7 +58,7 @@
             <Border Background="{DynamicResource WindowBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1"
                     CornerRadius="10" Padding="10" Width="{StaticResource CategoryPopupWidth}" KeyDown="CategoryPopup_KeyDown">
                 <StackPanel>
-                    <TextBlock Text="移动到分类" FontSize="12" Margin="8,4,8,8" Foreground="{DynamicResource MutedTextBrush}" />
+                    <TextBlock Text="移动到分类" FontSize="{StaticResource SecondaryTextSize}" Margin="8,4,8,8" Foreground="{DynamicResource MutedTextBrush}" />
                     <ListBox x:Name="CategoryChoices" ItemsSource="{Binding CategoryManager.Choices}" DisplayMemberPath="Name"
                              SelectedItem="{Binding CurrentCategoryChoice, Mode=OneWay}" MaxHeight="240"
                              SelectionChanged="CategoryChoices_SelectionChanged" Background="Transparent" BorderThickness="0"

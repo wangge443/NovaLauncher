@@ -1,5 +1,37 @@
 # Nova Launcher — 开发流程
 
+## 5.5 最终收尾（2026-10-16）
+
+用户已验收 UI / UX Polish，按授权以 `style: polish launcher UI and interactions` 提交。最终 Release Build 再次确认 **0 warnings / 0 errors**，视觉专项 **19 项断言再次全部通过**。此前完整八套回归共 **210 项主进程断言**与独立重启验证通过，详见下文。
+
+已复核 Home/Category/Favorites/Recent 共用布局、卡片尺寸与 Hover、Sidebar、空状态、窄滚动条和 Design Tokens。DesktopBackdrop 保持 Experimental；300 张卡片约 1.9 秒首次布局已记录在 Performance Backlog。修改仅包含本阶段视觉 XAML、验证、截图与文档，没有数据库 Schema、业务逻辑或无关修改。清理收尾临时截图，不开始下一阶段。
+
+## 5.5 UI / UX Polish（2026-10-16）
+
+稳定基线 fb313ceae7b39a13ea1704806df6beae49e838e8。本轮仅修改 ShellTheme 和页面 XAML 的视觉资源、卡片尺寸、分类入口图标及滚动条模板；应用 ViewModel、Model、Services、Persistence、Schema/Migration 和背景实现没有修改，无新依赖。5.5 已通过用户验收，最终收尾提交已获授权。
+
+最终 Release Build **0 warnings / 0 errors**。视觉专项 **19**、首页 **29**、分类 **33**、收藏 **27**、Recent **22**、启动 **32**、Toast **11**、导入/OLE **37**，共 **210 项主进程断言通过**；另含分类/收藏/Recent 独立 SQLite 重启断言。测试只使用隔离夹具与临时数据库，未改变真实用户数据库、收藏、分类或统计。
+
+~~~powershell
+dotnet build NovaLauncher.sln -c Release --no-restore
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --polish docs/screenshots/5.5
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --home TestResults/5.5/home
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --launch TestResults/5.5/launch
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --favorites TestResults/5.5/favorites
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --categories TestResults/5.5/categories
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --recent TestResults/5.5/recent
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- --toast TestResults/5.5/toast
+dotnet run --project NovaLauncher.Verification -c Release --no-build -- TestResults/5.5/import
+~~~
+
+视觉专项验证真实 WPF 控件：四种页面卡片同尺寸、查看全部至少 88 × 32 点击区域、ScrollBar 12 DIP 且保留 Track、原生 PageDown 与 RangeValue 自动化滚动到底、实际指针 Hover/离开恢复、Sidebar 行高、Toast 不抢输入并约两秒消失、800 × 560 最小窗口下 Sidebar 220 DIP 与受 35% 上限约束的宽态、普通 1120 × 760 与最大化布局、三种空状态。实际截图覆盖 Home/Normal、Hover、Category/Active、Favorites、Recent、空 Favorites/Recent、Sidebar Hover、Toast、普通/最大化/宽窄 Sidebar，见 [设计规范与全部截图](Design.md)。
+
+原分类/收藏/Recent 回归中的 148 DIP 硬编码断言更新为本轮 136 DIP 规范；首轮收藏测试仅在旧尺寸预期处失败，更新后完整通过，未通过改业务规避失败。实际鼠标/Enter/Space 启动、星标不误启动、分类浮层、长名称省略/Tooltip、减少动画、真实 OLE 拖入/取消/离开、连续 Toast 均通过。
+
+Performance Backlog：**300 cards Home initial layout ≈ 1.8s**（5.4 基线），5.5 本次实际 WPF 首次布局为 **1901 ms**，属于同一量级，不宣称性能提升；保留 WrapPanel，不引入复杂 VirtualizingWrapPanel 或重构 Application Collection。后续性能阶段再评估虚拟化与视觉树成本。未实机切换系统高对比度、混合 DPI 或最大文字缩放；截图为 RenderTargetBitmap，不证明 Experimental DWM 合成效果。
+
+使用 ui-ux-pro-max 内置规则检查并记录 Python 缺失；未声称成功执行技能搜索。临时回归截图已清理，仅保留 docs/screenshots/5.5 交付图片。
+
 ## 5.4 最终收尾（2026-10-16）
 
 用户已验收首页聚合，按授权以 `feat: add aggregated home dashboard` 提交。最终 Release Build 再次确认 **0 warnings / 0 errors**，首页专项 **29 项断言**再次全部通过，涵盖独立 HomeView/HomeViewModel、Recent/Favorite Top 6、All 原顺序、三段共享实例、查看全部与 Sidebar 同步、导入投影及空状态。本次 300 张卡片首次布局为 2016 ms。

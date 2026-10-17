@@ -4,7 +4,7 @@ Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windo
 
 ## 当前状态
 
-第五阶段 5.4：首页聚合最近使用 Top 6、收藏 Top 6 和全部应用，共享现有卡片实例并实时更新。分类、收藏、最近使用独立页面保持原行为，数据库 Schema/Migration 和依赖未变。Release Build 0 warnings / 0 errors，六套验证共 180 项主进程断言通过，另通过真实数据库运行与重启验证。5.4 已通过用户验收，最终收尾提交已获授权。数据位于 %LOCALAPPDATA%\NovaLauncher，Desktop Backdrop 仍为 Experimental。详见 [验证记录](docs/Development.md)及[实际首页截图](docs/screenshots/5.4/real-home-preview.png)。
+第五阶段 5.5：UI / UX Polish。统一 136 × 136 DIP 卡片、Section Header、字体和空状态资源，弱化分类入口并采用窄滚动条；保留分类、收藏、最近使用与首页聚合业务。无 Schema/Migration 或依赖变化，DesktopBackdrop 仍为 Experimental。5.5 已通过用户验收，最终收尾提交已获授权。最终规范见 [Design.md](docs/Design.md)，验证记录见 [Development.md](docs/Development.md)。
 
 ## 构建与运行
 

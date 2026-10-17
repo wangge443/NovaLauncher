@@ -50,6 +50,7 @@ internal static partial class Program
         bool favoriteTests = args.Contains("--favorites");
         bool recentTests = args.Contains("--recent");
         bool homeTests = args.Contains("--home");
+        bool polishTests = args.Contains("--polish");
         _screenshots = Path.GetFullPath(args.FirstOrDefault(arg => !arg.StartsWith("--")) ??
             (persistenceTests ? "docs/screenshots/4.3" : launchTests ? "docs/screenshots/4.2" : "docs/screenshots/4.1"));
         _fixtures = Path.Combine(Path.GetTempPath(), "NovaLauncher-Verification-" + Guid.NewGuid().ToString("N"));
@@ -62,7 +63,8 @@ internal static partial class Program
         {
             try
             {
-                if (homeTests) await RunHomeAsync((MainWindow)app.MainWindow);
+                if (polishTests) await RunPolishAsync((MainWindow)app.MainWindow);
+                else if (homeTests) await RunHomeAsync((MainWindow)app.MainWindow);
                 else if (recentTests) await RunRecentAsync((MainWindow)app.MainWindow);
                 else if (favoriteTests) await RunFavoritesAsync((MainWindow)app.MainWindow);
                 else if (categoryTests) await RunCategoriesAsync((MainWindow)app.MainWindow);
