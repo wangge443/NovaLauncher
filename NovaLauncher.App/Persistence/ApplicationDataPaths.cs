@@ -4,6 +4,7 @@ namespace NovaLauncher.App.Persistence;
 
 public sealed class ApplicationDataPaths(string root)
 {
+    public string RootDirectory { get; } = Path.GetFullPath(root);
     public static ApplicationDataPaths Default => new(Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "NovaLauncher"));
     public string DatabasePath { get; } = Path.Combine(root, "Data", "nova.db");

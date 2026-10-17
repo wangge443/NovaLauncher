@@ -8,9 +8,17 @@ public sealed class LauncherDbContext(DbContextOptions<LauncherDbContext> option
     public DbSet<ApplicationEntity> Applications => Set<ApplicationEntity>();
     public DbSet<Models.Category> Categories => Set<Models.Category>();
     public DbSet<UserProfileEntity> UserProfiles => Set<UserProfileEntity>();
+    public DbSet<AppSettingsEntity> AppSettings => Set<AppSettingsEntity>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        var settings = builder.Entity<AppSettingsEntity>();
+        settings.HasKey(x => x.Id);
+        settings.Property(x => x.Id).ValueGeneratedNever();
+        settings.Property(x => x.StartupPage).HasConversion<string>();
+        settings.Property(x => x.BackgroundMode).HasConversion<string>();
+        settings.Property(x => x.ThemeMode).HasConversion<string>();
+        settings.ToTable("AppSettings", table => table.HasCheckConstraint("CK_AppSettings_Singleton", "Id = 1"));
         var profile = builder.Entity<UserProfileEntity>();
         profile.HasKey(x => x.Id);
         profile.Property(x => x.Id).ValueGeneratedNever();

@@ -1,5 +1,22 @@
 # Nova Launcher — 开发流程
 
+## 6.2 最终收尾（2026-10-16）
+
+用户已验收设置中心与持久化，授权提交 `feat: add application settings`。收尾再次执行 Release Build，确认 **0 warnings / 0 errors**；设置专项 **36 项断言再次全部通过**，覆盖 Profile Flyout 入口、首页/分类/收藏/最近使用退出、窗口大小与位置记忆、越界回退、三种启动页、保存失败回滚以及外观占位。
+
+此前完整 **320 项主进程断言**、四次真实数据库独立启动验证和 Windows Shell 打开目录检查仍适用；收尾未修改业务实现、数据库或已验收 UI。AppSettings 已经 EF Core Migration 创建，旧应用、分类、收藏、个人资料、LaunchCount / LastLaunchTime 与图片文件完整。复核工作区只包含 6.2 实现、验证、截图和文档；清理本次专项临时输出。不开始下一阶段。
+
+## 6.2 设置中心与持久化（2026-10-16，已验收）
+
+完成独立 Settings Workspace、AppSettings Model/Entity/Repository/Service、SettingsView/ViewModel、窗口恢复、三种启动页与数据目录 Shell 操作。新增 `20261017025537_AddAppSettings`，旧 Migration、应用/分类/资料结构和背景系统不变，无新增应用依赖。本阶段已通过用户验收，最终收尾提交已获授权。
+
+Release Build **0 warnings / 0 errors**。隔离测试共 **320 项主进程断言通过**：Settings 36、Migration 30、Profile 44、Home 29、Category 33、Favorites 27、Recent 22、Launch 32、Toast 11、Polish 19、Import/OLE 37；另含既有独立进程恢复断言。Home 300 卡片首次布局本轮 2248 ms，原性能 backlog 保留，不宣称性能改善。
+
+真实 nova.db 在线备份后升级；四个独立生产 App 进程验证窗口大小/位置关闭保存与恢复、关闭记忆后的默认尺寸/居中位置，以及 Favorites / Recent / Home 三种启动页。每次退出后逐字段比较 Applications / Categories / UserProfiles 和全部图标/头像 SHA256，无变化。AppSettings 单行、Migration 完成；测试修改的设置已恢复，随后 UI 预览正常关闭按产品语义保存窗口边界。Windows Shell 打开真实目录通过。备份路径、表结构、复现命令和截图见 [6.2 交付记录](Settings-6.2.md)。
+
+首次构建被沙箱 SDK 目录访问限制阻断，使用所需权限后通过；开发中测试命名/Popup 点击方式已修正。初次部分鼠标/OLE 回归被目录验收打开的 Explorer 遮挡，收藏/启动防误点检查中止；OLE 在该目录生成的本轮测试快捷方式已定位并删除。关闭该测试 Explorer 后，所有受影响测试重跑通过，没有更改产品行为来规避测试。真实目录测试现在只关闭本次新建的 Explorer 窗口，防止污染后续桌面测试；误点诊断保留 HWND/进程/桌面截图信息。
+
+设置专项验证模拟负坐标副屏、移除副屏、工作区缩小、非法几何与标题栏不可见；实际 HWND 恢复由真实重启验证覆盖。未实机拔插显示器、切换混合 DPI 或高对比度。ui-ux-pro-max 查询因本机 Python 缺失未执行，按已读取内置规则检查。清理本轮临时工具和回归截图，保留交付截图与数据库备份。
 ## 6.1 最终收尾（2026-10-16）
 
 用户已通过功能及紧凑版 UI 最终验收，授权提交 feat: add local user profile。最终 Release Build 再次确认 **0 warnings / 0 errors**。个人资料专项 **44 项断言全部通过**：包含原 35 项、6 项内容自适应高度/名称布局/Sidebar 宽度与最大化还原断言，以及 Settings 返回分类、收藏、最近使用的 3 项补充断言；返回首页亦通过。此前八组回归 221 项和真实数据库独立重启验证仍适用，后续仅调整 Flyout 间距和验证代码，没有修改数据或业务逻辑。

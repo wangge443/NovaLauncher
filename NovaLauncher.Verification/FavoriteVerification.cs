@@ -159,7 +159,12 @@ internal static partial class Program
         Native.SetCursorPos((int)point.X, (int)point.Y);
         await Task.Delay(220);
         if (LaunchNative.WindowFromPoint(new((int)point.X, (int)point.Y)) != new WindowInteropHelper(window).Handle)
-            throw new InvalidOperationException("Verification window is obscured; refusing to click another window.");
+            {
+            var found = LaunchNative.WindowFromPoint(new((int)point.X, (int)point.Y));
+            ProfileDialogNative.GetWindowThreadProcessId(found, out uint process);
+            CaptureCategoryWindow(window, "obscured.png");
+            throw new InvalidOperationException($"Verification window is obscured; refusing to click another window. Expected HWND={hwnd}, actual={found}, PID={process}, point={point}");
+        }
         LaunchNative.mouse_event(2, 0, 0, 0, UIntPtr.Zero);
         LaunchNative.mouse_event(4, 0, 0, 0, UIntPtr.Zero);
     }

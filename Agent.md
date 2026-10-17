@@ -2,7 +2,7 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第六阶段 6.1：本地个人资料、Sidebar 底部头像与 Profile Flyout；稳定基线 08fe8615b206550cb77dc03fae416549541186cc。允许新增 UserProfiles Migration 与本地头像存储，设置仅提供占位入口。保护第五阶段所有功能，不开发登录、网络账户、多用户或真正设置。DesktopBackdrop 仍为 Experimental。6.1 已通过最终验收，按用户授权完成收尾提交，不开始下一阶段。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第六阶段 6.2：设置中心与设置持久化基础架构，已通过用户验收，按授权完成最终收尾提交。允许新增 AppSettings Migration、独立 Settings Workspace、窗口几何恢复及启动页；保护 6.1 个人资料和第五阶段功能。背景/主题仅预留数据和入口，不实现 6.3。DesktopBackdrop 仍为 Experimental。本轮提交 feat: add application settings，不开始下一阶段。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
@@ -55,4 +55,4 @@
 3. UI 工作先检查 ui-ux-pro-max 的安装与指令，形成设计参数和状态方案，再映射为 WPF 资源与控件。
 4. 按小范围改动实施，不覆盖用户工作；只有明确独立且有收益的工作流才考虑委派。
 5. 执行必要验证，记录未验证项与实际限制，清理本次无用临时文件，并同步相关文档。
-6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前只完成 6.1 本地个人资料，提供 Build、测试结果和实际 UI 截图；按用户授权完成 6.1 收尾提交，不开发下一阶段。
+6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前完成 6.2 设置中心，提供 Migration、真实数据库保护验证、Build、测试结果与实际 UI 截图；按用户授权完成 6.2 收尾提交，不开始下一阶段。

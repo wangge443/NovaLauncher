@@ -1,5 +1,11 @@
 # Nova Launcher — 架构设计
 
+## 6.2 Settings（当前架构）
+
+Profile Flyout → Settings Workspace → SettingsViewModel → AppSettingsService → AppSettingsRepository → SQLite。Model 为不依赖 WPF 的 AppSettings；接口注入，View 不访问数据库。新增 `20261017025537_AddAppSettings`，仅创建单行 AppSettings，Id=1 CHECK；StartupPage=Home、RememberWindowSize/Position=true、BackgroundMode=Default、ThemeMode=Light，窗口四个 REAL 字段默认 null，UpdatedAt 为 UTC。完整字段表见 [6.2 交付记录](Settings-6.2.md)。
+
+Repository 幂等创建默认记录，服务串行校验/保存，ViewModel 即时提交并在失败时回滚/Toast。App 等待原数据库初始化后加载设置，显示窗口前通过 SourceInitialized 恢复边界并选择启动页，正常 Closing 等待设置提交后保存最终 RestoreBounds。Win32 多显示器工作区经 HWND 坐标转换，标题栏不可见时回退，最终 Clamp 到工作区。IDataDirectoryService 封装目录创建与 Windows Shell。以下为历史架构。
+
 ## 6.1 UserProfile（当前架构）
 
 数据流：ProfileView → UserProfileViewModel → IUserProfileService / UserProfileService → IUserProfileRepository / UserProfileRepository → SQLite。View 只处理 Popup 锚点、焦点与窗口事件；Windows 文件选择器通过 IAvatarFilePicker 注入。App 等数据库初始化完成后加载 Profile，退出等待启动与资料写入任务。

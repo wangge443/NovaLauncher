@@ -393,4 +393,73 @@
             </ControlTemplate.Triggers>
         </ControlTemplate></Setter.Value></Setter>
     </Style>
+    <Style x:Key="SettingsPageTitle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="24"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Margin" Value="0,0,0,4"/>
+    </Style>
+    <Style x:Key="SettingsSectionTitle" TargetType="TextBlock" BasedOn="{StaticResource HomeSectionTitle}">
+        <Setter Property="Margin" Value="0,20,0,10"/>
+    </Style>
+    <Style x:Key="SettingsRow" TargetType="Border">
+        <Setter Property="Padding" Value="16,12"/><Setter Property="MinHeight" Value="64"/>
+        <Setter Property="Margin" Value="0,0,0,4"/><Setter Property="CornerRadius" Value="8"/>
+        <Setter Property="Background" Value="{DynamicResource SidebarBrush}"/>
+    </Style>
+    <Style x:Key="SettingsDescription" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="{StaticResource SecondaryTextSize}"/>
+        <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
+        <Setter Property="TextWrapping" Value="Wrap"/><Setter Property="Margin" Value="0,4,0,0"/>
+    </Style>
+    <Style x:Key="SettingsButton" TargetType="Button" BasedOn="{StaticResource QuietButton}">
+        <Setter Property="Padding" Value="12,6"/><Setter Property="MinHeight" Value="32"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style x:Key="SettingsToggle" TargetType="CheckBox">
+        <Setter Property="Width" Value="48"/><Setter Property="Height" Value="32"/>
+        <Setter Property="VerticalAlignment" Value="Center"/><Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}"/>
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox">
+            <Grid Background="Transparent">
+                <Border x:Name="Track" Width="40" Height="22" CornerRadius="11" Background="{DynamicResource MutedTextBrush}">
+                    <Ellipse x:Name="Thumb" Width="14" Height="14" Margin="4,0" HorizontalAlignment="Left" Fill="{DynamicResource WindowBrush}"/>
+                </Border>
+            </Grid>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsChecked" Value="True"><Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}"/><Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right"/></Trigger>
+                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Track" Property="Opacity" Value="0.8"/></Trigger>
+                <Trigger Property="IsPressed" Value="True"><Setter TargetName="Track" Property="Opacity" Value="0.65"/></Trigger>
+                <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Track" Property="Opacity" Value="0.5"/></Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style x:Key="SettingsSelector" TargetType="ComboBox">
+        <Setter Property="MinWidth" Value="116"/><Setter Property="MinHeight" Value="32"/>
+        <Setter Property="VerticalAlignment" Value="Center"/><Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}"/>
+        <Setter Property="ItemContainerStyle"><Setter.Value><Style TargetType="ComboBoxItem">
+            <Setter Property="Padding" Value="12,8"/><Setter Property="Background" Value="Transparent"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBoxItem">
+                <Border Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}" CornerRadius="4"><ContentPresenter/></Border>
+                <ControlTemplate.Triggers><Trigger Property="IsHighlighted" Value="True"><Setter Property="Background" Value="{DynamicResource HoverBrush}"/></Trigger><Trigger Property="IsSelected" Value="True"><Setter Property="Background" Value="{DynamicResource SelectedBrush}"/></Trigger></ControlTemplate.Triggers>
+            </ControlTemplate></Setter.Value></Setter>
+        </Style></Setter.Value></Setter>
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="ComboBox">
+            <Grid>
+                <ToggleButton Focusable="False" IsChecked="{Binding IsDropDownOpen, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                    <ToggleButton.Template><ControlTemplate TargetType="ToggleButton">
+                        <Border x:Name="Surface" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Background="{DynamicResource WindowBrush}" Padding="12,6">
+                            <Grid><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding SelectedItem.Label, RelativeSource={RelativeSource AncestorType=ComboBox}}" Margin="0,0,16,0" VerticalAlignment="Center"/>
+                                <TextBlock Grid.Column="1" Text="&#xE70D;" FontFamily="{StaticResource IconFont}" FontSize="10" VerticalAlignment="Center"/>
+                            </Grid>
+                        </Border>
+                        <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource HoverBrush}"/></Trigger></ControlTemplate.Triggers>
+                    </ControlTemplate></ToggleButton.Template>
+                </ToggleButton>
+                <Popup x:Name="PART_Popup" IsOpen="{TemplateBinding IsDropDownOpen}" Placement="Bottom" AllowsTransparency="True" Focusable="False">
+                    <Border Background="{DynamicResource WindowBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6" Padding="4" MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}">
+                        <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained"/>
+                    </Border>
+                </Popup>
+            </Grid>
+            <ControlTemplate.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger></ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
+    </Style>
 </ResourceDictionary>

@@ -1,5 +1,13 @@
 # Nova Launcher — UI 设计
 
+## 6.2 设置中心（当前规范）
+
+Settings 为独立 Workspace，单一纵向 ScrollViewer；依次为外观、启动与窗口、数据与存储、关于，不增加常驻 Sidebar。复用 WorkspacePadding=24；统一 SettingsRow 最小高度 64、Padding 16/12、圆角 8，描述与路径换行。两个轻量开关、三选项圆角 ComboBox 与 QuietButton 保持原生键盘语义和可见焦点。设置页不选中普通 Sidebar 项。
+
+背景/主题显示默认/浅色与即将支持；点击仅 Toast，不弹 MessageBox。样式集中 ShellTheme，保留现有窗口背景和个人资料。使用 ui-ux-pro-max 内置规则检查；本轮 py 未找到 Python，未声称数据库检索成功。详情及边界见 [6.2 交付记录](Settings-6.2.md)。
+
+截图：[实际设置](screenshots/6.2/real-settings.png)、[数据与关于](screenshots/6.2/real-settings-storage.png)、[最小窗口](screenshots/6.2/settings-small.png)、[小窗口底部](screenshots/6.2/settings-storage-about.png)。以下为历史设计。
+
 ## 6.1 Sidebar Avatar / Profile Flyout
 
 继续使用 5.5 Design Tokens 与 Windows 11 Minimal Light UI。ui-ux-pro-max 已读取，采用可见焦点、至少 48 DIP 点击区、反馈一致性与紧凑层级规则；本机 Python 不可用，本轮未执行技能检索脚本。

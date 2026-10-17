@@ -12,16 +12,20 @@ public partial class App : Application
 {
     private ContentViewModel? _content;
     private UserProfileViewModel? _profile;
+    private IAppSettingsService? _settingsService;
+    private SettingsViewModel? _settings;
+    public Task ReadyTask => _startupTask;
     private Task _startupTask = Task.CompletedTask;
     private bool _closing;
     private bool _closeReady;
 
     public App() { }
-    public App(IApplicationPersistenceService persistence, ICategoryService? categories = null, IUserProfileService? profile = null)
+    public App(IApplicationPersistenceService persistence, ICategoryService? categories = null, IUserProfileService? profile = null, IAppSettingsService? settings = null)
     {
         Persistence = persistence;
         Categories = categories;
         Profiles = profile;
+        _settingsService = settings;
     }
     private IApplicationPersistenceService? Persistence { get; }
     private ICategoryService? Categories { get; }
@@ -41,12 +45,15 @@ public partial class App : Application
             Categories ?? (Persistence is null ? new CategoryService(new CategoryRepository(new LauncherDbContextFactory(paths))) : null));
         _profile = new UserProfileViewModel(Profiles ?? (Persistence is null
             ? new UserProfileService(new UserProfileRepository(new LauncherDbContextFactory(paths)), paths) : null), new AvatarFilePicker(), _content.Toast);
+        _settingsService ??= Persistence is null ? new AppSettingsService(new AppSettingsRepository(new LauncherDbContextFactory(paths))) : null;
+        if (_settingsService is not null)
+            _settings = new SettingsViewModel(_settingsService, new DataDirectoryService(paths), paths, _content.Toast);
         MainWindow = new MainWindow
         {
-            DataContext = new MainWindowViewModel(_content, _profile)
+            DataContext = new MainWindowViewModel(_content, _profile, _settings)
         };
-        MainWindow.Show();
         MainWindow.Closing += OnWindowClosing;
+        if (_settingsService is null) MainWindow.Show();
         _startupTask = InitializeAsync();
     }
 
@@ -54,6 +61,15 @@ public partial class App : Application
     {
         await _content!.InitializeAsync();
         await _profile!.InitializeAsync();
+        if (_settingsService is not null)
+        {
+            bool loaded = await _settingsService.LoadAsync();
+            _settings!.Refresh();
+            ((MainWindowViewModel)MainWindow.DataContext).ApplyStartupPage(_settingsService.Current.StartupPage);
+            MainWindow.SourceInitialized += (_, _) => WindowPlacementService.Restore(MainWindow, _settingsService.Current);
+            MainWindow.Show();
+            if (!loaded) _content.Toast.Show("设置读取失败，已使用默认设置");
+        }
     }
 
     private async void OnWindowClosing(object? sender, CancelEventArgs e)
@@ -63,7 +79,17 @@ public partial class App : Application
         if (_closing) return;
         _closing = true;
         MainWindow.IsEnabled = false;
-        try { await _startupTask; await _content.FlushAsync(); if (_profile is not null) await _profile.FlushAsync(); }
+        try
+        {
+            await _startupTask; await _content.FlushAsync(); if (_profile is not null) await _profile.FlushAsync();
+            if (_settings is not null) await _settings.FlushAsync();
+            if (_settingsService is not null && !await _settingsService.UpdateAsync(current => WindowPlacementService.Capture(current, MainWindow)))
+            {
+                _content.Toast.Show("设置保存失败");
+                // Keep the failure visible briefly while still honoring the user's close request.
+                await Task.Delay(1200);
+            }
+        }
         finally
         {
             // Flush may complete synchronously; defer Close until the current Closing event has returned.
