@@ -16,7 +16,7 @@
                 </Style>
             </Border.Style>
         </Border>
-        <!-- CustomImageBackground is reserved; image loading/rendering is not implemented. -->
+        <!-- The legacy Desktop mode remains internal/experimental. Production uses the image pipeline below. -->
         <Border Background="{Binding SolidBackground, ElementName=BackgroundHost}">
             <Border.Style>
                 <Style TargetType="Border">
@@ -41,5 +41,16 @@
                 </Style>
             </Border.Style>
         </Border>
+        <Grid x:Name="ImageLayers" DataContext="{Binding Settings.Appearance.Background}" ClipToBounds="True">
+            <Grid.Style><Style TargetType="Grid"><Setter Property="Visibility" Value="Collapsed"/>
+                <Style.Triggers><DataTrigger Binding="{Binding HasImage}" Value="True"><Setter Property="Visibility" Value="Visible"/></DataTrigger>
+                <DataTrigger Binding="{Binding IsHighContrast, ElementName=BackgroundHost}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
+            </Style></Grid.Style>
+            <Image x:Name="WallpaperImage" Source="{Binding Image}" Stretch="{Binding Stretch}" RenderOptions.BitmapScalingMode="LowQuality">
+                <Image.Effect><BlurEffect Radius="{Binding BlurRadius}" KernelType="Gaussian" RenderingBias="Performance"/></Image.Effect>
+            </Image>
+            <Border x:Name="WhiteOverlay" Background="White" Opacity="{Binding OverlayOpacity}"/>
+            <Border Height="48" VerticalAlignment="Top" Background="{DynamicResource SidebarBrush}"/>
+        </Grid>
     </Grid>
 </UserControl>

@@ -18,6 +18,9 @@ public sealed class LauncherDbContext(DbContextOptions<LauncherDbContext> option
         settings.Property(x => x.StartupPage).HasConversion<string>();
         settings.Property(x => x.BackgroundMode).HasConversion<string>();
         settings.Property(x => x.ThemeMode).HasConversion<string>();
+        settings.Property(x => x.BackgroundStretch).HasConversion<string>().HasDefaultValue(Models.BackgroundStretch.UniformToFill);
+        settings.Property(x => x.BackgroundOverlayOpacity).HasDefaultValue(0.72);
+        settings.Property(x => x.BackgroundBlurRadius).HasDefaultValue(12d);
         settings.ToTable("AppSettings", table => table.HasCheckConstraint("CK_AppSettings_Singleton", "Id = 1"));
         var profile = builder.Entity<UserProfileEntity>();
         profile.HasKey(x => x.Id);

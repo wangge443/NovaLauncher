@@ -50,9 +50,28 @@ namespace NovaLauncher.App.Persistence.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("INTEGER");
 
+                    b.Property<double>("BackgroundBlurRadius")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("REAL")
+                        .HasDefaultValue(12.0);
+
+                    b.Property<string>("BackgroundImagePath")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("BackgroundMode")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<double>("BackgroundOverlayOpacity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("REAL")
+                        .HasDefaultValue(0.71999999999999997);
+
+                    b.Property<string>("BackgroundStretch")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("UniformToFill");
 
                     b.Property<bool>("RememberWindowPosition")
                         .HasColumnType("INTEGER");

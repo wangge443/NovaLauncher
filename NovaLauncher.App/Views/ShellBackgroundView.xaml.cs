@@ -18,12 +18,17 @@ public partial class ShellBackgroundView : UserControl
 {
     public static readonly DependencyProperty ModeProperty = DependencyProperty.Register(
         nameof(Mode), typeof(BackgroundMode), typeof(ShellBackgroundView),
-        new PropertyMetadata(BackgroundMode.Desktop, OnModeChanged));
+        new PropertyMetadata(BackgroundMode.SolidColor, OnModeChanged));
 
     private static readonly DependencyPropertyKey IsBackdropActivePropertyKey = DependencyProperty.RegisterReadOnly(
         nameof(IsBackdropActive), typeof(bool), typeof(ShellBackgroundView), new PropertyMetadata(false));
     public static readonly DependencyProperty IsBackdropActiveProperty = IsBackdropActivePropertyKey.DependencyProperty;
     public bool IsBackdropActive => (bool)GetValue(IsBackdropActiveProperty);
+    public static readonly DependencyProperty IsHighContrastProperty = DependencyProperty.Register(
+        nameof(IsHighContrast), typeof(bool), typeof(ShellBackgroundView), new PropertyMetadata(false));
+    public bool IsHighContrast => (bool)GetValue(IsHighContrastProperty);
+    private void PreferencesChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    { if (e.PropertyName == nameof(SystemParameters.HighContrast)) Dispatcher.Invoke(() => SetValue(IsHighContrastProperty, SystemParameters.HighContrast)); }
     private DesktopBackdropController? _controller;
 
     public static readonly DependencyProperty BackgroundImageProperty = DependencyProperty.Register(
@@ -70,6 +75,8 @@ public partial class ShellBackgroundView : UserControl
     private void OnLoaded(object sender, RoutedEventArgs e)
     {
         if (_controller is not null || Window.GetWindow(this) is not Window window) return;
+        SetValue(IsHighContrastProperty, SystemParameters.HighContrast);
+        SystemParameters.StaticPropertyChanged += PreferencesChanged;
         _controller = new DesktopBackdropController(window, (active, reason) =>
         {
             SetValue(IsBackdropActivePropertyKey, active);
@@ -82,6 +89,7 @@ public partial class ShellBackgroundView : UserControl
 
     private void OnUnloaded(object sender, RoutedEventArgs e)
     {
+        SystemParameters.StaticPropertyChanged -= PreferencesChanged;
         _controller?.Dispose();
         _controller = null;
     }

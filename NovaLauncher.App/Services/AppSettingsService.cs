@@ -45,7 +45,10 @@ public sealed class AppSettingsService(IAppSettingsRepository repository) : IApp
     {
         Id = 1,
         StartupPage = Enum.IsDefined(value.StartupPage) ? value.StartupPage : StartupPage.Home,
-        BackgroundMode = BackgroundMode.Default, ThemeMode = ThemeMode.Light,
+        BackgroundMode = Enum.IsDefined(value.BackgroundMode) ? value.BackgroundMode : BackgroundMode.Default, ThemeMode = ThemeMode.Light,
+        BackgroundStretch = Enum.IsDefined(value.BackgroundStretch) ? value.BackgroundStretch : BackgroundStretch.UniformToFill,
+        BackgroundOverlayOpacity = double.IsFinite(value.BackgroundOverlayOpacity) ? Math.Clamp(value.BackgroundOverlayOpacity, 0.2, 0.95) : 0.72,
+        BackgroundBlurRadius = double.IsFinite(value.BackgroundBlurRadius) ? Math.Clamp(value.BackgroundBlurRadius, 0, 30) : 12,
         WindowWidth = Dimension(value.WindowWidth, 800, 1120),
         WindowHeight = Dimension(value.WindowHeight, 560, 720),
         WindowLeft = Coordinate(value.WindowLeft), WindowTop = Coordinate(value.WindowTop)

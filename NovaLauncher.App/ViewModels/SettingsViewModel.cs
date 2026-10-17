@@ -16,9 +16,9 @@ public sealed class SettingsViewModel : ViewModelBase
     private AppSettings _display;
     private bool _isSaving;
     private Task _pending = Task.CompletedTask;
-    public SettingsViewModel(IAppSettingsService service, IDataDirectoryService directory, ApplicationDataPaths paths, IToastService toast)
+    public SettingsViewModel(IAppSettingsService service, IDataDirectoryService directory, ApplicationDataPaths paths, IToastService toast, AppearanceViewModel? appearance = null)
     {
-        _service = service; _toast = toast; _display = service.Current;
+        Appearance = appearance; _service = service; _toast = toast; _display = service.Current;
         DataDirectory = paths.RootDirectory; DatabasePath = paths.DatabasePath;
         OpenDataDirectoryCommand = new AsyncRelayCommand(async () =>
         {
@@ -27,6 +27,7 @@ public sealed class SettingsViewModel : ViewModelBase
         });
         AppearanceCommand = new RelayCommand(() => toast.Show("外观设置将在下一阶段提供"));
     }
+    public AppearanceViewModel? Appearance { get; }
     public IReadOnlyList<StartupPageChoice> StartupPages { get; } =
         [new(StartupPage.Home, "首页"), new(StartupPage.Recent, "最近使用"), new(StartupPage.Favorites, "收藏")];
     public bool CanEdit => !_isSaving;
@@ -40,7 +41,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public IAsyncRelayCommand OpenDataDirectoryCommand { get; }
     public IRelayCommand AppearanceCommand { get; }
     public void Refresh() { _display = _service.Current; NotifyValues(); }
-    public Task FlushAsync() => _pending;
+    public async Task FlushAsync() { await _pending; if (Appearance is not null) await Appearance.FlushAsync(); }
     private void Save(Func<AppSettings, AppSettings> update)
     {
         if (_isSaving) { NotifyValues(); return; }

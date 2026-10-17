@@ -4,7 +4,7 @@ Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windo
 
 ## 当前状态
 
-第六阶段 6.2：设置中心与设置持久化。Profile Flyout 进入独立 Settings，支持窗口大小/位置记忆、启动页、数据目录与关于；背景/主题仅预留。新增 AppSettings Migration，保护资料及现有应用数据。6.2 已通过用户验收，按授权完成最终收尾提交；不开始下一阶段。实现和验证见 [6.2 交付记录](docs/Settings-6.2.md)。
+第六阶段 6.3：背景与外观系统。Settings 中支持默认、桌面静态壁纸、自定义图片，以及遮罩、模糊、填充方式与恢复默认。沿用 6.2 持久化与窗口行为，Theme 保持 Light，DesktopBackdrop 仅为 Experimental / Internal。本阶段不自动提交，等待验收。
 
 ## 构建与运行
 

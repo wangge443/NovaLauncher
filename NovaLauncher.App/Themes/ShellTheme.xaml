@@ -118,6 +118,7 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <SolidColorBrush x:Key="AppearanceLabelSurface" Color="#CCFFFFFF"/>
     <Style x:Key="ApplicationNameStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
@@ -129,6 +130,9 @@
         <Setter Property="LineHeight" Value="{StaticResource ApplicationNameLineHeight}" />
         <Setter Property="Height" Value="{StaticResource ApplicationNameHeight}" />
         <Setter Property="ClipToBounds" Value="True" />
+            <Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.NeedsTextSurface, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+            <Setter Property="Background" Value="{DynamicResource AppearanceLabelSurface}"/>
+        </DataTrigger></Style.Triggers>
     </Style>
     <Style x:Key="ApplicationDetailStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
@@ -350,6 +354,9 @@
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="VerticalAlignment" Value="Center" />
+            <Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.NeedsTextSurface, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+            <Setter Property="Background" Value="{DynamicResource AppearanceLabelSurface}"/>
+        </DataTrigger></Style.Triggers>
     </Style>
     <Style x:Key="HomeViewAllButton" TargetType="Button" BasedOn="{StaticResource QuietButton}">
         <Setter Property="HorizontalAlignment" Value="Right" />
@@ -460,6 +467,21 @@
                 </Popup>
             </Grid>
             <ControlTemplate.Triggers><Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger></ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style x:Key="AppearanceSlider" TargetType="Slider">
+        <Setter Property="Height" Value="32"/><Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}"/>
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Slider">
+            <Grid Margin="8,0">
+                <Border Height="4" CornerRadius="2" Background="{DynamicResource BorderBrush}" VerticalAlignment="Center"/>
+                <Track x:Name="PART_Track">
+                    <Track.DecreaseRepeatButton><RepeatButton Command="Slider.DecreaseLarge" Focusable="False" Style="{StaticResource ScrollPageButton}"/></Track.DecreaseRepeatButton>
+                    <Track.Thumb><Thumb Width="18" Height="18"><Thumb.Template><ControlTemplate TargetType="Thumb">
+                        <Ellipse Fill="{DynamicResource AccentBrush}" Stroke="{DynamicResource WindowBrush}" StrokeThickness="3"/>
+                    </ControlTemplate></Thumb.Template></Thumb></Track.Thumb>
+                    <Track.IncreaseRepeatButton><RepeatButton Command="Slider.IncreaseLarge" Focusable="False" Style="{StaticResource ScrollPageButton}"/></Track.IncreaseRepeatButton>
+                </Track>
+            </Grid>
         </ControlTemplate></Setter.Value></Setter>
     </Style>
 </ResourceDictionary>

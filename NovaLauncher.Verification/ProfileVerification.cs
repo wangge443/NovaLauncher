@@ -205,7 +205,7 @@ internal static partial class Program
         [System.Runtime.InteropServices.DllImport("user32.dll")]
         internal static extern bool PostMessage(IntPtr handle, uint message, IntPtr wParam, IntPtr lParam);
     }
-    private static async Task<string?> NativeProfilePickerAsync(string? path)
+    private static async Task<string?> NativeProfilePickerAsync(string? path, string title = "更换头像", Func<string?>? pick = null)
     {
         var worker = Task.Run(async () =>
         {
@@ -213,7 +213,7 @@ internal static partial class Program
             var timeout = System.Diagnostics.Stopwatch.StartNew();
             while (dialog == IntPtr.Zero && timeout.Elapsed < TimeSpan.FromSeconds(15))
             {
-                var candidate = ProfileDialogNative.FindWindow(null, "更换头像");
+                var candidate = ProfileDialogNative.FindWindow(null, title);
                 ProfileDialogNative.GetWindowThreadProcessId(candidate, out uint process);
                 if (process == Environment.ProcessId) dialog = candidate;
                 else await Task.Delay(100);
@@ -221,12 +221,13 @@ internal static partial class Program
             if (dialog == IntPtr.Zero) throw new TimeoutException("Native avatar picker not found");
             try
             {
-                await Task.Delay(250);
+                await Task.Delay(1000);
                 if (path is not null)
                 {
                     var field = ProfileDialogNative.GetDlgItem(dialog, 1148);
                     if (field == IntPtr.Zero) throw new InvalidOperationException("File name field not found");
                     ProfileDialogNative.SendMessage(field, 0x000C, IntPtr.Zero, path);
+                    await Task.Delay(250);
                 }
                 ProfileDialogNative.PostMessage(dialog, 0x0111, new IntPtr(path is null ? 2 : 1), IntPtr.Zero);
             }
@@ -236,7 +237,7 @@ internal static partial class Program
                 throw;
             }
         });
-        string? selected = new AvatarFilePicker().Pick();
+        string? selected = pick is null ? new AvatarFilePicker().Pick() : pick();
         await worker;
         return selected;
     }

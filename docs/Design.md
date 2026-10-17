@@ -1,5 +1,15 @@
 # Nova Launcher — UI 设计
 
+## 6.3 背景与可读性（当前规范）
+
+复用 Settings 单一 ScrollViewer，背景区域使用 Expander，内含模式选择、自定义图片按钮、桌面刷新、两个 Slider、显示方式和恢复默认。Default 隐藏图片参数；只有 CustomImage 显示图片按钮，DesktopWallpaper 显示静态壁纸限制和刷新。沿用 SettingsRow/Selector/QuietButton 与语义颜色，Slider 保留原生键盘和自动化语义。
+
+ShellBackgroundView 中图片独立应用可复用 BlurEffect，白色 Overlay 在其上，Launcher UI 在两者上方；没有 Window.Opacity 或 UI 根层 Blur。Default 不加载图片，背景图片层隐藏。高对比度时隐藏图片层，沿用系统色。Sidebar 保留原半透明 Surface；标题栏增加轻 Surface，低于 60% 遮罩时对应用名与 Section 标题增加浅色文字底，图片背景下 HoverSurface 提高白色覆盖保证统计可读，卡片尺寸/布局/业务不变。
+
+ui-ux-pro-max 已读取；本机 py 未找到 Python，依据内置对比度、语义控件、焦点、单层滚动和明确错误反馈规则审核实际截图。DesktopBackdrop 旧代码保留为 Experimental / Internal，默认不再激活。
+
+详见 [6.3 实现与验证记录](Appearance-6.3.md)。以下为历史阶段。
+
 ## 6.2 设置中心（当前规范）
 
 Settings 为独立 Workspace，单一纵向 ScrollViewer；依次为外观、启动与窗口、数据与存储、关于，不增加常驻 Sidebar。复用 WorkspacePadding=24；统一 SettingsRow 最小高度 64、Padding 16/12、圆角 8，描述与路径换行。两个轻量开关、三选项圆角 ComboBox 与 QuietButton 保持原生键盘语义和可见焦点。设置页不选中普通 Sidebar 项。

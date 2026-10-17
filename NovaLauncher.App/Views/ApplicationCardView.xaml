@@ -23,8 +23,13 @@
                 </ControlTemplate>
             </Button.Template>
             <Grid Background="Transparent">
-                <Border x:Name="HoverSurface" Background="{DynamicResource HoverBrush}"
-                        CornerRadius="{StaticResource ApplicationCardRadius}" Opacity="0" />
+                <Border x:Name="HoverSurface" CornerRadius="{StaticResource ApplicationCardRadius}" Opacity="0">
+                    <Border.Style><Style TargetType="Border"><Setter Property="Background" Value="{DynamicResource HoverBrush}"/>
+                        <Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.HasImage, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                            <Setter Property="Background" Value="{DynamicResource AppearanceLabelSurface}"/>
+                        </DataTrigger></Style.Triggers>
+                    </Style></Border.Style>
+                </Border>
                 <Border x:Name="LaunchFlash" Background="{DynamicResource SelectedBrush}"
                         CornerRadius="{StaticResource ApplicationCardRadius}" Opacity="0" />
                 <StackPanel x:Name="NormalContent" Margin="{StaticResource ApplicationCardPadding}" IsHitTestVisible="False">

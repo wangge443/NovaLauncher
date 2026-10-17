@@ -1,5 +1,17 @@
 # Nova Launcher — 开发流程
 
+## 6.3 背景与外观（2026-10-17，待验收）
+
+完成 Default / DesktopWallpaper / CustomImage、单页背景设置、实时 Blur/Overlay/Fill/Fit、400ms debounce、安全图片存储与 fallback。新增 EF Migration `20261017084703_AddBackgroundAppearance`，旧 Migration 未修改；Theme 保持 Light，DesktopBackdrop 保留 Experimental / Internal。本轮不 commit。实现、限制、备份及截图见 [6.3 交付记录](Appearance-6.3.md)。
+
+最终 Release Build **0 warnings / 0 errors**。背景专项 **39 项**，既有回归 **320 项**全部通过，共 **359 项主进程断言**：Settings36、Migration30、Profile44、Home29、Category33、Favorites27、Recent22、Launch32、Toast11、Polish19、Import/OLE37；另含既有独立进程恢复检查。真实 nova.db 三次独立生产 App 进程验证迁移数据保护、自定义源图删除后的重启恢复、桌面壁纸与参数恢复、恢复默认及原设置逐字段还原，全部通过。
+
+自定义图 + Blur12：本轮 30 次窗口布局 **751 ms**，82 卡片的 30 次滚动 Render yield **83 ms**，真实 Hover 通过。独立 Home 300 卡片首次布局 **2025 ms**，既有性能 backlog 保留。这些是墙钟测量，不代表 GPU FPS；未实机覆盖混合 DPI、多屏拔插及高对比度切换。
+
+测试过程中原生文件选择器初始化、滚动回顶部后的布局时序已在测试中明确等待。Profile 曾被哔哩哔哩窗口遮挡，防误点击检查中止；暂时最小化遮挡窗口后独立重跑通过。Favorites 第二次鼠标点击曾超时，未改产品或测试行为，单独复跑 27 项全部通过。保留防误点击检查，没有绕过保护。
+
+已审查实际默认、自定义、桌面壁纸、低/高遮罩与最小窗口截图。清理本轮临时 EF 工具和回归输出，保留交付截图及真实数据库备份；工作区仅包含本阶段实现、验证与文档，等待用户验收。
+
 ## 6.2 最终收尾（2026-10-16）
 
 用户已验收设置中心与持久化，授权提交 `feat: add application settings`。收尾再次执行 Release Build，确认 **0 warnings / 0 errors**；设置专项 **36 项断言再次全部通过**，覆盖 Profile Flyout 入口、首页/分类/收藏/最近使用退出、窗口大小与位置记忆、越界回退、三种启动页、保存失败回滚以及外观占位。

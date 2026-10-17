@@ -14,6 +14,7 @@ public partial class App : Application
     private UserProfileViewModel? _profile;
     private IAppSettingsService? _settingsService;
     private SettingsViewModel? _settings;
+    private AppearanceService? _appearance;
     public Task ReadyTask => _startupTask;
     private Task _startupTask = Task.CompletedTask;
     private bool _closing;
@@ -47,7 +48,11 @@ public partial class App : Application
             ? new UserProfileService(new UserProfileRepository(new LauncherDbContextFactory(paths)), paths) : null), new AvatarFilePicker(), _content.Toast);
         _settingsService ??= Persistence is null ? new AppSettingsService(new AppSettingsRepository(new LauncherDbContextFactory(paths))) : null;
         if (_settingsService is not null)
-            _settings = new SettingsViewModel(_settingsService, new DataDirectoryService(paths), paths, _content.Toast);
+        {
+            _appearance = new AppearanceService(_settingsService, new BackgroundImageStore(paths), new DesktopWallpaperSource(), _content.Toast);
+            _settings = new SettingsViewModel(_settingsService, new DataDirectoryService(paths), paths, _content.Toast,
+                new AppearanceViewModel(_appearance, new BackgroundFilePicker(), _content.Toast));
+        }
         MainWindow = new MainWindow
         {
             DataContext = new MainWindowViewModel(_content, _profile, _settings)
@@ -65,6 +70,7 @@ public partial class App : Application
         {
             bool loaded = await _settingsService.LoadAsync();
             _settings!.Refresh();
+            await _appearance!.InitializeAsync();
             ((MainWindowViewModel)MainWindow.DataContext).ApplyStartupPage(_settingsService.Current.StartupPage);
             MainWindow.SourceInitialized += (_, _) => WindowPlacementService.Restore(MainWindow, _settingsService.Current);
             MainWindow.Show();

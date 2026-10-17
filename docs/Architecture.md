@@ -1,5 +1,15 @@
 # Nova Launcher — 架构设计
 
+## 6.3 Background Pipeline（当前架构）
+
+Background Source → BackgroundImageStore（OnLoad / Freeze）→ AppearanceService → Blur → White Overlay → ShellBackgroundView → Launcher UI。SettingsViewModel 持有 AppearanceViewModel，后者只调用服务，不处理文件或 Windows API。AppSettingsService/Repository 的原分层不变，新增 20261017084703_AddBackgroundAppearance，仅增加 BackgroundImagePath nullable TEXT、BackgroundOverlayOpacity REAL=0.72、BackgroundBlurRadius REAL=12、BackgroundStretch TEXT=UniformToFill。模式枚举扩展 Default / DesktopWallpaper / CustomImage，Theme 固定 Light。
+
+Windows 官方 SystemParametersInfoW(SPI_GETDESKWALLPAPER) 读取系统静态路径；非空但失效时尝试用户 Themes/TranscodedWallpaper 缓存（可能滞后于壁纸管理器）。不查询网络，不监听复杂 Hook，不按窗口最大重叠显示器选择。自定义图写 Background/background-{guid}.png.tmp、Flush、重命名为版本 PNG，再提交 SQLite；成功清理旧文件，失败清理候选文件，因此磁盘与 DB 失败不会破坏旧背景。图片最长边 2560、文件限 80MB、像素限 4000 万；解码/转换在后台执行，OnLoad 结束释放流并 Freeze。
+
+AppearanceService 保持即时预览，400ms debounce 合并参数写入；仅更新背景字段，不覆盖同时保存的启动页/窗口设置。保存失败回滚预览并 Toast，关闭等待在途命令及 debounce。模式或恢复默认操作等待参数保存后执行。默认与读取失败均显示稳定浅色 Surface，保留错误模式/路径供刷新重试；恢复默认提交清空路径及默认参数后再删除自有文件。
+
+详见 [6.3 实现与验证记录](Appearance-6.3.md)。以下为历史阶段。
+
 ## 6.2 Settings（当前架构）
 
 Profile Flyout → Settings Workspace → SettingsViewModel → AppSettingsService → AppSettingsRepository → SQLite。Model 为不依赖 WPF 的 AppSettings；接口注入，View 不访问数据库。新增 `20261017025537_AddAppSettings`，仅创建单行 AppSettings，Id=1 CHECK；StartupPage=Home、RememberWindowSize/Position=true、BackgroundMode=Default、ThemeMode=Light，窗口四个 REAL 字段默认 null，UpdatedAt 为 UTC。完整字段表见 [6.2 交付记录](Settings-6.2.md)。

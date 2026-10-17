@@ -1,7 +1,8 @@
 namespace NovaLauncher.App.Models;
 
 public enum StartupPage { Home, Recent, Favorites }
-public enum BackgroundMode { Default }
+public enum BackgroundMode { Default, DesktopWallpaper, CustomImage }
+public enum BackgroundStretch { UniformToFill, Uniform }
 public enum ThemeMode { Light }
 
 public record AppSettings
@@ -15,6 +16,10 @@ public record AppSettings
     public double? WindowLeft { get; init; }
     public double? WindowTop { get; init; }
     public BackgroundMode BackgroundMode { get; init; } = BackgroundMode.Default;
+    public string? BackgroundImagePath { get; init; }
+    public double BackgroundOverlayOpacity { get; init; } = 0.72;
+    public double BackgroundBlurRadius { get; init; } = 12;
+    public BackgroundStretch BackgroundStretch { get; init; } = BackgroundStretch.UniformToFill;
     public ThemeMode ThemeMode { get; init; } = ThemeMode.Light;
     public DateTimeOffset UpdatedAt { get; init; } = DateTimeOffset.UtcNow;
 }
