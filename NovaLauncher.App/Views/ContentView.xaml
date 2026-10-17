@@ -90,6 +90,14 @@
                         </Setter.Value>
                     </Setter>
                     <Style.Triggers>
+                        <DataTrigger Binding="{Binding Mode}" Value="Settings">
+                            <Setter Property="ContentTemplate"><Setter.Value><DataTemplate>
+                                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                    <TextBlock Text="设置" Style="{StaticResource HomeSectionTitle}" HorizontalAlignment="Center" />
+                                    <TextBlock Text="设置功能将在后续版本提供" FontSize="{StaticResource SecondaryTextSize}" Foreground="{DynamicResource MutedTextBrush}" Margin="0,8,0,0" />
+                                </StackPanel>
+                            </DataTemplate></Setter.Value></Setter>
+                        </DataTrigger>
                         <DataTrigger Binding="{Binding IsHomeDashboard}" Value="True">
                             <Setter Property="ContentTemplate"><Setter.Value><DataTemplate><views:HomeView DataContext="{Binding Home}" /></DataTemplate></Setter.Value></Setter>
                         </DataTrigger>

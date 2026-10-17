@@ -369,4 +369,28 @@
             <Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="Foreground" Value="{DynamicResource AccentBrush}" /></Trigger>
         </Style.Triggers>
     </Style>
+    <sys:Double x:Key="ProfileSmallAvatarSize">34</sys:Double>
+    <sys:Double x:Key="ProfileLargeAvatarSize">72</sys:Double>
+    <sys:Double x:Key="ProfileFlyoutWidth">264</sys:Double>
+    <Style x:Key="ProfileActionButton" TargetType="Button" BasedOn="{StaticResource QuietButton}">
+        <Setter Property="MinHeight" Value="36" />
+        <Setter Property="HorizontalContentAlignment" Value="Left" />
+        <Setter Property="HorizontalAlignment" Value="Stretch" />
+    </Style>
+    <Style x:Key="ProfileAvatarButton" TargetType="Button">
+        <Setter Property="Width" Value="48" /><Setter Property="Height" Value="48" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource FocusRing}" />
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+            <Border x:Name="Surface" Background="Transparent" CornerRadius="24">
+                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource HoverBrush}" /></Trigger>
+                <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource HoverBrush}" /></Trigger>
+                <DataTrigger Binding="{Binding IsProfileFlyoutOpen}" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource SelectedBrush}" /></DataTrigger>
+                <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource SelectedBrush}" /></Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
+    </Style>
 </ResourceDictionary>

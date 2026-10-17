@@ -1,5 +1,19 @@
 # Nova Launcher — UI 设计
 
+## 6.1 Sidebar Avatar / Profile Flyout
+
+继续使用 5.5 Design Tokens 与 Windows 11 Minimal Light UI。ui-ux-pro-max 已读取，采用可见焦点、至少 48 DIP 点击区、反馈一致性与紧凑层级规则；本机 Python 不可用，本轮未执行技能检索脚本。
+
+Sidebar 底部固定 34 DIP 圆形头像，点击区 48 × 48 DIP，和导航图标轴线协调；中间导航可滚动。无常驻名称、Chevron 或 Accent 选中条。Hover/Pressed 与展开状态提供轻微 Surface 反馈，Tooltip 绑定 DisplayName。
+
+Flyout 使用 WPF Popup，宽 264 DIP，大头像 72 DIP，圆角与轻边框。高度按内容自适应；Padding 为左右 16、上下 12 DIP，头像到名称、名称到操作区均为 8 DIP，设置项不增加额外空隙。恢复默认隐藏菜单行后即时缩短 36 DIP。最终紧凑版截图位于 screenshots/6.1/compact。自定义头像用圆形 ImageBrush / UniformToFill；默认头像为本地 Nova N 矢量。再次点击头像、外部点击、窗口失活或 Esc 关闭；名称编辑时 Esc 先取消编辑。窗口移动、缩放、最大化及 Sidebar 调宽同步更新锚点。
+
+Tab 可聚焦头像与操作，Enter/Space 打开，名称 Enter 保存；关闭后恢复头像焦点。名称编辑、更换头像、恢复默认和设置均有 AutomationProperties.Name。设置入口关闭 Flyout 并进入占位，不实现设置内容。
+
+截图位于 screenshots/6.1：sidebar-default、profile-default、profile-custom、profile-small、settings-placeholder；real-sidebar / real-profile / real-restarted / real-profile-restarted 来自真实数据库启动与重启。自定义示例图用于验证同步与持久化，测试后真实资料恢复原值。
+
+DesktopBackdrop 仍为 Experimental；300 卡片首次布局约 1.9 秒仍保留在 Performance Backlog。
+
 ## 5.5 UI / UX Polish（当前规范）
 
 保留 Windows 11 Minimal Light UI、语义画刷和原导航结构。本节覆盖下文历史阶段的尺寸；未调整 DesktopBackdrop，仍为 Experimental。使用 ui-ux-pro-max 的语义层级、稳定布局、可见焦点、交互目标和减少动画规则；本机 python/python3 不可用，py -3 报告未安装 Python，使用已读取内置规则，未声称检索成功。

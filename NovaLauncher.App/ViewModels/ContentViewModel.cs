@@ -8,7 +8,7 @@ using NovaLauncher.App.Services;
 
 namespace NovaLauncher.App.ViewModels;
 
-public enum WorkspaceMode { Home, Category, Favorites, Recent }
+public enum WorkspaceMode { Home, Category, Favorites, Recent, Settings }
 
 public sealed class ContentViewModel : ViewModelBase, IDisposable
 {
@@ -113,7 +113,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     }
 
     public IToastService Toast { get; }
-    public bool IsEmpty => FilteredApplications.IsEmpty;
+    public bool IsEmpty => Mode != WorkspaceMode.Settings && FilteredApplications.IsEmpty;
     public bool IsDragOver { get => _isDragOver; private set => SetProperty(ref _isDragOver, value); }
     public bool IsImporting { get => _isImporting; private set => SetProperty(ref _isImporting, value); }
     public string? StatusMessage { get => _statusMessage; private set => SetProperty(ref _statusMessage, value); }

@@ -11,17 +11,21 @@ namespace NovaLauncher.App;
 public partial class App : Application
 {
     private ContentViewModel? _content;
+    private UserProfileViewModel? _profile;
+    private Task _startupTask = Task.CompletedTask;
     private bool _closing;
     private bool _closeReady;
 
     public App() { }
-    public App(IApplicationPersistenceService persistence, ICategoryService? categories = null)
+    public App(IApplicationPersistenceService persistence, ICategoryService? categories = null, IUserProfileService? profile = null)
     {
         Persistence = persistence;
         Categories = categories;
+        Profiles = profile;
     }
     private IApplicationPersistenceService? Persistence { get; }
     private ICategoryService? Categories { get; }
+    private IUserProfileService? Profiles { get; }
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -35,13 +39,21 @@ public partial class App : Application
         _content = new ContentViewModel(new ApplicationImportService(new ShortcutResolver(), icons),
             new ApplicationLaunchService(), persistence, new ToastService(),
             Categories ?? (Persistence is null ? new CategoryService(new CategoryRepository(new LauncherDbContextFactory(paths))) : null));
+        _profile = new UserProfileViewModel(Profiles ?? (Persistence is null
+            ? new UserProfileService(new UserProfileRepository(new LauncherDbContextFactory(paths)), paths) : null), new AvatarFilePicker(), _content.Toast);
         MainWindow = new MainWindow
         {
-            DataContext = new MainWindowViewModel(_content)
+            DataContext = new MainWindowViewModel(_content, _profile)
         };
         MainWindow.Show();
         MainWindow.Closing += OnWindowClosing;
-        _ = _content.InitializeAsync();
+        _startupTask = InitializeAsync();
+    }
+
+    private async Task InitializeAsync()
+    {
+        await _content!.InitializeAsync();
+        await _profile!.InitializeAsync();
     }
 
     private async void OnWindowClosing(object? sender, CancelEventArgs e)
@@ -51,7 +63,7 @@ public partial class App : Application
         if (_closing) return;
         _closing = true;
         MainWindow.IsEnabled = false;
-        try { await _content.FlushAsync(); }
+        try { await _startupTask; await _content.FlushAsync(); if (_profile is not null) await _profile.FlushAsync(); }
         finally
         {
             // Flush may complete synchronously; defer Close until the current Closing event has returned.

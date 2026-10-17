@@ -1,5 +1,26 @@
 # Nova Launcher — 架构设计
 
+## 6.1 UserProfile（当前架构）
+
+数据流：ProfileView → UserProfileViewModel → IUserProfileService / UserProfileService → IUserProfileRepository / UserProfileRepository → SQLite。View 只处理 Popup 锚点、焦点与窗口事件；Windows 文件选择器通过 IAvatarFilePicker 注入。App 等数据库初始化完成后加载 Profile，退出等待启动与资料写入任务。
+
+新增 Migration：20261017021040_AddUserProfile；未修改旧 Migration，不使用 EnsureCreated。
+
+| UserProfiles 字段 | SQLite 类型与约束 |
+| --- | --- |
+| Id | INTEGER 主键，固定 1，禁止自动生成 |
+| DisplayName | TEXT NOT NULL，Trim 后长度 1–24 |
+| AvatarPath | TEXT NULL；null 表示默认 Nova 矢量头像 |
+| UpdatedAt | TEXT NOT NULL，映射 DateTimeOffset |
+
+默认记录使用参数化 INSERT OR IGNORE 幂等创建；名称优先 Environment.UserName，异常、空值或超长回退 User。Profile 读取失败时保留 User 与默认头像，不阻断应用列表。
+
+头像流：File Picker → 格式/解码校验 → PNG 转换 → Local Profile Storage → AvatarPath → WPF ImageSource。存储在 %LOCALAPPDATA%\NovaLauncher\Profile\avatar-{guid}.png，不放入图标缓存。使用版本文件替代建议的固定 avatar.png：先写临时文件并重命名，再更新 SQLite，成功后清理旧文件；数据库失败删除新文件并保留旧文件。恢复默认先提交 null，删除失败仅记日志。图片最长边 512，输入限 50 MB / 3200 万像素。服务串行处理资料操作。
+
+BitmapImage 使用 OnLoad，释放流后 Freeze，避免锁住源文件。缺失或损坏的已保存头像回退默认显示。名称和头像仅在持久化成功后更新 UI；名称保存失败恢复旧名称。
+
+Settings 使用独立 WorkspaceMode 与简单占位模板，Sidebar 不显示 Settings 项，也不显示虚构选中态；可正常返回任意已有导航。以下架构说明为历史记录。
+
 ## 5.4 Home Projections
 
 本节更新当前边界：Home 使用独立 HomeView/HomeViewModel，ContentView 保留拖放、Toast 和空状态外壳，通过模板切换首页与原筛选列表；同一时刻仅实例化当前页面。设置保留原全部列表占位。

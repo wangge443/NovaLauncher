@@ -7,9 +7,19 @@ public sealed class LauncherDbContext(DbContextOptions<LauncherDbContext> option
 {
     public DbSet<ApplicationEntity> Applications => Set<ApplicationEntity>();
     public DbSet<Models.Category> Categories => Set<Models.Category>();
+    public DbSet<UserProfileEntity> UserProfiles => Set<UserProfileEntity>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
+        var profile = builder.Entity<UserProfileEntity>();
+        profile.HasKey(x => x.Id);
+        profile.Property(x => x.Id).ValueGeneratedNever();
+        profile.Property(x => x.DisplayName).IsRequired().HasMaxLength(24);
+        profile.ToTable("UserProfiles", table =>
+        {
+            table.HasCheckConstraint("CK_UserProfile_Singleton", "Id = 1");
+            table.HasCheckConstraint("CK_UserProfile_Name", "length(trim(DisplayName)) BETWEEN 1 AND 24 AND DisplayName = trim(DisplayName)");
+        });
         var app = builder.Entity<ApplicationEntity>();
         app.HasKey(x => x.Id);
         app.Property(x => x.IsFavorite).HasDefaultValue(false);

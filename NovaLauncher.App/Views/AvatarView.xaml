@@ -1,0 +1,17 @@
+<UserControl x:Class="NovaLauncher.App.Views.AvatarView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" IsHitTestVisible="False">
+    <Grid>
+        <Ellipse Fill="{DynamicResource SelectedBrush}" Stroke="{DynamicResource BorderBrush}" StrokeThickness="1" />
+        <Ellipse><Ellipse.Fill><ImageBrush ImageSource="{Binding AvatarSource}" Stretch="UniformToFill" /></Ellipse.Fill></Ellipse>
+        <Viewbox Margin="8">
+            <Canvas Width="24" Height="28">
+            <Path Data="M 4,24 L 4,4 L 20,24 L 20,4" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2">
+                <Path.Style><Style TargetType="Path"><Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers><DataTrigger Binding="{Binding AvatarSource}" Value="{x:Null}"><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers>
+                </Style></Path.Style>
+            </Path>
+            </Canvas>
+        </Viewbox>
+    </Grid>
+</UserControl>

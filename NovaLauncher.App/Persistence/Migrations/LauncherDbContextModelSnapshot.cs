@@ -108,6 +108,32 @@ namespace NovaLauncher.App.Persistence.Migrations
                         });
                 });
 
+            modelBuilder.Entity("NovaLauncher.App.Persistence.UserProfileEntity", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("AvatarPath")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DisplayName")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("UserProfiles", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_UserProfile_Name", "length(trim(DisplayName)) BETWEEN 1 AND 24 AND DisplayName = trim(DisplayName)");
+
+                            t.HasCheckConstraint("CK_UserProfile_Singleton", "Id = 1");
+                        });
+                });
+
             modelBuilder.Entity("NovaLauncher.App.Persistence.ApplicationEntity", b =>
                 {
                     b.HasOne("NovaLauncher.App.Models.Category", null)

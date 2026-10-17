@@ -91,9 +91,9 @@ internal static partial class Program
             Check(shell.Sidebar.SelectedItem == shell.Sidebar.FooterItems[0] && RecentCards(vm).Length == 7, "View all Favorites synchronizes Sidebar and exposes full list");
             shell.Sidebar.SelectedItem = game;
             Check(RecentCards(vm).SequenceEqual([first]) && !vm.IsHomeDashboard, "Category continues using existing filtered page");
-            shell.Sidebar.SelectedItem = shell.Sidebar.FooterItems[2];
+            shell.Sidebar.Profile.OpenSettingsCommand.Execute(null);
             window.UpdateLayout();
-            Check(!vm.IsHomeDashboard && !Descendants<HomeView>(window).Any() && RecentCards(vm).Length == 8, "Settings retains previous placeholder list");
+            Check(vm.Mode == WorkspaceMode.Settings && !Descendants<HomeView>(window).Any() && !AllCardViews(window).Any(), "Profile settings opens placeholder without Home cards");
             shell.Sidebar.SelectedItem = shell.Sidebar.Items[0];
             await vm.ImportAsync([CopyProbe("New Home Import")]);
             Check(vm.Home.AllApplications.Count == 9 && !vm.Home.RecentApplications.Contains(vm.Applications.Last()) &&

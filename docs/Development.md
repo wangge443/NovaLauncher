@@ -1,5 +1,38 @@
 # Nova Launcher — 开发流程
 
+## 6.1 最终收尾（2026-10-16）
+
+用户已通过功能及紧凑版 UI 最终验收，授权提交 feat: add local user profile。最终 Release Build 再次确认 **0 warnings / 0 errors**。个人资料专项 **44 项断言全部通过**：包含原 35 项、6 项内容自适应高度/名称布局/Sidebar 宽度与最大化还原断言，以及 Settings 返回分类、收藏、最近使用的 3 项补充断言；返回首页亦通过。此前八组回归 221 项和真实数据库独立重启验证仍适用，后续仅调整 Flyout 间距和验证代码，没有修改数据或业务逻辑。
+
+最终截图见 screenshots/6.1/compact。旧应用、分类、收藏、启动次数、最近启动时间和图标完整，验证后真实个人资料恢复原值。工作区仅含 6.1 实现、验证、截图及文档；清理收尾临时截图，未开始下一阶段。
+
+## 6.1 本地个人资料验证（2026-10-16）
+
+基线 08fe8615b206550cb77dc03fae416549541186cc。新增 Profile Model、Repository、Service、ViewModel、AvatarView/ProfileView，以及 20261017021040_AddUserProfile Migration；调整 App 装配/关闭等待、Sidebar 与 Settings 占位。旧 Migration、原应用数据结构、背景实现与依赖版本不变。6.1 已通过最终验收，按授权以 feat: add local user profile 收尾提交。
+
+最终 Release Build：**0 warnings / 0 errors**。
+
+个人资料专项 **35 项断言通过**：幂等默认记录、Migration/Snapshot、头像布局/Tooltip、原生点击与键盘开关、外部关闭、名称 Enter/Trim/Esc、空/超长名称、真实 Windows 文件选择器选择与取消、PNG/JPG/JPEG/BMP、自有存储、连续更换无锁、损坏/非法图片、SQLite 锁失败保留旧名称/头像、恢复默认、服务重建恢复、移动/缩放/最大化/Sidebar 宽度锚点、Settings 返回首页、Profile 读取失败回退与旧数据保护。
+
+八组回归 **221 项主进程断言通过**：Migration 30、Home 29、Category 33、Favorites 27、Recent 22、Launch 32、Toast 11、Import/OLE 37；另含分类/收藏/Recent 独立进程重启验证。导入测试首次批量调用误传空参数，在进入测试前退出；移除该空参数后完整 37 项通过。未修改业务代码来迁就测试。300 卡片首次布局本轮 1797 ms，原约 1.9 秒 Performance Backlog 保留。
+
+真实数据库验证使用生产 App 的两次独立进程启动：在线备份后应用 Migration，比较 Applications 全字段、Categories 全字段和全部图标 SHA256，全部不变；收藏、LaunchCount、LastLaunchTime 均保留。UserProfiles 恰好一条，所有 Migration 已应用。修改名称与头像，删除源图，完全退出再启动后名称及 PNG 哈希一致；验证后恢复原有个人资料。两进程分别 4 / 5 项断言通过，父进程确认退出码均为 0。
+
+备份保留在：
+%LOCALAPPDATA%\NovaLauncher\Data\Backups\nova-before-profile-20261017T022554Z-de47ea20353c429cab17e90365c791e9.db
+
+复现（需要可交互 Windows 桌面，测试期间会操作原生鼠标/文件选择器）：
+
+~~~powershell
+dotnet build NovaLauncher.sln -c Release --no-restore
+.\NovaLauncher.Verification\bin\Release\net9.0-windows\NovaLauncher.Verification.exe --profile docs/screenshots/6.1
+.\NovaLauncher.Verification\bin\Release\net9.0-windows\NovaLauncher.Verification.exe --real-profile
+~~~
+
+隔离回归使用 --migrations、--home、--categories、--favorites、--recent、--launch、--toast；导入验证不传模式参数，可指定临时截图目录。旧 scripts/Test-UiShell.ps1 仍针对早期固定六项导航，本轮未用它证明动态 Sidebar；本轮布局与交互由 Profile/Home/Category 验证覆盖。未实机切换高对比度或混合 DPI，不宣称覆盖这些环境。
+
+交付截图： [Sidebar](screenshots/6.1/sidebar-default.png)、[默认 Flyout](screenshots/6.1/profile-default.png)、[更换头像](screenshots/6.1/profile-custom.png)、[最小窗口](screenshots/6.1/profile-small.png)、[设置占位](screenshots/6.1/settings-placeholder.png)、[真实资料](screenshots/6.1/real-profile.png)、[真实重启](screenshots/6.1/real-profile-restarted.png)。截图为实际 WPF 窗口，Popup 使用屏幕合成捕获；真实测试结束恢复资料，因此测试截图名称/头像可以与最终恢复值不同。
+
 ## 5.5 最终收尾（2026-10-16）
 
 用户已验收 UI / UX Polish，按授权以 `style: polish launcher UI and interactions` 提交。最终 Release Build 再次确认 **0 warnings / 0 errors**，视觉专项 **19 项断言再次全部通过**。此前完整八套回归共 **210 项主进程断言**与独立重启验证通过，详见下文。
