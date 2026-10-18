@@ -1,5 +1,15 @@
 # Nova Launcher — 开发流程
 
+## 7.3 中文拼音与首字母搜索（2026-10-18，已验收）
+
+基线 70d7e62。新增 ToolGood.Words.Pinyin **3.1.0.4**（MIT、net9.0、离线内嵌词典、无传递依赖），固定版本与锁文件，附带许可到运行输出。ApplicationSearchEntry / ApplicationSearchIndex 在加载、导入、重命名时缓存 Key，移除/Reset/Dispose 清理；ApplicationSearchService 复用原匹配与时间/名称/Id 排序规则，扩展全拼与首字母。保留原名称三档最高优先级，规范名称匹配其次，再匹配拼音；不修改数据库 Schema/Migration、UI、键盘、IME 或启动命令。
+
+`dotnet restore NovaLauncher.sln --locked-mode` 成功；最终 Release Build **0 warnings / 0 errors**。`--pinyin` 专项 **123 项**，`--quick-launcher` 回归 **69 项**，13 组既有功能回归 **439 项**，共 **631 项主进程断言通过**，另含既有独立进程检查。覆盖中文/全拼/首字母/混合字符、排序/去重、索引生命周期、300/1000 条目、实际 IME、快捷键、管理和所有页面。Favorites 早期因桌面命中目标不符而停止输入，增加诊断后该套件通过；没有放宽点击保护或修改产品行为。
+
+300 中文应用：索引构建 2.22 ms（词典已热）、缓存查询 0.133–2.119 ms、Query 投影/绑定 1.09–10.52 ms、布局 5.53–71.39 ms。词典首次初始化 185.02 ms，GC 后堆增量约 41.17 MiB；与仅 40,800 bytes 的 300 条目派生字符串数据量分开计量。1000 条目补充测量有一次约 392 ms 布局延迟，保留底层 Home 的既有性能边界。
+
+已检查 wx、jsb、qqyy 三张实际浮层截图，UI 维持 7.2。依赖核查来源、完整 Rank 表、多音字/生僻字限制、内存与性能细节、截图和复现命令见 [PinyinSearch-7.3.md](PinyinSearch-7.3.md)。测试使用隔离库与探针，临时产物已清理。用户已验收并授权提交 feat: add pinyin application search。收尾再次锁定还原与 Release Build 通过（0 warnings / 0 errors）；业务代码未改，沿用已完成的 631 项断言结果，不重复运行通过的套件。已确认无 Schema 变化或无关工作区修改，不开始新功能开发。
+
 ## 7.2 Quick Launcher（2026-10-18，已验收）
 
 基于 b081a2b，实现同窗口 QuickLauncherOverlay、独立 QuickLauncherViewModel、顶部按钮入口、空 Query Recent/Favorites Top6、搜索 Top8、↑↓/Enter/Esc 与整行鼠标启动。保留底层页面及导航，复用原 ApplicationSearchService/LaunchCommand，删除 7.1 SearchMode/搜索 Grid/SearchWrapPanel 和旧专项入口；没有数据库或依赖改动。用户已授权最终收尾提交 feat: add quick launcher overlay。

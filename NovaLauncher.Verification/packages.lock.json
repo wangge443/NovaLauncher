@@ -195,11 +195,17 @@
         "resolved": "9.0.16",
         "contentHash": "BgvJQq4uc6jOiiuZ/5LTxrZ+hXTmnm/Q/Sq9/RM2LtBqY8YSA7UB8NgF6j0ZdqWrfvk9Z8AfwV+WMTONIOXESw=="
       },
+      "ToolGood.Words.Pinyin": {
+        "type": "Transitive",
+        "resolved": "3.1.0.4",
+        "contentHash": "QG51dprs+F9FWNoqCAgyBC/IV+sLFv7sNgQvAu7kbLp4IClnPdHTiX/K+4xo+Ippv6szabixTEBfFkvKSLs5Mw=="
+      },
       "novalauncher.app": {
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",
-          "Microsoft.EntityFrameworkCore.Sqlite": "[9.0.16, )"
+          "Microsoft.EntityFrameworkCore.Sqlite": "[9.0.16, )",
+          "ToolGood.Words.Pinyin": "[3.1.0.4, )"
         }
       }
     }

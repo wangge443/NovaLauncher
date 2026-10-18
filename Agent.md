@@ -2,7 +2,7 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第七阶段 7.2：Quick Launcher 快速启动浮层，基于已验收 7.1（b081a2b）。复用 ApplicationSearchService 与 LaunchCommand，清理旧 Workspace SearchMode，保留背景页面和全部既有管理功能，不修改 Schema/Migration。本阶段已通过用户最终验收，并获授权收尾提交 feat: add quick launcher overlay；不开始下一阶段。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第七阶段 7.3：Quick Launcher 中文拼音与首字母搜索，基于已验收 7.2（70d7e62）。通过 ApplicationSearchService 的内存索引扩展匹配；保持 7.2 UI、键盘、IME 与启动行为，不修改 Schema/Migration。新增固定版本 ToolGood.Words.Pinyin 3.1.0.4，离线生成派生 Key。7.3 已通过用户验收，按授权提交 feat: add pinyin application search；不开始新功能开发。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
@@ -55,4 +55,4 @@
 3. UI 工作先检查 ui-ux-pro-max 的安装与指令，形成设计参数和状态方案，再映射为 WPF 资源与控件。
 4. 按小范围改动实施，不覆盖用户工作；只有明确独立且有收益的工作流才考虑委派。
 5. 执行必要验证，记录未验证项与实际限制，清理本次无用临时文件，并同步相关文档。
-6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前 7.2 Quick Launcher 已通过最终验收，按授权完成收尾提交；不开始下一阶段。
+6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前 7.3 已通过验收，完成依赖锁定、Release 和改动范围复核后按授权收尾提交；不开始新功能开发。

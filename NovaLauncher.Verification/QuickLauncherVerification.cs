@@ -231,7 +231,7 @@ internal static partial class Program
         var quick=content.QuickLauncher; quick.Open(); window.UpdateLayout();
         Check(quick.Results.Count==6 && quick.Results[0].Application==records[0],"Empty query caps recent at six, newest first");
         var model=new List<double>();var layout=new List<double>();var calculation=new List<double>();
-        var search=new ApplicationSearchService();
+        using var search=new ApplicationSearchService(content.Applications);
         foreach(var query in new[]{"App","App 2","App 29","App 299","App","不存在"})
         {
             search.Query=query;

@@ -4,7 +4,7 @@ Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windo
 
 ## 当前状态
 
-第七阶段 7.2：Quick Launcher 快速启动浮层，支持 Ctrl+K、Top8 紧凑结果、↑↓选择、Enter 启动与 Esc 关闭，底层页面保持不变；复用原内存搜索与启动链路，数据库及背景系统不变。已通过用户最终验收，按授权收尾提交，不开始下一阶段。详见 [7.2 交付记录](docs/QuickLauncher-7.2.md)。
+第七阶段 7.3：Quick Launcher 增加中文全拼、首字母和混合名称搜索。运行时缓存 Search Key，原名称匹配优先，保留 7.2 UI、键盘、IME、Top8 与空 Query 行为；数据库不变。已通过用户验收，按授权完成收尾提交，不开始新功能开发。详见 [7.3 交付记录](docs/PinyinSearch-7.3.md)。
 
 ## 构建与运行
 

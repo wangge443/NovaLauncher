@@ -40,8 +40,13 @@ internal static partial class Program
         {
             var point = card.PointToScreen(new Point(65, 65));
             Native.SetCursorPos((int)point.X, (int)point.Y); await Task.Delay(180);
-            if (LaunchNative.WindowFromPoint(new((int)point.X, (int)point.Y)) != new WindowInteropHelper(window).Handle)
-                throw new InvalidOperationException("Card is obscured; refusing native right click");
+            var hitWindow = LaunchNative.WindowFromPoint(new((int)point.X, (int)point.Y));
+            if (hitWindow != new WindowInteropHelper(window).Handle)
+            {
+                ProfileDialogNative.GetWindowThreadProcessId(hitWindow, out uint process);
+                SaveWindow(window, "obscured-card.png");
+                throw new InvalidOperationException($"Card is obscured; refusing native right click. Point={point}; hit HWND={hitWindow}; PID={process}; test HWND={new WindowInteropHelper(window).Handle}; card size={card.ActualWidth}x{card.ActualHeight}");
+            }
             LaunchNative.mouse_event(8, 0, 0, 0, UIntPtr.Zero);
             LaunchNative.mouse_event(16, 0, 0, 0, UIntPtr.Zero);
         }

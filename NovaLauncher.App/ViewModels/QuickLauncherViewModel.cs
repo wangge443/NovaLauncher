@@ -10,7 +10,7 @@ public sealed class QuickLauncherViewModel : ViewModelBase, IDisposable
 {
     private readonly ObservableCollection<ApplicationCardViewModel> _source;
     private readonly HashSet<ApplicationCardViewModel> _observed = [];
-    private readonly ApplicationSearchService _search = new();
+    private readonly ApplicationSearchService _search;
     private bool _isOpen;
     private string _query = "";
     private string? _error;
@@ -19,6 +19,8 @@ public sealed class QuickLauncherViewModel : ViewModelBase, IDisposable
     public QuickLauncherViewModel(ObservableCollection<ApplicationCardViewModel> source)
     {
         _source = source;
+        // Subscribe the index before result refresh handlers so changes are searchable immediately.
+        _search = new(source);
         LaunchCommand = new AsyncRelayCommand<ApplicationCardViewModel>(LaunchAsync);
         OpenCommand = new RelayCommand(Open);
         CloseCommand = new RelayCommand(Close);
@@ -124,6 +126,7 @@ public sealed class QuickLauncherViewModel : ViewModelBase, IDisposable
     }
     public void Dispose()
     {
+        _search.Dispose();
         _source.CollectionChanged -= SourceChanged;
         foreach (var card in _observed) card.PropertyChanged -= CardChanged;
         _observed.Clear();

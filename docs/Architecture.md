@@ -1,5 +1,17 @@
 # Nova Launcher — 架构设计
 
+## 7.3 Application Search Index（当前架构）
+
+Application → DisplayName → ApplicationSearchEntry（ApplicationId、OriginalName、NormalizedName、FullPinyin、PinyinInitials）。ApplicationSearchService 持有 ApplicationSearchIndex，Index 以现有 ApplicationCardViewModel 引用为键，订阅共享 Applications 的集合变化与 DisplayName 通知。构造时索引已有条目，Add/Replace 索引新项，Rename 替换该项，Remove/Reset 退订并清理；Dispose 释放集合/卡片订阅和字典。
+
+索引在 QuickLauncherViewModel 的结果刷新监听之前订阅，因此关闭面板期间也保持更新，打开或重命名后的首次刷新即可命中新 Key。VM 只增加搜索服务的初始化/释放，原 Query、投影、Top8、空 Query、选择与启动实现不变。Index 不依赖数据库，不把 Key 放入持久化模型。
+
+SearchQuery → Trim / Normalize（忽略空白、转小写）→ ApplicationSearchIndex → 最佳匹配 Rank → RecentApplicationComparer → Top8。原文匹配 Rank 0–2，规范名称匹配 3–5，全拼完全/前缀 6–7，首字母完全/前缀 8–9，全拼/首字母包含 10–11；值越小越优先，无匹配为 int.MaxValue。过滤原集合一次，每项只取最高质量匹配，因此不会因多个 Key 命中重复。
+
+Key 构造使用 ToolGood.Words.Pinyin 3.1.0.4 的 GetPinyinList 一次获得默认无声调音节，拼接全拼与首字母。ASCII 每字符保留，中文取音节首字母，数字、标点和未转换符号保留（库可能忽略范围内无读音字）；OriginalName 始终完整。纯英文/数字等非词典范围名称跳过词典调用。Query 阶段只访问不可变 Key 字符串，不重新生成，不转换中文 Query。
+
+词典是内嵌资源，首次中文转换有一次性初始化成本；按库默认词组/单字读音，不进行额外语义消歧。详细体积、内存和性能边界见 [PinyinSearch-7.3.md](PinyinSearch-7.3.md)。7.2 以下为历史记录，其“搜索服务本体未改动”仅指当时阶段。
+
 ## 7.2 Quick Launcher（当前架构）
 
 Ctrl+K / Search Trigger → QuickLauncherOverlay → QuickLauncherViewModel.SearchQuery → ApplicationSearchService → Top Results → SelectedIndex → 原 ApplicationCardViewModel.LaunchCommand。

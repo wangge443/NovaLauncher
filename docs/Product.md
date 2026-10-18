@@ -1,5 +1,13 @@
 # Nova Launcher — 产品定义
 
+## 7.3 拼音与首字母搜索（已验收）
+
+Quick Launcher 支持微信 → weixin/wx、记事本 → jishiben/jsb、QQ音乐 → qqyinyue/qqyy，以及中文、英文、数字混合名称。名称原文忽略大小写的完全/前缀/包含匹配优先；额外提供忽略空白的名称匹配，再按全拼完全/前缀、首字母完全/前缀、全拼包含、首字母包含排序。同档仍按最近启动、DisplayName、Id 排序；每个应用只出现一次。
+
+加载/导入时建立内存 Key，重命名立即替换、移除立即释放；查询不转换拼音，不读写 SQLite。仅去除派生 Key 和 Query 中的空白，保留 +、.、-、_、括号与数字。中文 Query 不强制转拼音；未知字符仍可通过原名称匹配。采用离线词典默认读音，不承诺语义级多音字消歧或所有生僻字覆盖。
+
+保持 7.2 Overlay、Top8、空 Query Recent Top6 / Favorites fallback、键盘、鼠标与 IME 防护。无 Schema/Migration；不扩展在线搜索或历史。依赖、验证、性能及截图见 [PinyinSearch-7.3.md](PinyinSearch-7.3.md)。以下为历史阶段。
+
 ## 7.2 Quick Launcher（已验收）
 
 7.2 用窗口内 Quick Launcher 浮层替代 7.1 的 Workspace 搜索。顶部保留按钮式搜索入口，Ctrl+K 打开同一浮层；重复 Ctrl+K 聚焦并全选。Settings 中直接叠加面板，不切换页面。关闭或成功启动后清空 Query，WorkspaceMode、SelectedCategory、Sidebar 及原页面均保留。
