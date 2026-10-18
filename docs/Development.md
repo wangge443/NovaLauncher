@@ -1,5 +1,15 @@
 # Nova Launcher — 开发流程
 
+## 7.2 Quick Launcher（2026-10-18，已验收）
+
+基于 b081a2b，实现同窗口 QuickLauncherOverlay、独立 QuickLauncherViewModel、顶部按钮入口、空 Query Recent/Favorites Top6、搜索 Top8、↑↓/Enter/Esc 与整行鼠标启动。保留底层页面及导航，复用原 ApplicationSearchService/LaunchCommand，删除 7.1 SearchMode/搜索 Grid/SearchWrapPanel 和旧专项入口；没有数据库或依赖改动。用户已授权最终收尾提交 feat: add quick launcher overlay。
+
+最终 Release Build **0 warnings / 0 errors**，采用独立输出目录，未关闭运行中的用户 Nova。新专项 **69 项**、13 组既有回归 **439 项**，共 **508 项主进程断言通过**，另含既有独立进程检查。真实中文 IME 输入 weixin 后 Space 提交“微信”，Enter 确认组合也不误启动；WPF 组合事件逐键覆盖。启动失败保留与旧异步请求不关闭新会话均通过。
+
+300 应用纯匹配排序 **0.057–0.618 ms**，投影及绑定 **0.96–21.85 ms**，后续布局/Render yield **3.75–26.11 ms**，同次投影加布局最高约 **43.76 ms**；最多八个结果视觉行，存储读取仍一次。Home 原 300 卡片首次布局本轮 2466 ms，未宣称解决该历史问题。
+
+已检查空 Query、搜索结果、选中状态、低遮罩自定义背景、桌面壁纸、最小窗口及真实中文输入截图。完整复现、边界和截图见 [QuickLauncher-7.2.md](QuickLauncher-7.2.md)。临时独立构建、回归截图和日志已清理；保留本阶段交付截图与原历史记录。最终收尾再次通过默认输出 Release Build（0 warnings / 0 errors）与专项 69 项断言，详见交付记录。
+
 ## 7.1 最终收尾（已验收）
 
 用户已验收并授权提交 feat: add global application search。再次构建 Release：**0 warnings / 0 errors**。默认输出因正在运行的 Nova 锁定 apphost 失败，改用独立 OutputPath 构建成功，保留用户窗口。使用该产物重跑搜索专项，**43 项断言全部通过**；300 应用六次查询加布局为 **210.0、84.3、8.3、99.1、145.5、16.5 ms**，保持已验收性能范围。

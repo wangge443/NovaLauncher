@@ -14,9 +14,8 @@ public partial class MainWindow : Window
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key != Key.K || Keyboard.Modifiers != ModifierKeys.Control || DataContext is not MainWindowViewModel vm) return;
-        vm.Sidebar.PrepareSearch();
-        Workspace.UpdateLayout();
-        Workspace.FocusSearch();
+        if (QuickOverlay.IsComposing) return;
+        QuickOverlay.OpenAndFocus();
         e.Handled = true;
     }
 

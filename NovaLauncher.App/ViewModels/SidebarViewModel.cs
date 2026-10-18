@@ -20,11 +20,6 @@ public sealed class SidebarViewModel : ViewModelBase
         [new("收藏", "\uE734", Mode: WorkspaceMode.Favorites), new("最近使用", "\uE81C", Mode: WorkspaceMode.Recent)];
 
     private NavigationItem _selectedItem;
-    private NavigationItem? _lastApplicationItem;
-    public void PrepareSearch()
-    {
-        if (SelectedItem.IsSettings) SelectedItem = _lastApplicationItem ?? Items[0];
-    }
 
     public SidebarViewModel(ContentViewModel content, UserProfileViewModel profile)
     {
@@ -48,13 +43,10 @@ public sealed class SidebarViewModel : ViewModelBase
             {
                 if (SetProperty(ref _selectedItem, value))
                 {
-                    if (!value.IsSettings) _lastApplicationItem = value;
                     _content.SelectWorkspace(value is CategoryViewModel ? WorkspaceMode.Category : value.Mode, value as CategoryViewModel, !value.IsSettings);
                     OnPropertyChanged(nameof(TopSelectedItem));
                     OnPropertyChanged(nameof(FooterSelectedItem));
                 }
-                else if (_content.IsSearching)
-                    _content.SelectWorkspace(value is CategoryViewModel ? WorkspaceMode.Category : value.Mode, value as CategoryViewModel);
             }
         }
     }

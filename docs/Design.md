@@ -1,5 +1,15 @@
 # Nova Launcher — UI 设计
 
+## 7.2 Quick Launcher（当前规范）
+
+顶部 320×40 DIP 搜索入口改成 Button，保留 Fluent 搜索图标与 Ctrl+K 提示，Settings 隐藏入口但快捷键仍可用。主面板宽 580 DIP、水平居中，顶边位于内容区高度 18%（约窗口上方四分之一），随窗口收窄限制宽度和最大高度；结果区独立滚动，不挤动背景页面。
+
+Surface 沿用 WindowBrush 实底、轻边框、12 DIP 圆角和轻阴影；Scrim 使用低透明深色，后方页面保持可见。查询区高 52 DIP、字号 20；结果行高 64 DIP、图标 40 DIP，名称 15、分类 12。Selected 为浅 Accent Surface 加细边框，Hover 仅 Surface 变化，无缩放和跳动。最多 Top8；小窗口滚动查看后续项。
+
+打开使用既有 HoverDuration 淡入（减少动画规则沿用），关闭即时收起。打开聚焦 TextBox，重复 Ctrl+K 全选，Tab 在面板内循环，关闭恢复原可见且可用控件焦点。Esc 按钮可通过 Tab/Enter 激活；结果行提供可访问名称和原生 ListBox 选中语义。组合输入期间保留 IME 的 Enter/Space/方向键，不将候选确认当作启动。
+
+使用 ui-ux-pro-max 已读取的焦点、键盘、状态反馈、原生控件及语义颜色规则；本机无 Python，不宣称执行新技能检索。实际检查 Default、低遮罩 CustomImage、DesktopWallpaper、小窗口和中文输入截图，见 [QuickLauncher-7.2.md](QuickLauncher-7.2.md)。以下 7.1 为历史设计。
+
 ## 7.1 搜索交互（当前规范）
 
 应用 Workspace 顶部左对齐搜索框：320×40 DIP、8 DIP 圆角，尺寸集中在 ShellTheme 的 SearchWidth/SearchHeight/SearchRadius。使用 WindowBrush 实底、BorderBrush 默认边框、Hover 次级描边、Focused Accent 细边框；Fluent 搜索图标、搜索应用占位与 AutomationProperties.Name。右侧 Ctrl+K 提示在焦点或有文本时隐藏；有文本显示带可访问名称的 28 DIP Clear 按钮，输入不会与提示重叠。

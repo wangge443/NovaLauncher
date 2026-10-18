@@ -1,5 +1,17 @@
 # Nova Launcher — 架构设计
 
+## 7.2 Quick Launcher（当前架构）
+
+Ctrl+K / Search Trigger → QuickLauncherOverlay → QuickLauncherViewModel.SearchQuery → ApplicationSearchService → Top Results → SelectedIndex → 原 ApplicationCardViewModel.LaunchCommand。
+
+ContentViewModel 持有并释放 QuickLauncherViewModel；两者共享 Applications 实例。QuickLauncherViewModel 仅订阅集合和名称/最近启动时间/收藏变化，查询在内存完成；结果保留原卡片 VM 引用，最多 8 项。空 Query 从最近使用取 6 项，否则收藏 6 项。结果增量同步，Query 改变选首项，源变化保留仍存在的选中项，否则安全回到首项；无结果为 -1。
+
+QuickLauncherOverlay 是 MainWindow 的同窗口覆盖层，放在 ShellLayout 上方，包含 Scrim、查询 TextBox 和紧凑 ListBox；View 仅适配焦点、IME、鼠标、键盘和窗口尺寸。打开/关闭不修改 WorkspaceMode、SelectedCategory 或 Sidebar。顶部入口只绑定 OpenCommand，没有第二个输入状态。
+
+Enter/单击调用 QuickLauncherViewModel.LaunchCommand，再执行原卡片 LaunchCommand；原成功统计变化确认成功后关闭，失败事件显示面板内错误。会话序号防止旧请求完成后关闭新面板；关闭窗口仍走原卡片在途命令 Flush。Query 不保存，搜索无 SQLite 调用，ApplicationSearchService 本体保持不变。
+
+IME 同时观察 WPF TextComposition 开始/更新/完成和 HWND 的 WM_IME_STARTCOMPOSITION/ENDCOMPOSITION，不消费原生消息；组合期、ImeProcessed/DeadCharProcessed 键及提交键未释放时不处理命令键。原输入事件继续由 WPF/IME 处理。7.1 的 WorkspaceMode.Search、保存原页状态、SearchResults 投影、SearchWrapPanel、Search Empty UI 及旧专项入口已移除。
+
 ## 7.1 Global Search Pipeline（当前架构）
 
 Ctrl+K / SearchBox → ContentViewModel.SearchQuery → ApplicationSearchService → 已加载 Application Collection → Match + Rank → 增量 Search Results → ApplicationCardView。

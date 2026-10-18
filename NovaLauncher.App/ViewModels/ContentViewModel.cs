@@ -8,7 +8,7 @@ using NovaLauncher.App.Services;
 
 namespace NovaLauncher.App.ViewModels;
 
-public enum WorkspaceMode { Home, Category, Favorites, Recent, Settings, Search }
+public enum WorkspaceMode { Home, Category, Favorites, Recent, Settings }
 
 public sealed class ContentViewModel : ViewModelBase, IDisposable
 {
@@ -27,41 +27,6 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     private bool _isImporting;
     private string? _statusMessage;
     private int _messageVersion;
-    private readonly ApplicationSearchService _search = new();
-    private readonly ObservableCollection<ApplicationCardViewModel> _searchResults = [];
-    private readonly ListCollectionView _searchView;
-    private readonly ListCollectionView _browseView;
-    private string _searchQuery = "";
-    private WorkspaceMode _previousMode = WorkspaceMode.Home;
-    private CategoryViewModel? _previousCategory;
-    private bool _previousHome = true;
-    public bool IsSearching => Mode == WorkspaceMode.Search;
-    public bool HasSearchText => SearchQuery.Length > 0;
-    public string SearchTitle => $"搜索结果 · {FilteredApplications.Cast<object>().Count()}";
-    public string SearchQuery
-    {
-        get => _searchQuery;
-        set
-        {
-            if (!SetProperty(ref _searchQuery, value)) return;
-            OnPropertyChanged(nameof(HasSearchText));
-            _search.Query = value.Trim();
-            if (_search.Query.Length == 0)
-            {
-                if (IsSearching) ApplyWorkspace(_previousMode, _previousCategory, _previousHome);
-                return;
-            }
-            if (!IsSearching)
-            {
-                _previousMode = Mode == WorkspaceMode.Settings ? WorkspaceMode.Home : Mode;
-                _previousCategory = SelectedCategory;
-                _previousHome = IsHomeDashboard || Mode == WorkspaceMode.Settings;
-            }
-            ApplyWorkspace(WorkspaceMode.Search, _previousCategory, false);
-        }
-    }
-    public Task LaunchSearchResultAsync() => IsSearching && FilteredApplications.Cast<ApplicationCardViewModel>().FirstOrDefault() is { } card
-        ? card.LaunchCommand.ExecuteAsync(null) : Task.CompletedTask;
 
     public ContentViewModel(IApplicationImportService importer, IApplicationLaunchService launcher,
         IApplicationPersistenceService persistence, IToastService toast, ICategoryService? categories = null,
@@ -77,11 +42,10 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         _token = _lifetime.Token;
         CategoryManager = new(categories, toast);
         Home = new(Applications);
-        _browseView = new ListCollectionView(Applications) { Filter = MatchesMode };
-        _searchView = new ListCollectionView(_searchResults);
-        ((INotifyCollectionChanged)_browseView).CollectionChanged += FilteredCollectionChanged;
-        ((INotifyCollectionChanged)_searchView).CollectionChanged += FilteredCollectionChanged;
-        Applications.CollectionChanged += ApplicationsChanged;
+        QuickLauncher = new(Applications);
+        FilteredApplications = new ListCollectionView(Applications);
+        FilteredApplications.Filter = MatchesMode;
+        FilteredApplications.CollectionChanged += FilteredCollectionChanged;
     }
 
     private bool MatchesMode(object item) => Mode switch
@@ -89,14 +53,14 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
             WorkspaceMode.Category => ((ApplicationCardViewModel)item).CategoryId == SelectedCategory?.Id,
             WorkspaceMode.Favorites => ((ApplicationCardViewModel)item).IsFavorite,
             WorkspaceMode.Recent => ((ApplicationCardViewModel)item).LastLaunchTime.HasValue,
-            WorkspaceMode.Search => _search.Matches((ApplicationCardViewModel)item),
             _ => true
         };
 
     public ObservableCollection<ApplicationCardViewModel> Applications { get; } = [];
-    public ICollectionView FilteredApplications => IsSearching ? _searchView : _browseView;
+    public ICollectionView FilteredApplications { get; }
     public CategoryManagerViewModel CategoryManager { get; }
     public HomeViewModel Home { get; }
+    public QuickLauncherViewModel QuickLauncher { get; }
     private bool _isHomeDashboard = true;
     public bool IsHomeDashboard { get => _isHomeDashboard; private set => SetProperty(ref _isHomeDashboard, value); }
     private CategoryViewModel? _selectedCategory;
@@ -109,32 +73,19 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     public WorkspaceMode Mode { get => _mode; private set => SetProperty(ref _mode, value); }
     public void SelectWorkspace(WorkspaceMode mode, CategoryViewModel? category = null, bool showHome = true)
     {
-        SearchQuery = "";
-        ApplyWorkspace(mode, category, showHome);
-    }
-    private void ApplyWorkspace(WorkspaceMode mode, CategoryViewModel? category, bool showHome)
-    {
         if (mode == WorkspaceMode.Category && category is null) throw new ArgumentNullException(nameof(category));
         SelectedCategory = mode == WorkspaceMode.Category ? category : null;
-        bool wasSearching = IsSearching;
         Mode = mode;
-        if (wasSearching != IsSearching)
-        {
-            OnPropertyChanged(nameof(IsSearching));
-            OnPropertyChanged(nameof(FilteredApplications));
-        }
         IsHomeDashboard = mode == WorkspaceMode.Home && showHome;
-        if (IsSearching) RefreshSearch();
-        else using (_browseView.DeferRefresh())
+        using (FilteredApplications.DeferRefresh())
         {
-            _browseView.CustomSort = mode == WorkspaceMode.Recent ? RecentApplicationComparer.Instance : null;
-            _browseView.Filter = MatchesMode;
+            ((ListCollectionView)FilteredApplications).CustomSort = mode == WorkspaceMode.Recent ? RecentApplicationComparer.Instance : null;
+            FilteredApplications.Filter = MatchesMode;
         }
         NotifyEmptyState();
     }
     public string EmptyTitle => Mode switch
     {
-        WorkspaceMode.Search => "未找到应用",
         WorkspaceMode.Favorites => "还没有收藏应用",
         WorkspaceMode.Recent => "最近还没有启动过应用",
         WorkspaceMode.Category => "此分类暂无应用",
@@ -142,7 +93,6 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     };
     public string EmptyHint => Mode switch
     {
-        WorkspaceMode.Search => $"没有与“{_search.Query}”匹配的应用",
         WorkspaceMode.Favorites => "右键应用卡片即可收藏",
         WorkspaceMode.Recent => "启动应用后，它会出现在这里",
         WorkspaceMode.Category => "右键应用卡片，选择“移动到分类”",
@@ -150,28 +100,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     };
     private void RefreshFilter()
     {
-        if (IsSearching) RefreshSearch();
-        else _browseView.Refresh();
-        NotifyEmptyState();
-    }
-    private void ApplicationsChanged(object? sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (IsSearching) RefreshSearch();
-    }
-    private void RefreshSearch()
-    {
-        var desired = Applications.Where(_search.Matches).ToArray();
-        Array.Sort(desired, (left, right) => _search.Compare(left, right));
-        var membership = desired.ToHashSet();
-        // Incremental updates preserve unchanged containers and keyboard focus.
-        for (int i = _searchResults.Count - 1; i >= 0; i--)
-            if (!membership.Contains(_searchResults[i])) _searchResults.RemoveAt(i);
-        for (int i = 0; i < desired.Length; i++)
-        {
-            int existing = _searchResults.IndexOf(desired[i]);
-            if (existing < 0) _searchResults.Insert(i, desired[i]);
-            else if (existing != i) _searchResults.Move(existing, i);
-        }
+        FilteredApplications.Refresh();
         NotifyEmptyState();
     }
     private void NotifyEmptyState()
@@ -179,9 +108,8 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(EmptyTitle));
         OnPropertyChanged(nameof(EmptyHint));
-        OnPropertyChanged(nameof(SearchTitle));
     }
-    private void FilteredCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => NotifyEmptyState();
+    private void FilteredCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => OnPropertyChanged(nameof(IsEmpty));
     private void RefreshFavorites()
     {
         // Home/category membership is unchanged; keep their controls and keyboard focus intact.
@@ -189,7 +117,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     }
     private void CardPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (Mode is WorkspaceMode.Recent or WorkspaceMode.Search && e.PropertyName is nameof(ApplicationCardViewModel.LastLaunchTime) or nameof(ApplicationCardViewModel.DisplayName))
+        if (Mode == WorkspaceMode.Recent && e.PropertyName is nameof(ApplicationCardViewModel.LastLaunchTime) or nameof(ApplicationCardViewModel.DisplayName))
             RefreshFilter();
     }
 
@@ -313,7 +241,6 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
                 if (error == "该应用已添加") { Toast.Show(error); continue; }
                 if (error is not null) { notices.Add(error); continue; }
                 AddCard(application);
-                if (IsSearching) Toast.Show("应用已添加");
             }
             if (notices.Count > 0) ShowMessage(string.Join("；", notices));
             else StatusMessage = null;
@@ -349,9 +276,8 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         if (_token.IsCancellationRequested) return;
         _lifetime.Cancel();
         Home.Dispose();
-        Applications.CollectionChanged -= ApplicationsChanged;
-        ((INotifyCollectionChanged)_browseView).CollectionChanged -= FilteredCollectionChanged;
-        ((INotifyCollectionChanged)_searchView).CollectionChanged -= FilteredCollectionChanged;
+        QuickLauncher.Dispose();
+        FilteredApplications.CollectionChanged -= FilteredCollectionChanged;
         Toast.Dispose();
         _lifetime.Dispose();
         foreach (var card in Applications)

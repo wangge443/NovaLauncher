@@ -78,6 +78,7 @@
                               AutomationProperties.AutomationId="SidebarSplitter"
                               AutomationProperties.Name="调整侧栏宽度" ToolTip="拖动调整侧栏宽度；方向键微调" />
             </Grid>
+            <views:QuickLauncherOverlay x:Name="QuickOverlay" Grid.Row="1" Panel.ZIndex="20" DataContext="{Binding Content.QuickLauncher}"/>
         </Grid>
     </Border>
 </Window>

@@ -2,7 +2,7 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第七阶段 7.1：全局应用搜索，基于已验收 6.5（f217def）。窗口内 Ctrl+K、内存名称搜索、原页面恢复、Enter 启动与搜索结果管理；复用原卡片/服务，保持数据库 Schema、背景与现有功能。7.1 已通过用户验收，按授权完成最终收尾提交，不开始下一阶段。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第七阶段 7.2：Quick Launcher 快速启动浮层，基于已验收 7.1（b081a2b）。复用 ApplicationSearchService 与 LaunchCommand，清理旧 Workspace SearchMode，保留背景页面和全部既有管理功能，不修改 Schema/Migration。本阶段已通过用户最终验收，并获授权收尾提交 feat: add quick launcher overlay；不开始下一阶段。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
@@ -55,4 +55,4 @@
 3. UI 工作先检查 ui-ux-pro-max 的安装与指令，形成设计参数和状态方案，再映射为 WPF 资源与控件。
 4. 按小范围改动实施，不覆盖用户工作；只有明确独立且有收益的工作流才考虑委派。
 5. 执行必要验证，记录未验证项与实际限制，清理本次无用临时文件，并同步相关文档。
-6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前完成 7.1 全局应用搜索，提供性能、Build、测试与 UI 截图；7.1 已验收并授权收尾提交，不开始下一阶段。
+6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前 7.2 Quick Launcher 已通过最终验收，按授权完成收尾提交；不开始下一阶段。

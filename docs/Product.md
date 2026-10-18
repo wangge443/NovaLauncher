@@ -1,5 +1,13 @@
 # Nova Launcher — 产品定义
 
+## 7.2 Quick Launcher（已验收）
+
+7.2 用窗口内 Quick Launcher 浮层替代 7.1 的 Workspace 搜索。顶部保留按钮式搜索入口，Ctrl+K 打开同一浮层；重复 Ctrl+K 聚焦并全选。Settings 中直接叠加面板，不切换页面。关闭或成功启动后清空 Query，WorkspaceMode、SelectedCategory、Sidebar 及原页面均保留。
+
+空 Query 优先显示最近使用 Top6；无最近记录则显示收藏 Top6；两者都没有时提示输入应用名称。非空 Query 复用 ApplicationSearchService，按原匹配排序取 Top8。第一项默认选中，Query 变化重置到首项，↑↓不循环，Enter 启动当前项，Esc/外部点击关闭；鼠标整行单击启动。启动失败保留面板与错误提示。结果行显示图标、名称、分类，不提供右键管理菜单，原 Workspace 卡片的管理功能保持不变。
+
+仅内存搜索，无 Schema/Migration 或历史持久化。7.1 的 SearchMode/Grid/专用空状态已移除，只有一套 Query。实现、IME 和性能验证见 [QuickLauncher-7.2.md](QuickLauncher-7.2.md)。以下为历史阶段。
+
 ## 7.1 全局应用搜索（已验收）
 
 Home、Category、Favorites、Recent 的 Workspace 顶部提供应用搜索；Settings 隐藏。窗口内 Ctrl+K 聚焦并全选已有文字，Settings 下先恢复上一次应用页（无记录则 Home）。非空 Trim Query 进入临时 Search 模式，搜索全部已加载应用；清空、Clear 或搜索框 Esc 恢复进入前页面及分类，Sidebar 保留原选中项。空文本 Esc 仅释放焦点。

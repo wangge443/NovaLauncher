@@ -1,6 +1,5 @@
 using System.Windows.Controls;
 using System.Windows;
-using System.Windows.Input;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using NovaLauncher.App.ViewModels;
@@ -10,34 +9,6 @@ namespace NovaLauncher.App.Views;
 public partial class ContentView : UserControl
 {
     public ContentView() => InitializeComponent();
-
-    public void FocusSearch()
-    {
-        SearchBox.Focus();
-        SearchBox.SelectAll();
-    }
-
-    private async void SearchBox_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (DataContext is not ContentViewModel vm) return;
-        if (e.Key == Key.Escape)
-        {
-            if (vm.HasSearchText) vm.SearchQuery = "";
-            else { Keyboard.ClearFocus(); FocusManager.SetFocusedElement(FocusManager.GetFocusScope(SearchBox), null); }
-            e.Handled = true;
-        }
-        else if (e.Key == Key.Enter)
-        {
-            e.Handled = true;
-            await vm.LaunchSearchResultAsync();
-        }
-    }
-
-    private void ClearSearch_Click(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is ContentViewModel vm) vm.SearchQuery = "";
-        FocusSearch();
-    }
 
     private static string[] GetPaths(DragEventArgs e)
     {
