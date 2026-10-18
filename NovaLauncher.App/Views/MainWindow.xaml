@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:views="clr-namespace:NovaLauncher.App.Views"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
-        Title="{Binding Title}"
+        Title="{Binding Title}" PreviewKeyDown="Window_PreviewKeyDown"
         Width="1120" Height="720"
         MinWidth="800" MinHeight="560"
         WindowStyle="None" ResizeMode="CanResize"
@@ -70,7 +70,7 @@
                     <ColumnDefinition Width="3*" />
                 </Grid.ColumnDefinitions>
                 <views:SidebarView DataContext="{Binding Sidebar}" AutomationProperties.AutomationId="Sidebar" />
-                <views:ContentView Grid.Column="1" DataContext="{Binding Content}" AutomationProperties.AutomationId="LauncherWorkspace" />
+                <views:ContentView x:Name="Workspace" Grid.Column="1" DataContext="{Binding Content}" AutomationProperties.AutomationId="LauncherWorkspace" />
                 <GridSplitter Width="8" HorizontalAlignment="Right" VerticalAlignment="Stretch"
                               ResizeDirection="Columns" ResizeBehavior="CurrentAndNext"
                               ShowsPreview="False" DragIncrement="1" KeyboardIncrement="10"

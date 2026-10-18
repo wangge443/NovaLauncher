@@ -74,7 +74,8 @@ internal static partial class Program
         {
             try
             {
-                if (args.Contains("--app-edit")) await RunApplicationEditingAsync((MainWindow)app.MainWindow);
+                if (args.Contains("--search")) await RunSearchAsync((MainWindow)app.MainWindow);
+                else if (args.Contains("--app-edit")) await RunApplicationEditingAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--management")) await RunManagementAsync((MainWindow)app.MainWindow); else if (appearanceTests) await RunAppearanceAsync((MainWindow)app.MainWindow); else if (settingsTests) await RunSettingsAsync((MainWindow)app.MainWindow); else if (profileTests) await RunProfileAsync((MainWindow)app.MainWindow);
                 else if (polishTests) await RunPolishAsync((MainWindow)app.MainWindow);
                 else if (homeTests) await RunHomeAsync((MainWindow)app.MainWindow);

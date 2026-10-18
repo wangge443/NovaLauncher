@@ -1,4 +1,6 @@
 using System.Windows;
+using System.Windows.Input;
+using NovaLauncher.App.ViewModels;
 
 namespace NovaLauncher.App.Views;
 
@@ -7,6 +9,15 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+    }
+
+    private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key != Key.K || Keyboard.Modifiers != ModifierKeys.Control || DataContext is not MainWindowViewModel vm) return;
+        vm.Sidebar.PrepareSearch();
+        Workspace.UpdateLayout();
+        Workspace.FocusSearch();
+        e.Handled = true;
     }
 
     private void ShellLayout_SizeChanged(object sender, SizeChangedEventArgs e)

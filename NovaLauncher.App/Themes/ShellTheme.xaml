@@ -51,6 +51,7 @@
     <SolidColorBrush x:Key="HoverBrush" Color="#0F324F88" />
     <SolidColorBrush x:Key="CloseHoverBrush" Color="#32D93B48" />
     <Duration x:Key="HoverDuration">0:0:0.16</Duration>
+    <sys:Double x:Key="SearchHeight">40</sys:Double><sys:Double x:Key="SearchWidth">320</sys:Double><CornerRadius x:Key="SearchRadius">8</CornerRadius>
     <CornerRadius x:Key="SurfaceRadius">16</CornerRadius>
     <Thickness x:Key="WorkspacePadding">24</Thickness>
     <Thickness x:Key="ToastPadding">16,10</Thickness>
@@ -483,5 +484,13 @@
                 </Track>
             </Grid>
         </ControlTemplate></Setter.Value></Setter>
+    </Style>
+    <Style x:Key="SearchLabel" TargetType="TextBlock">
+        <Style.Triggers>
+            <MultiDataTrigger><MultiDataTrigger.Conditions>
+                <Condition Binding="{Binding IsSearching}" Value="True"/>
+                <Condition Binding="{Binding DataContext.Settings.Appearance.Background.NeedsTextSurface, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"/>
+            </MultiDataTrigger.Conditions><Setter Property="Background" Value="{DynamicResource AppearanceLabelSurface}"/></MultiDataTrigger>
+        </Style.Triggers>
     </Style>
 </ResourceDictionary>

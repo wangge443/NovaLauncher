@@ -1,5 +1,13 @@
 # Nova Launcher — UI 设计
 
+## 7.1 搜索交互（当前规范）
+
+应用 Workspace 顶部左对齐搜索框：320×40 DIP、8 DIP 圆角，尺寸集中在 ShellTheme 的 SearchWidth/SearchHeight/SearchRadius。使用 WindowBrush 实底、BorderBrush 默认边框、Hover 次级描边、Focused Accent 细边框；Fluent 搜索图标、搜索应用占位与 AutomationProperties.Name。右侧 Ctrl+K 提示在焦点或有文本时隐藏；有文本显示带可访问名称的 28 DIP Clear 按钮，输入不会与提示重叠。
+
+结果维持大图标卡片与自动换行；标题“搜索结果 · N”，空状态使用搜索图标、“未找到应用”和匹配文本说明。低遮罩背景下标题/空状态文字沿用 AppearanceLabelSurface，搜索框保持不透明可读。Sidebar 原页面选中状态保留。Clear 和 Esc 恢复原页面；空 Esc 释放焦点，Tab/Shift+Tab 支持跨可见区域访问卡片，Enter 从搜索框启动首项。未增加方向键选择或 Sidebar 搜索入口。
+
+已使用 ui-ux-pro-max 内置焦点、键盘、可访问名称、统一图标和语义颜色规则检查；python、python3 不可用，py 报告未安装 Python，因此没有声称完成技能检索。实际 WPF 截图见 [Search-7.1.md](Search-7.1.md)。
+
 ## 6.5 应用编辑交互（当前规范）
 
 保持 6.4 ContextMenu 透明度、布局和样式，直接加入重命名/更换图标/恢复默认图标组。末尾移除使用 ManagementDangerBrush。恢复默认仅在 CustomIconPath 非空时显示。

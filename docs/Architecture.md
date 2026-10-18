@@ -1,5 +1,15 @@
 # Nova Launcher — 架构设计
 
+## 7.1 Global Search Pipeline（当前架构）
+
+Ctrl+K / SearchBox → ContentViewModel.SearchQuery → ApplicationSearchService → 已加载 Application Collection → Match + Rank → 增量 Search Results → ApplicationCardView。
+
+ApplicationSearchService 是纯内存匹配/比较器，没有持久化依赖；OrdinalIgnoreCase 的完全、前缀、包含分级后复用 Recent 比较器。ContentViewModel 保存进入前 Mode、Category 和 Home Dashboard 标记；搜索用独立 ObservableCollection/ListCollectionView 增量同步已有卡片引用，浏览页保留原过滤集合。重命名、LastLaunchTime 与源集合变化刷新投影，收藏和分类命令继续使用原服务。SQLite 仅在既有加载、导入与管理/统计持久化流程中访问，输入不访问 SQLite。
+
+MainWindow 的 PreviewKeyDown 只适配窗口内 Ctrl+K；Sidebar 记录上次应用导航项。ContentView 负责聚焦/全选与搜索框 Enter/Esc 适配；Enter 调用 VM，再复用首项 LaunchCommand → ApplicationLaunchService，无新 Process.Start。中文 IME 的 ImeProcessed Enter 不作为启动键处理。
+
+搜索专用 SearchWrapPanel 复用原卡片模板与尺寸 token，只实现视口内容器，支持滚动、回收、宽度换行及跨视口 Tab/Shift+Tab。普通 Home、分类、收藏和 Recent 布局不变。增量投影保留未变化项；面板处理 Add/Remove/Move/Reset 并在结果变化后回到顶部。未新增依赖或数据库迁移。验证边界见 [Search-7.1.md](Search-7.1.md)。
+
 ## 6.5 应用管理（当前架构）
 
 ContextMenu → ApplicationCardViewModel → IApplicationManagementService → IApplicationManagementRepository → SQLite。名称复用 DisplayName；新 Migration 20261017143447_AddCustomApplicationIcon 仅增加 Applications.CustomIconPath nullable TEXT，旧 Migration 不变。

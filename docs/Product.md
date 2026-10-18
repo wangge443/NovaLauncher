@@ -1,5 +1,13 @@
 # Nova Launcher — 产品定义
 
+## 7.1 全局应用搜索（已验收）
+
+Home、Category、Favorites、Recent 的 Workspace 顶部提供应用搜索；Settings 隐藏。窗口内 Ctrl+K 聚焦并全选已有文字，Settings 下先恢复上一次应用页（无记录则 Home）。非空 Trim Query 进入临时 Search 模式，搜索全部已加载应用；清空、Clear 或搜索框 Esc 恢复进入前页面及分类，Sidebar 保留原选中项。空文本 Esc 仅释放焦点。
+
+仅匹配 DisplayName，OrdinalIgnoreCase Contains，支持中文、英文、数字；完全匹配优先于前缀，再到包含；同级按 LastLaunchTime 降序、名称和 Id 稳定排序。Enter 通过原 LaunchCommand 启动首项，保留搜索上下文；Tab/Shift+Tab 可访问结果。7.1 未增加 Up/Down 选择。
+
+搜索结果复用完整 ApplicationCardView，右键管理、启动统计、匹配导入与移除实时同步。Query 不持久化，搜索不查询 SQLite，不修改 Schema 或 Migration；不增加拼音、纠错、系统扫描、网络搜索或历史。实现与验收证据见 [Search-7.1.md](Search-7.1.md)。以下为历史阶段。
+
 ## 6.5 应用编辑（当前范围）
 
 Application Context Menu 增加重命名、更换图标、条件显示的恢复默认图标，以及末尾危险色“从启动器移除”。重命名 Trim 后限 1–48 字符；支持 PNG/JPG/JPEG/BMP/ICO。操作成功后 Home、分类、收藏和最近使用立即同步。移除通过 Nova 内部确认，只删除启动器记录与自有资源，真实程序和快捷方式保留，可再次导入。
