@@ -18,6 +18,8 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     private readonly IApplicationLaunchService _launcher;
     private readonly IApplicationPersistenceService _persistence;
     private readonly IApplicationLocationService? _location;
+    private readonly IApplicationManagementService? _management;
+    private readonly IApplicationIconPicker? _iconPicker;
     private Task? _initialization;
     private Task _importTask = Task.CompletedTask;
     private readonly HashSet<string> _targets = new(StringComparer.OrdinalIgnoreCase);
@@ -28,12 +30,14 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
 
     public ContentViewModel(IApplicationImportService importer, IApplicationLaunchService launcher,
         IApplicationPersistenceService persistence, IToastService toast, ICategoryService? categories = null,
-        IApplicationLocationService? location = null)
+        IApplicationLocationService? location = null, IApplicationManagementService? management = null,
+        IApplicationIconPicker? iconPicker = null)
     {
         _importer = importer;
         _launcher = launcher;
         _persistence = persistence;
         _location = location;
+        _management = management; _iconPicker = iconPicker;
         Toast = toast;
         _token = _lifetime.Token;
         CategoryManager = new(categories, toast);
@@ -111,7 +115,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     }
     private void CardPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        if (Mode == WorkspaceMode.Recent && e.PropertyName == nameof(ApplicationCardViewModel.LastLaunchTime))
+        if (Mode == WorkspaceMode.Recent && e.PropertyName is nameof(ApplicationCardViewModel.LastLaunchTime) or nameof(ApplicationCardViewModel.DisplayName))
             RefreshFilter();
     }
 
@@ -146,7 +150,8 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     private void AddCard(Models.LauncherApplication application)
     {
         if (_targets.Contains(application.ExecutablePath)) return;
-        var card = new ApplicationCardViewModel(application, _launcher, _persistence, CategoryManager, Toast, _location);
+        var card = new ApplicationCardViewModel(application, _launcher, _persistence, CategoryManager, Toast, _location, _management, _iconPicker);
+        card.Removed += RemoveCard;
         card.CategoryChanged += RefreshFilter;
         card.FavoriteChanged += RefreshFavorites;
         card.PropertyChanged += CardPropertyChanged;
@@ -156,11 +161,25 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(IsEmpty));
     }
 
+    private void RemoveCard(ApplicationCardViewModel card)
+    {
+        card.Removed -= RemoveCard;
+        card.CategoryChanged -= RefreshFilter;
+        card.FavoriteChanged -= RefreshFavorites;
+        card.PropertyChanged -= CardPropertyChanged;
+        card.LaunchFailed -= ShowMessage;
+        _targets.Remove(card.Application.ExecutablePath);
+        Applications.Remove(card);
+        card.Dispose();
+        NotifyEmptyState();
+    }
+
     public async Task FlushAsync()
     {
         if (_initialization is not null) await _initialization;
         await _importTask;
         await (CategoryManager.CreateCommand.ExecutionTask ?? Task.CompletedTask);
+        await Task.WhenAll(Applications.ToArray().Select(card => card.FlushManagementAsync()));
         await Task.WhenAll(Applications.Select(card => card.ChangeCategoryCommand.ExecutionTask ?? Task.CompletedTask));
         await Task.WhenAll(Applications.Select(card => card.ToggleFavoriteCommand.ExecutionTask ?? Task.CompletedTask));
         await Task.WhenAll(Applications.Select(card => card.LaunchCommand.ExecutionTask ?? Task.CompletedTask));
@@ -261,6 +280,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         foreach (var card in Applications)
         {
             card.LaunchFailed -= ShowMessage;
+            card.Removed -= RemoveCard;
             card.CategoryChanged -= RefreshFilter;
             card.FavoriteChanged -= RefreshFavorites;
             card.PropertyChanged -= CardPropertyChanged;

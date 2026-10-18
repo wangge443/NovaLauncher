@@ -23,11 +23,25 @@
                 </Style></MenuItem.ItemContainerStyle>
             </MenuItem>
             <Separator Style="{StaticResource ManagementSeparator}"/>
+            <MenuItem x:Name="RenameMenuItem" Header="重命名" IsEnabled="{Binding CanManage}" Click="RenameMenu_Click">
+                <MenuItem.Icon><TextBlock Text="&#xE8AC;" Style="{StaticResource ManagementIcon}"/></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem x:Name="ChangeIconMenuItem" Header="更换图标" Command="{Binding ChangeIconCommand}">
+                <MenuItem.Icon><TextBlock Text="&#xE91B;" Style="{StaticResource ManagementIcon}"/></MenuItem.Icon>
+            </MenuItem>
+            <MenuItem x:Name="RestoreIconMenuItem" Header="恢复默认图标" Command="{Binding RestoreIconCommand}" Visibility="{Binding HasCustomIcon, Converter={StaticResource BooleanVisibility}}">
+                <MenuItem.Icon><TextBlock Text="&#xE777;" Style="{StaticResource ManagementIcon}"/></MenuItem.Icon>
+            </MenuItem>
+            <Separator Style="{StaticResource ManagementSeparator}"/>
             <MenuItem x:Name="LocationMenuItem" Header="打开文件位置" Command="{Binding OpenLocationCommand}">
                 <MenuItem.Icon><TextBlock Text="&#xE838;" Style="{StaticResource ManagementIcon}"/></MenuItem.Icon>
             </MenuItem>
             <MenuItem x:Name="InfoMenuItem" Header="应用信息" Click="InfoMenu_Click">
                 <MenuItem.Icon><TextBlock Text="&#xE946;" Style="{StaticResource ManagementIcon}"/></MenuItem.Icon>
+            </MenuItem>
+            <Separator Style="{StaticResource ManagementSeparator}"/>
+            <MenuItem x:Name="RemoveMenuItem" Header="从启动器移除" IsEnabled="{Binding CanManage}" Click="RemoveMenu_Click" Foreground="{DynamicResource ManagementDangerBrush}">
+                <MenuItem.Icon><TextBlock Text="&#xE74D;" Style="{StaticResource ManagementIcon}"/></MenuItem.Icon>
             </MenuItem>
         </ContextMenu>
     </UserControl.ContextMenu>
@@ -72,6 +86,37 @@
                 </StackPanel>
             </Grid>
         </Button>
+        <Popup x:Name="RenamePopup" PlacementTarget="{Binding ElementName=LaunchButton}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
+               Opened="RenamePopup_Opened" Closed="EditorPopup_Closed">
+            <Border Style="{StaticResource ManagementSurface}" Width="360" Padding="18" KeyDown="Rename_KeyDown" KeyboardNavigation.TabNavigation="Cycle">
+                <StackPanel IsEnabled="{Binding CanManage}">
+                    <TextBlock Text="重命名应用" FontSize="18" FontWeight="SemiBold"/>
+                    <TextBlock Text="应用名称" Margin="0,16,0,0"/>
+                    <TextBox x:Name="RenameEditor" Text="{Binding RenameDraft, UpdateSourceTrigger=PropertyChanged}" Padding="8" Margin="0,8,0,0"
+                             Background="{DynamicResource WindowBrush}" Foreground="{DynamicResource TextBrush}" BorderBrush="{DynamicResource BorderBrush}" AutomationProperties.Name="应用名称"/>
+                    <TextBlock Text="1–48 个字符" Style="{StaticResource SettingsDescription}"/>
+                    <TextBlock Text="{Binding RenameError}" TextWrapping="Wrap" Margin="0,6,0,0" AutomationProperties.LiveSetting="Polite"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
+                        <Button Content="取消" Style="{StaticResource SettingsButton}" Click="CancelRename_Click"/>
+                        <Button x:Name="SaveRenameButton" Content="保存" Style="{StaticResource SettingsButton}" Click="SaveRename_Click"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Popup>
+        <Popup x:Name="RemovePopup" PlacementTarget="{Binding ElementName=LaunchButton}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
+               Opened="RemovePopup_Opened" Closed="EditorPopup_Closed">
+            <Border Style="{StaticResource ManagementSurface}" Width="380" Padding="18" KeyDown="Remove_KeyDown" KeyboardNavigation.TabNavigation="Cycle">
+                <StackPanel IsEnabled="{Binding CanManage}">
+                    <TextBlock Text="从 Nova Launcher 移除此应用？" FontSize="16" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                    <TextBlock Text="{Binding DisplayName}" TextWrapping="Wrap" Margin="0,12,0,0"/>
+                    <TextBlock Text="不会删除电脑中的程序或文件。" Style="{StaticResource SettingsDescription}" Margin="0,8,0,0"/>
+                    <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,18,0,0">
+                        <Button x:Name="CancelRemoveButton" Content="取消" Style="{StaticResource SettingsButton}" Click="CancelRemove_Click"/>
+                        <Button x:Name="ConfirmRemoveButton" Content="从启动器移除" Style="{StaticResource SettingsButton}" Foreground="{DynamicResource ManagementDangerBrush}" Command="{Binding RemoveCommand}"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </Popup>
         <Popup x:Name="InfoPopup" PlacementTarget="{Binding ElementName=LaunchButton}" Placement="Bottom" StaysOpen="False" AllowsTransparency="True"
                Opened="InfoPopup_Opened" Closed="InfoPopup_Closed">
             <Border Style="{StaticResource ManagementSurface}" Width="360" Padding="18" KeyDown="Info_KeyDown">
@@ -87,6 +132,7 @@
                         <TextBox Text="{Binding TargetPath, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" Foreground="{DynamicResource TextBrush}" Padding="0" AutomationProperties.Name="目标路径"/>
                         <TextBlock Text="分类" Style="{StaticResource SettingsDescription}" Margin="0,12,0,0"/><TextBlock Text="{Binding CategoryName}" TextWrapping="Wrap"/>
                         <TextBlock Text="收藏状态" Style="{StaticResource SettingsDescription}" Margin="0,12,0,0"/><TextBlock Text="{Binding FavoriteStatus}"/>
+                        <TextBlock Text="{Binding CustomIconStatus, StringFormat=自定义图标：{0}}" Margin="0,12,0,0"/>
                         <TextBlock Text="{Binding LaunchCountText}" Margin="0,12,0,0"/>
                         <TextBlock Text="{Binding LastLaunchText}" Margin="0,4,0,0"/>
                     </StackPanel>

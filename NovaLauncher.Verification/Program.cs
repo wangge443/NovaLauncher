@@ -23,6 +23,8 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Contains("--real-app-edit-migration")) return VerifyRealEditingMigrationAsync().GetAwaiter().GetResult();
+        if (args.Length == 2 && args[0] == "--app-edit-restart") return VerifyEditingRestartAsync(args[1]).GetAwaiter().GetResult();
         if (args.Contains("--real-appearance")) return VerifyRealAppearanceAsync().GetAwaiter().GetResult();
         if (args.Length == 2 && args[0] == "--appearance-real-window") return RunRealAppearanceWindow(args[1]);
         if (args.Contains("--settings-preview")) return RunSettingsPreview(args.Contains("--verify-shell"));
@@ -72,7 +74,8 @@ internal static partial class Program
         {
             try
             {
-                if (args.Contains("--management")) await RunManagementAsync((MainWindow)app.MainWindow); else if (appearanceTests) await RunAppearanceAsync((MainWindow)app.MainWindow); else if (settingsTests) await RunSettingsAsync((MainWindow)app.MainWindow); else if (profileTests) await RunProfileAsync((MainWindow)app.MainWindow);
+                if (args.Contains("--app-edit")) await RunApplicationEditingAsync((MainWindow)app.MainWindow);
+                else if (args.Contains("--management")) await RunManagementAsync((MainWindow)app.MainWindow); else if (appearanceTests) await RunAppearanceAsync((MainWindow)app.MainWindow); else if (settingsTests) await RunSettingsAsync((MainWindow)app.MainWindow); else if (profileTests) await RunProfileAsync((MainWindow)app.MainWindow);
                 else if (polishTests) await RunPolishAsync((MainWindow)app.MainWindow);
                 else if (homeTests) await RunHomeAsync((MainWindow)app.MainWindow);
                 else if (recentTests) await RunRecentAsync((MainWindow)app.MainWindow);

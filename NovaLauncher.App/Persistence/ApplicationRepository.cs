@@ -15,11 +15,41 @@ public interface IApplicationRepository
     Task UpdateFavoriteAsync(Guid id, bool isFavorite, CancellationToken token);
 }
 
+public interface IApplicationManagementRepository
+{
+    Task RenameAsync(Guid id, string name, CancellationToken token);
+    Task SetCustomIconAsync(Guid id, string? path, CancellationToken token);
+    Task RemoveAsync(Guid id, CancellationToken token);
+}
+
 public sealed class ApplicationRepository(IDbContextFactory<LauncherDbContext> factory, ApplicationDataPaths paths)
-    : IApplicationRepository
+    : IApplicationRepository, IApplicationManagementRepository
 {
     public static string PathKey(string path) => Path.GetFullPath(path).ToUpperInvariant();
     private readonly DatabaseInitializationService _initialization = new(factory, paths);
+
+    public Task RenameAsync(Guid id, string name, CancellationToken token) => Task.Run(async () =>
+    {
+        using var db = factory.CreateDbContext();
+        int changed = await db.Applications.Where(x => x.Id == id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.DisplayName, name), token);
+        if (changed != 1) throw new InvalidOperationException("Application does not exist.");
+    }, token);
+
+    public Task SetCustomIconAsync(Guid id, string? path, CancellationToken token) => Task.Run(async () =>
+    {
+        using var db = factory.CreateDbContext();
+        int changed = await db.Applications.Where(x => x.Id == id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(x => x.CustomIconPath, path), token);
+        if (changed != 1) throw new InvalidOperationException("Application does not exist.");
+    }, token);
+
+    public Task RemoveAsync(Guid id, CancellationToken token) => Task.Run(async () =>
+    {
+        using var db = factory.CreateDbContext();
+        int changed = await db.Applications.Where(x => x.Id == id).ExecuteDeleteAsync(token);
+        if (changed != 1) throw new InvalidOperationException("Application does not exist.");
+    }, token);
 
     // SQLite's async APIs still perform synchronous I/O. Keep the whole operation off the UI thread.
     public Task InitializeAsync(CancellationToken token) => _initialization.InitializeAsync(token);

@@ -27,6 +27,8 @@ public partial class ApplicationCardView : UserControl
         _timeRefresh.Stop();
         CardMenu.IsOpen = false;
         InfoPopup.IsOpen = false;
+        RenamePopup.IsOpen = false;
+        RemovePopup.IsOpen = false;
     }
 
     private void RefreshTime()
@@ -36,7 +38,7 @@ public partial class ApplicationCardView : UserControl
 
     private void UpdateInteraction()
     {
-        bool active = IsMouseOver || IsKeyboardFocusWithin || CardMenu.IsOpen || InfoPopup.IsOpen;
+        bool active = IsMouseOver || IsKeyboardFocusWithin || CardMenu.IsOpen || InfoPopup.IsOpen || RenamePopup.IsOpen || RemovePopup.IsOpen;
         var duration = (Duration)FindResource("HoverDuration");
         double offset = active && duration.HasTimeSpan && duration.TimeSpan > TimeSpan.Zero
             ? -(double)FindResource("ApplicationCardLift") : 0;
@@ -97,6 +99,51 @@ public partial class ApplicationCardView : UserControl
         UpdateInteraction();
     }
     private void CloseInfo_Click(object sender, RoutedEventArgs e) => InfoPopup.IsOpen = false;
+    private void RenameMenu_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (DataContext is not ApplicationCardViewModel card || !card.BeginRenameCommand.CanExecute(null)) return;
+        card.BeginRenameCommand.Execute(null);
+        Dispatcher.BeginInvoke(new Action(() => { if (IsLoaded) RenamePopup.IsOpen = true; }));
+    }
+    private void RenamePopup_Opened(object? sender, EventArgs e)
+    {
+        UpdateInteraction();
+        Dispatcher.BeginInvoke(new Action(() => { RenameEditor.Focus(); RenameEditor.SelectAll(); }));
+    }
+    private void EditorPopup_Closed(object? sender, EventArgs e)
+    {
+        if (IsLoaded) LaunchButton.Focus();
+        UpdateInteraction();
+    }
+    private void CancelRename_Click(object sender, RoutedEventArgs e) => RenamePopup.IsOpen = false;
+    private async void SaveRename_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        if (DataContext is not ApplicationCardViewModel card || !card.RenameCommand.CanExecute(null)) return;
+        await card.RenameCommand.ExecuteAsync(null);
+        if (card.RenameError is null) RenamePopup.IsOpen = false;
+    }
+    private void Rename_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape) { RenamePopup.IsOpen = false; e.Handled = true; }
+        else if (e.Key == Key.Enter && RenameEditor.IsKeyboardFocused) SaveRename_Click(sender, e);
+    }
+    private void RemoveMenu_Click(object sender, RoutedEventArgs e)
+    {
+        e.Handled = true;
+        Dispatcher.BeginInvoke(new Action(() => { if (IsLoaded) RemovePopup.IsOpen = true; }));
+    }
+    private void RemovePopup_Opened(object? sender, EventArgs e)
+    {
+        UpdateInteraction();
+        Dispatcher.BeginInvoke(new Action(() => CancelRemoveButton.Focus()));
+    }
+    private void CancelRemove_Click(object sender, RoutedEventArgs e) => RemovePopup.IsOpen = false;
+    private void Remove_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Escape) { RemovePopup.IsOpen = false; e.Handled = true; }
+    }
     private void Info_KeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key != Key.Escape) return;

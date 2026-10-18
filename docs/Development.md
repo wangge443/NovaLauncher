@@ -1,5 +1,19 @@
 # Nova Launcher — 开发流程
 
+## 6.5 最终收尾（已验收）
+
+用户已验收并授权提交 `feat: add application management actions`。最终 Release Build **0 warnings / 0 errors**；默认输出首次因运行中的 Nova 锁定 apphost 失败，随后使用独立输出目录构建成功，未关闭用户窗口。应用管理专项 **59 项断言再次全部通过**，含独立进程重启、自定义图标连续替换、恢复默认、真实 EXE/LNK 安全、页面实时同步及重新导入。此前完整 **498 项主进程断言**与独立进程检查结果仍适用，背景、Theme、UserProfile、Settings 实现未再修改。
+
+复核工作区仅包含本阶段实现、Migration、验证、文档和截图；清理本轮临时构建与测试输出。按授权提交，不开始下一阶段。
+
+## 6.5 应用管理完善（待验收）
+
+基于 944776a，新增重命名、自定义图标、恢复默认图标和从启动器移除。Release Build **0 warnings / 0 errors**；6.5 专项 **59 项**、既有回归 **435 项**、真实迁移保护 **4 项**，共 **498 项主进程断言通过**，另有独立进程名称/图标恢复检查。新增并应用 Migration `20261017143447_AddCustomApplicationIcon`，真实库先在线备份，旧字段与资源哈希逐项一致。
+
+专项包含数据库写入失败、源图删除、缺失/损坏回退、连续换图、清理文件被锁时恢复成功、移除等待在途启动统计并阻止新写入；真实 EXE/LNK 文件存在且 SHA256 保持一致，同路径重新导入生成新条目。旧 Migration、Background / Theme / DesktopBackdrop 实现未修改。仅更新既有管理测试的菜单项数量断言以适配新增项。
+
+实现、备份路径、复现命令、截图及验证边界见 [6.5 交付记录](ApplicationEditing-6.5.md)。保持未提交，等待验收，不开始下一阶段。以下为历史记录。
+
 ## 6.4 最终收尾（2026-10-17）
 
 用户已最终验收，授权提交 `feat: add application context menu and category management`。收尾 Release Build **0 warnings / 0 errors**，使用独立输出目录避免占用运行中的 Nova；管理专项 **46 项断言再次全部通过**，包含 Settings 分类创建与 Sidebar 实时更新、无卡片星标、鼠标/键盘菜单、收藏/分类投影、正常启动、应用信息、Explorer 选中文件和真实数据保护。此前完整 **410 项断言**结果仍适用。

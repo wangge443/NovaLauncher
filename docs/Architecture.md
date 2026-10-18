@@ -1,5 +1,13 @@
 # Nova Launcher — 架构设计
 
+## 6.5 应用管理（当前架构）
+
+ContextMenu → ApplicationCardViewModel → IApplicationManagementService → IApplicationManagementRepository → SQLite。名称复用 DisplayName；新 Migration 20261017143447_AddCustomApplicationIcon 仅增加 Applications.CustomIconPath nullable TEXT，旧 Migration 不变。
+
+CustomIconStore 将图像转换为 PNG，保存到 CustomIcons 的应用 ID + 版本 GUID 文件。先写入并刷新临时文件、原子改名，再写数据库指针；数据库失败清理候选，成功后清理旧文件。图标解析依次为自定义图标、自动缓存、EXE 提取、Nova 默认图标；OnLoad 解码后释放文件流。
+
+移除等待在途启动/收藏/分类写入；数据库成功后才通知共享集合删除条目并释放 TargetPathKey。只通过确定的自有缓存路径与经目录/应用 ID 验证的自定义路径清理文件，清理失败仅记录日志。详见 [6.5 交付记录](ApplicationEditing-6.5.md)。以下为历史架构。
+
 ## 6.4 管理入口（当前架构）
 
 Settings 内 CategoryManagementView 绑定窗口 Content.CategoryManager，与 Sidebar 共享同一集合和 CategoryManagerViewModel；创建继续走既有 CategoryService / CategoryRepository，无第二套业务逻辑。菜单直接绑定 ApplicationCardViewModel.ToggleFavoriteCommand / ChangeCategoryCommand，保留现有持久化失败处理与 Home/Category/Favorites 投影刷新。

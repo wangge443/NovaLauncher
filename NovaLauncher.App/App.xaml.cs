@@ -39,12 +39,14 @@ public partial class App : Application
 
         var paths = ApplicationDataPaths.Default;
         var icons = new ApplicationIconService();
+        var management = new ApplicationManagementService(new ApplicationRepository(new LauncherDbContextFactory(paths), paths),
+            new ApplicationIconCache(paths, icons), new CustomIconStore(paths));
         var persistence = Persistence ?? new ApplicationPersistenceService(
             new ApplicationRepository(new LauncherDbContextFactory(paths), paths), new ApplicationIconCache(paths, icons));
         _content = new ContentViewModel(new ApplicationImportService(new ShortcutResolver(), icons),
             new ApplicationLaunchService(), persistence, new ToastService(),
             Categories ?? (Persistence is null ? new CategoryService(new CategoryRepository(new LauncherDbContextFactory(paths))) : null),
-            new ApplicationLocationService());
+            new ApplicationLocationService(), Persistence is null ? management : null, new ApplicationIconPicker());
         _profile = new UserProfileViewModel(Profiles ?? (Persistence is null
             ? new UserProfileService(new UserProfileRepository(new LauncherDbContextFactory(paths)), paths) : null), new AvatarFilePicker(), _content.Toast);
         _settingsService ??= Persistence is null ? new AppSettingsService(new AppSettingsRepository(new LauncherDbContextFactory(paths))) : null;

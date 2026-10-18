@@ -119,6 +119,9 @@ namespace NovaLauncher.App.Persistence.Migrations
                     b.Property<Guid?>("CategoryId")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("CustomIconPath")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTimeOffset>("DateAdded")
                         .HasColumnType("TEXT");
 

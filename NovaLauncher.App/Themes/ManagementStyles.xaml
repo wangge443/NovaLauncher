@@ -1,5 +1,6 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <SolidColorBrush x:Key="ManagementDangerBrush" Color="#9B4444"/>
     <Style x:Key="ManagementSurface" TargetType="Border">
         <Setter Property="Background" Value="{DynamicResource WindowBrush}"/>
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>

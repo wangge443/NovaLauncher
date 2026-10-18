@@ -119,7 +119,7 @@ internal static partial class Program
         SaveWindow(window, "sidebar.png"); SaveWindow(window, "card-normal.png");
         await OpenCardMenuAsync(card);
         Check(first.LaunchCount == 0, "Native right click never launches");
-        Check(card.ContextMenu.Items.Count == 5, "Context menu exposes four actions and separator");
+        Check(card.ContextMenu.Items.Count == 11, "Context menu retains original actions alongside editing actions and separators");
         CaptureCategoryWindow(window, "context-menu.png");
         var favorite = (MenuItem)card.FindName("FavoriteMenuItem");
         Check((string)favorite.Header == "收藏", "Menu initially offers favorite");

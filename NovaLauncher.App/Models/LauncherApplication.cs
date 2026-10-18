@@ -8,6 +8,7 @@ public sealed record LauncherApplication(
     byte[]? Icon, ApplicationSourceType SourceType)
 {
     public bool IsAvailable { get; init; } = true;
+    public string? CustomIconPath { get; init; }
     public Guid? CategoryId { get; init; }
     public bool IsFavorite { get; init; }
     public long LaunchCount { get; init; }

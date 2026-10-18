@@ -2,7 +2,7 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第六阶段 6.4：Sidebar 分类创建迁入 Settings、ApplicationCard 管理操作迁入右键菜单。基于已验收 6.3（911ee64），复用分类与收藏服务，不修改数据库 Schema，不修改 Background / DesktopWallpaper / CustomImage / Blur / Overlay / Theme / DesktopBackdrop。6.3 桌面壁纸为内部静态图片，实时透明 DesktopBackdrop 继续 Experimental。6.4 已通过最终验收，按用户授权提交收尾；不开始下一阶段。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第六阶段 6.5：重命名、自定义图标、恢复默认图标与从启动器移除。基于已验收 6.4（944776a），保持 ContextMenu 视觉和背景系统。新增 CustomIconPath Migration，保护旧数据；只删除 Nova 记录与自有资源，禁止删除真实 EXE/LNK。6.5 已通过验收，按用户授权完成最终收尾提交，不开始下一阶段。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
@@ -55,4 +55,4 @@
 3. UI 工作先检查 ui-ux-pro-max 的安装与指令，形成设计参数和状态方案，再映射为 WPF 资源与控件。
 4. 按小范围改动实施，不覆盖用户工作；只有明确独立且有收益的工作流才考虑委派。
 5. 执行必要验证，记录未验证项与实际限制，清理本次无用临时文件，并同步相关文档。
-6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前完成 6.4 分类入口与卡片菜单，提供数据保护验证、Build、测试与 UI 截图；6.4 已验收并授权收尾提交，不开始下一阶段。
+6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前完成 6.5 应用管理，提供数据保护验证、Build、测试与 UI 截图；6.5 已验收并授权收尾提交，不开始下一阶段。

@@ -41,13 +41,15 @@ public sealed class ApplicationPersistenceService(
                     if (!Enum.IsDefined((ApplicationSourceType)record.SourceType) ||
                         !Path.IsPathFullyQualified(record.ExecutablePath) || !Path.IsPathFullyQualified(record.SourcePath))
                         throw new InvalidDataException("Invalid application paths or source type.");
-                    var icon = await cache.LoadAsync(record.Id, record.ExecutablePath, record.IconCachePath, token);
+                    var icon = await cache.CustomIcons.TryLoadAsync(record.Id, record.CustomIconPath, token)
+                        ?? await cache.LoadAsync(record.Id, record.ExecutablePath, record.IconCachePath, token);
                     bool available = await Task.Run(() => File.Exists(record.ExecutablePath), token);
                     applications.Add(new(record.Id, record.DisplayName, record.ExecutablePath, record.SourcePath,
                         icon, (ApplicationSourceType)record.SourceType)
                     {
                         LaunchCount = record.LaunchCount, LastLaunchTime = record.LastLaunchTime,
-                        IsAvailable = available, CategoryId = record.CategoryId, IsFavorite = record.IsFavorite
+                        IsAvailable = available, CategoryId = record.CategoryId, IsFavorite = record.IsFavorite,
+                        CustomIconPath = record.CustomIconPath
                     });
                 }
                 catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
@@ -150,7 +152,13 @@ public sealed class ApplicationPersistenceService(
 
 public sealed class ApplicationIconCache(ApplicationDataPaths paths, IApplicationIconService icons)
 {
+    public CustomIconStore CustomIcons { get; } = new(paths);
     public string PathFor(Guid id) => paths.IconPath(id);
+    public void Delete(Guid id)
+    {
+        try { File.Delete(PathFor(id)); }
+        catch (Exception ex) { Trace.TraceWarning("Icon cache cleanup failed: {0}", ex); }
+    }
 
     public Task InitializeAsync(CancellationToken token) => Task.Run(() =>
     {

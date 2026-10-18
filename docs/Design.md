@@ -1,5 +1,13 @@
 # Nova Launcher — UI 设计
 
+## 6.5 应用编辑交互（当前规范）
+
+保持 6.4 ContextMenu 透明度、布局和样式，直接加入重命名/更换图标/恢复默认图标组。末尾移除使用 ManagementDangerBrush。恢复默认仅在 CustomIconPath 非空时显示。
+
+重命名使用卡片独立 Popup，现有名称全选，实时校验，输入框 Enter 保存、Esc 取消；失败保留旧值并显示 Toast。移除确认使用内部 Popup，明确“从 Nova Launcher 移除此应用？”及“不会删除电脑中的程序或文件。”，默认焦点在取消。只读应用信息增加自定义图标状态。
+
+已使用 ui-ux-pro-max 的本地规则检查焦点、键盘和视觉一致性；本机 Python 查询不可用，未宣称运行技能搜索。四张真实窗口截图见 [6.5 交付记录](ApplicationEditing-6.5.md)。以下为历史规范。
+
 ## 6.4 分类管理与上下文菜单（当前规范）
 
 Settings 分类管理位于外观与启动设置之间，沿用 SettingsRow / SettingsButton、单页滚动和语义颜色。列表每行为图标 + 名称，保留布局扩展位置；新建采用带明确标签与错误提示的内联编辑器。Sidebar 不再出现新建分类入口。

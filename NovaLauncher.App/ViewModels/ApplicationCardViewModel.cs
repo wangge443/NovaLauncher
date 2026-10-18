@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace NovaLauncher.App.ViewModels;
 
-public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
+public sealed partial class ApplicationCardViewModel : ViewModelBase, IDisposable
 {
     private readonly IApplicationLaunchService _launcher;
     private readonly IApplicationPersistenceService _persistence;
@@ -19,7 +19,7 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
     public LauncherApplication Application { get; private set; }
     public string DisplayName => Application.DisplayName;
     public bool IsAvailable => Application.IsAvailable;
-    public ImageSource Icon { get; }
+    public ImageSource Icon { get; private set; }
     public long LaunchCount => Application.LaunchCount;
     public DateTimeOffset? LastLaunchTime => Application.LastLaunchTime;
     public string LastLaunchText => $"上次启动：{LaunchTimeFormatter.Format(LastLaunchTime, DateTimeOffset.Now)}";
@@ -57,7 +57,8 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
 
     public ApplicationCardViewModel(LauncherApplication application, IApplicationLaunchService launcher,
         IApplicationPersistenceService persistence, CategoryManagerViewModel? categoryManager = null, IToastService? toast = null,
-        IApplicationLocationService? location = null)
+        IApplicationLocationService? location = null, IApplicationManagementService? management = null,
+        IApplicationIconPicker? iconPicker = null)
     {
         _launcher = launcher;
         _persistence = persistence;
@@ -72,12 +73,18 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
             }
             catch (Exception ex) { Trace.TraceWarning("Application location failed: {0}", ex); _toast?.Show("无法打开文件位置"); }
         });
-        ChangeCategoryCommand = new AsyncRelayCommand<CategoryChoice>(ChangeCategoryAsync);
+        ChangeCategoryCommand = new AsyncRelayCommand<CategoryChoice>(ChangeCategoryAsync, _ => CanInteract);
         _token = _lifetime.Token;
         Application = application;
-        ToggleFavoriteCommand = new AsyncRelayCommand(ToggleFavoriteAsync, () => !_token.IsCancellationRequested);
-        LaunchCommand = new AsyncRelayCommand(LaunchAsync, () => !_token.IsCancellationRequested);
-        if (application.Icon is { Length: > 0 } bytes)
+        ToggleFavoriteCommand = new AsyncRelayCommand(ToggleFavoriteAsync, () => CanInteract);
+        LaunchCommand = new AsyncRelayCommand(LaunchAsync, () => CanInteract);
+        InitializeManagement(management, iconPicker);
+        Icon = DecodeIcon(application.Icon);
+    }
+
+    private static ImageSource DecodeIcon(byte[]? bytes)
+    {
+        if (bytes is { Length: > 0 })
         {
             using var stream = new MemoryStream(bytes);
             var image = new BitmapImage();
@@ -86,11 +93,11 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
             image.StreamSource = stream;
             image.EndInit();
             image.Freeze();
-            Icon = image;
+            return image;
         }
         else
         {
-            Icon = DefaultIcon;
+            return DefaultIcon;
         }
     }
 
@@ -98,7 +105,7 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
 
     private async Task ToggleFavoriteAsync()
     {
-        if (IsSavingFavorite || _token.IsCancellationRequested) return;
+        if (IsSavingFavorite || !CanInteract) return;
         IsSavingFavorite = true;
         bool next = !IsFavorite;
         try
@@ -121,7 +128,7 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
 
     private async Task ChangeCategoryAsync(CategoryChoice? choice)
     {
-        if (choice is null || IsChangingCategory || _token.IsCancellationRequested) return;
+        if (choice is null || IsChangingCategory || !CanInteract) return;
         if (choice.Id == CategoryId) { IsCategoryPickerOpen = false; return; }
         IsChangingCategory = true;
         try
@@ -146,7 +153,7 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
     private async Task LaunchAsync()
     {
         // Also guard direct ExecuteAsync calls, not just the Button's CanExecute path.
-        if (IsLaunching || _token.IsCancellationRequested) return;
+        if (IsLaunching || !CanInteract) return;
         IsLaunching = true;
         long started = Stopwatch.GetTimestamp();
         try
@@ -189,6 +196,7 @@ public sealed class ApplicationCardViewModel : ViewModelBase, IDisposable
         _lifetime.Dispose();
         LaunchCommand.NotifyCanExecuteChanged();
         ToggleFavoriteCommand.NotifyCanExecuteChanged();
+        NotifyManagementCommands();
     }
 
     // Vector fallback stays sharp at any DPI and never owns a native resource.

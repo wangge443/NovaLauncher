@@ -15,4 +15,5 @@ public sealed class ApplicationEntity
     public DateTimeOffset DateAdded { get; set; }
     public long SortOrder { get; set; }
     public string? IconCachePath { get; set; }
+    public string? CustomIconPath { get; set; }
 }
