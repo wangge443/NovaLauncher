@@ -1,16 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+  <Import Project="../Version.props" />
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <AssemblyName>NovaLauncher</AssemblyName>
+    <RootNamespace>NovaLauncher.App</RootNamespace>
+    <Product>Nova Launcher</Product>
+    <Description>Personal Windows Application Launcher</Description>
+    <AssemblyTitle>Personal Windows Application Launcher</AssemblyTitle>
+    <GenerateAssemblyCompanyAttribute>false</GenerateAssemblyCompanyAttribute>
+    <ApplicationIcon>Resources/Nova.ico</ApplicationIcon>
+    <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <Resource Include="Resources/Nova.ico" />
     <None Update="ThirdParty/ToolGood.Words.Pinyin.LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="9.0.16" />

@@ -4,7 +4,7 @@ Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windo
 
 ## 当前状态
 
-第七阶段 7.3：Quick Launcher 增加中文全拼、首字母和混合名称搜索。运行时缓存 Search Key，原名称匹配优先，保留 7.2 UI、键盘、IME、Top8 与空 Query 行为；数据库不变。已通过用户验收，按授权完成收尾提交，不开始新功能开发。详见 [7.3 交付记录](docs/PinyinSearch-7.3.md)。
+第八阶段 8.1：发布安全与交付基线（已通过开发验收）。当前 Preview 版本为 `0.1.0-preview.1`；增加单实例、字段级设置保存、异步有界日志、统一 Nova 图标与可重复的 FDD/SCD/Single-file 发布脚本。交付目录、验证证据及未完成的真实干净机器验收见 [Release.md](docs/Release.md)。
 
 ## 构建与运行
 
@@ -16,7 +16,7 @@ dotnet build NovaLauncher.sln -c Release --no-restore
 dotnet run --project NovaLauncher.App/NovaLauncher.App.csproj -c Release --no-build
 ```
 
-已验证 Release 构建无警告和错误，以及实际窗口导航、键盘选择、缩放和标题栏按钮。运行 `powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/Test-UiShell.ps1` 可复现 UI 检查并生成截图；脚本会操作测试窗口。实际截图和验证边界见 [Design.md](docs/Design.md)。
+已验证 Release 构建无警告和错误，以及实际窗口导航、键盘选择、缩放和标题栏按钮。8.1 发布验证使用 `scripts/Test-Publish.ps1`（命令和实际范围见 [Release.md](docs/Release.md)），会操作隔离测试窗口。`Test-UiShell.ps1` 的旧导航假设仅作为历史记录。实际截图和验证边界见 [Design.md](docs/Design.md)。
 
 4.1 导入与卡片验证：运行 `dotnet run --project NovaLauncher.Verification -c Release --no-build`，执行服务/状态断言与真实 OLE 拖放，生成 `docs/screenshots/4.1/` 运行截图。需要交互式桌面，运行期间会移动鼠标；结束后恢复位置并清理测试文件。详见 [Development.md](docs/Development.md)。
 

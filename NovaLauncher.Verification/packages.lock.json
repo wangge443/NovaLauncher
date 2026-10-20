@@ -200,7 +200,7 @@
         "resolved": "3.1.0.4",
         "contentHash": "QG51dprs+F9FWNoqCAgyBC/IV+sLFv7sNgQvAu7kbLp4IClnPdHTiX/K+4xo+Ippv6szabixTEBfFkvKSLs5Mw=="
       },
-      "novalauncher.app": {
+      "NovaLauncher": {
         "type": "Project",
         "dependencies": {
           "CommunityToolkit.Mvvm": "[8.4.2, )",

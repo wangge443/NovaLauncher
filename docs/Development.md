@@ -1,5 +1,17 @@
 # Nova Launcher — 开发流程
 
+## 8.1 发布基线（2026-10-20，已通过开发验收）
+
+基线 b55b477；用户已授权提交 `chore: establish release and diagnostics baseline`，不开始 8.2。收尾再次执行 Release Build：0 warnings / 0 errors（build-closeout.log）；沿用已通过的功能测试与发布验收结果，不重复运行。真实 Clean Machine Test 仍未完成，保留为正式对外发布前的 Release Gate；主要交付形式为 Self-contained win-x64 Portable Preview。构建与发布命令、产物结构、升级和人工 clean-machine 步骤见 [Release.md](Release.md)。Release Build 0 warnings / 0 errors。发布二进制、日志和测试截图位于被忽略的 artifacts，不进入 Git。
+
+既有完整回归与新增测试共 710 项主进程断言通过：Persistence 25、Home 29、Favorites 31、Recent 22、Profile 44、Management 46、AppEdit 59、Pinyin 123、Launch 32、Toast 11、Polish 19、Import 37、Categories 34、Appearance 39、Quick Launcher 69、Settings 36、Migrations 30、Release Safety 13、Logging 11。重复压力轮次不计入总数。
+
+新增入口 `--release-safety` 覆盖 stale/concurrent settings patch、旧统计快照与删除、迁移前备份、测试根隔离；`--logging` 覆盖 UTF-8、容量/轮转、磁盘失败及异常记录。并发验证发现 SQLite 锁升级失败，写事务修复后连续 20 轮通过。UI 测试针对输入时序等待实际焦点/原生按键分发，没有放宽产品断言；Settings 版本断言改读 InformationalVersion 保留 Preview 后缀。
+
+最终实际 SCD 连续 smoke 12 项检查通过；FDD 启动范围 6 项、Single-file 启动范围 5 项通过。实际 SCD Fresh 默认记录、pending migration 备份及 8.0 旧版持久化数据升级另行通过。300 条目相同夹具的进程到窗口耗时 Release 5883 ms / SCD 5587 ms。真实 Clean Machine Test 未完成，Single-file 未执行完整功能 smoke；完整证据与截图见 Release。
+
+完整发布 smoke 使用 `powershell.exe -NoProfile -STA -File scripts/Test-Publish.ps1`（参数见 Release）。操作真实复制 EXE、OLE、原生窗口和 UI Automation，需交互式桌面且不要同时运行其他输入测试。`scripts/Test-UiShell.ps1` 是历史 Shell 验证，旧导航假设不作为本轮发布验收依据。
+
 ## 7.3 中文拼音与首字母搜索（2026-10-18，已验收）
 
 基线 70d7e62。新增 ToolGood.Words.Pinyin **3.1.0.4**（MIT、net9.0、离线内嵌词典、无传递依赖），固定版本与锁文件，附带许可到运行输出。ApplicationSearchEntry / ApplicationSearchIndex 在加载、导入、重命名时缓存 Key，移除/Reset/Dispose 清理；ApplicationSearchService 复用原匹配与时间/名称/Id 排序规则，扩展全拼与首字母。保留原名称三档最高优先级，规范名称匹配其次，再匹配拼音；不修改数据库 Schema/Migration、UI、键盘、IME 或启动命令。

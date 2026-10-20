@@ -23,6 +23,9 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length == 5 && args[0] == "--external-drop") return RunExternalDrop(args);
+        if (args.Contains("--logging")) return RunLoggingTestsAsync().GetAwaiter().GetResult();
+        if (args.Contains("--release-safety")) return RunReleaseSafetyAsync().GetAwaiter().GetResult();
         if (args.Contains("--real-app-edit-migration")) return VerifyRealEditingMigrationAsync().GetAwaiter().GetResult();
         if (args.Length == 2 && args[0] == "--app-edit-restart") return VerifyEditingRestartAsync(args[1]).GetAwaiter().GetResult();
         if (args.Contains("--real-appearance")) return VerifyRealAppearanceAsync().GetAwaiter().GetResult();

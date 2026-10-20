@@ -18,12 +18,13 @@ public sealed class ApplicationImportService(IShortcutResolver shortcuts, IAppli
                 cancellationToken.ThrowIfCancellationRequested();
                 var result = Import(sourcePath, cancellationToken);
                 cancellationToken.ThrowIfCancellationRequested();
+                Trace.TraceInformation(result.Application is not null ? "Application import parsed successfully" : "Application import rejected");
                 completion.TrySetResult(result);
             }
             catch (OperationCanceledException) { completion.TrySetCanceled(cancellationToken); }
             catch (Exception ex)
             {
-                Trace.TraceWarning("Application import failed: {0}", ex.GetType().Name);
+                Trace.TraceWarning("Application import failed: {0}", ex);
                 completion.TrySetResult(new(null, "无法导入此文件，请检查文件或快捷方式目标"));
             }
         }) { IsBackground = true, Name = "Application import" };

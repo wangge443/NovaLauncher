@@ -24,7 +24,7 @@ public sealed class UserProfileService(IUserProfileRepository repository, Applic
     public static string DefaultName()
     {
         try { string name = Environment.UserName.Trim(); return name.Length is >= 1 and <= 24 ? name : "User"; }
-        catch (Exception ex) { Trace.TraceWarning("Profile username unavailable: {0}", ex.Message); return "User"; }
+        catch (Exception ex) { Trace.TraceWarning("Profile username unavailable: {0}", ex); return "User"; }
     }
     public async Task<ProfileResult> LoadAsync()
     {
@@ -36,7 +36,7 @@ public sealed class UserProfileService(IUserProfileRepository repository, Applic
             if (_current.AvatarPath is { } path)
             {
                 try { _avatar = await Task.Run(() => ReadPng(path)); }
-                catch (Exception ex) { Trace.TraceWarning("Profile avatar unavailable: {0}", ex.Message); }
+                catch (Exception ex) { Trace.TraceWarning("Profile avatar unavailable: {0}", ex); }
             }
             return new(_current, _avatar);
         }
@@ -59,7 +59,7 @@ public sealed class UserProfileService(IUserProfileRepository repository, Applic
             return new(null, null, "不支持此图片格式");
         byte[] image;
         try { image = await Task.Run(() => ReadPng(path)); }
-        catch (Exception ex) { Trace.TraceWarning("Avatar decoding failed: {0}", ex.Message); return new(null, null, "无法读取该图片"); }
+        catch (Exception ex) { Trace.TraceWarning("Avatar decoding failed: {0}", ex); return new(null, null, "无法读取该图片"); }
         await _gate.WaitAsync();
         string? created = null;
         string? temporary = null;
@@ -108,7 +108,7 @@ public sealed class UserProfileService(IUserProfileRepository repository, Applic
             if (string.Equals(Path.GetDirectoryName(full), Path.GetFullPath(paths.ProfileDirectory), StringComparison.OrdinalIgnoreCase)
                 && Path.GetFileName(full).StartsWith("avatar-", StringComparison.Ordinal)) File.Delete(full);
         }
-        catch (Exception ex) { Trace.TraceWarning("Profile obsolete avatar cleanup failed: {0}", ex.Message); }
+        catch (Exception ex) { Trace.TraceWarning("Profile obsolete avatar cleanup failed: {0}", ex); }
     }
     private static byte[] ReadPng(string path)
     {

@@ -110,7 +110,8 @@ internal static partial class Program
         view = Descendants<SettingsView>(window).Single(); var scroll = Descendants<ScrollViewer>(view).Single(x => x.TemplatedParent is not TextBox);
         Check(scroll.ScrollableWidth == 0 && scroll.ScrollableHeight > 0, "Minimum window scrolls vertically only");
         SaveWindow(window, "settings-small.png"); scroll.ScrollToEnd(); window.UpdateLayout(); SaveWindow(window, "settings-storage-about.png");
-        Check(settings.Version == typeof(SettingsViewModel).Assembly.GetName().Version!.ToString(3), "Version from assembly");
+        string informationalVersion = System.Reflection.CustomAttributeExtensions.GetCustomAttribute<System.Reflection.AssemblyInformationalVersionAttribute>(typeof(SettingsViewModel).Assembly)!.InformationalVersion.Split('+')[0];
+        Check(settings.Version == informationalVersion, "About uses assembly informational version including preview suffix");
         Check(settings.DataDirectory == paths.RootDirectory && settings.DatabasePath == paths.DatabasePath, "Paths use ApplicationDataPaths");
     }
     private static string SettingsExistingState(ApplicationDataPaths paths)

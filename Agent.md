@@ -2,7 +2,7 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第七阶段 7.3：Quick Launcher 中文拼音与首字母搜索，基于已验收 7.2（70d7e62）。通过 ApplicationSearchService 的内存索引扩展匹配；保持 7.2 UI、键盘、IME 与启动行为，不修改 Schema/Migration。新增固定版本 ToolGood.Words.Pinyin 3.1.0.4，离线生成派生 Key。7.3 已通过用户验收，按授权提交 feat: add pinyin application search；不开始新功能开发。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第八阶段 8.1：发布安全与交付基线，基于已验收 Product Audit 8.0（b55b477）。范围为单实例、写入安全、日志、身份版本、Publish 与交付验证；不增加 Launcher 业务功能，不改 Schema/Migration，不优化 300 卡片，不改 DesktopBackdrop。8.1 已通过开发验收，用户已授权以 chore: establish release and diagnostics baseline 收尾提交；不开始 8.2。真实 Clean Machine Test 仍未完成，作为正式对外发布前的 Release Gate；主要交付方式为 Self-contained win-x64 Portable Preview，Single-file 仅部分验证。交付与验证边界见 docs/Release.md。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
@@ -55,4 +55,4 @@
 3. UI 工作先检查 ui-ux-pro-max 的安装与指令，形成设计参数和状态方案，再映射为 WPF 资源与控件。
 4. 按小范围改动实施，不覆盖用户工作；只有明确独立且有收益的工作流才考虑委派。
 5. 执行必要验证，记录未验证项与实际限制，清理本次无用临时文件，并同步相关文档。
-6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前 7.3 已通过验收，完成依赖锁定、Release 和改动范围复核后按授权收尾提交；不开始新功能开发。
+6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前 8.1 已通过开发验收，按用户授权完成收尾提交；不开始 8.2，不将真实 Clean Machine Test 标记为完成。

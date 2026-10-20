@@ -45,7 +45,8 @@ internal static partial class Program
                 if(state.Original is {} original)
                 {
                     if(state.OriginalImage is {} bytes && original.BackgroundImagePath is {} path) await File.WriteAllBytesAsync(path,bytes);
-                    await new AppSettingsRepository(new LauncherDbContextFactory(paths)).SaveAsync(original);
+                    var restoreRepository = new AppSettingsRepository(new LauncherDbContextFactory(paths));
+                    await restoreRepository.SaveAsync(await restoreRepository.GetOrCreateAsync(), original);
                     Check(LegacySettings(paths)==state.LegacySettings,"All original AppSettings fields restored exactly");
                 }
                 File.Delete(snapshot);

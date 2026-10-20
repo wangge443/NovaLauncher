@@ -37,8 +37,7 @@ public sealed class ApplicationLaunchService : IApplicationLaunchService
             catch (OperationCanceledException) { completion.TrySetCanceled(cancellationToken); }
             catch (Exception ex)
             {
-                Trace.TraceWarning("Launch request failed ({0}, HRESULT {1:X8}): {2}",
-                    ex.GetType().Name, ex.HResult, ex.Message);
+                Trace.TraceWarning("Launch request failed: {0}", ex);
                 completion.TrySetResult(new(false, "无法启动该应用，请检查文件或访问权限"));
             }
         }) { IsBackground = true, Name = "Application launch" };

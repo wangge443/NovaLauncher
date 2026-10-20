@@ -22,7 +22,7 @@ internal static partial class Program
         public int Writes { get; private set; }
         public bool Fail { get; set; }
         public Task<AppSettings> GetOrCreateAsync(CancellationToken token=default) => inner.GetOrCreateAsync(token);
-        public Task SaveAsync(AppSettings value,CancellationToken token=default) { Writes++; return Fail ? Task.FromException(new IOException("write failed")) : inner.SaveAsync(value,token); }
+        public Task<AppSettings> SaveAsync(AppSettings original,AppSettings value,CancellationToken token=default) { Writes++; return Fail ? Task.FromException<AppSettings>(new IOException("write failed")) : inner.SaveAsync(original,value,token); }
     }
     private static string BackgroundFixture(string folder, string name, BitmapEncoder? encoder = null)
     {
@@ -118,7 +118,10 @@ internal static partial class Program
         foreach(var item in shell.Sidebar.Items.Concat(shell.Sidebar.FooterItems)) { shell.Sidebar.SelectedItem=item; window.UpdateLayout(); Check(appearance.HasImage,"Background retained on "+item.Name); }
         await WaitForAsync(()=>!content.Toast.IsOpen); await Task.Delay(200); shell.Sidebar.OpenSettings(); await Task.Delay(100); var settingsView=Descendants<SettingsView>(window).Single();
         ((Expander)settingsView.FindName("BackgroundExpander")).IsExpanded=true; window.UpdateLayout();
-        var slider=Descendants<Slider>(settingsView).First(); slider.Focus(); ProfileKey(0x27); await Task.Delay(80);
+        var slider=Descendants<Slider>(settingsView).First(); slider.BringIntoView(); window.Activate();
+        LaunchNative.SetForegroundWindow(new System.Windows.Interop.WindowInteropHelper(window).Handle);
+        slider.Focus(); await WaitForAsync(() => slider.IsKeyboardFocused && window.IsActive);
+        ProfileKey(0x27); await WaitForAsync(() => vm.OverlayPercent == 73);
         Check(vm.OverlayPercent==73,"Slider native Right key updates preview"); await vm.FlushAsync(); vm.OverlayPercent=72; await vm.FlushAsync();
         SaveWindow(window,"appearance-settings.png");
         Check(Descendants<ScrollViewer>(settingsView).Count(x=>x.TemplatedParent is not TextBox)==1,"Appearance retains one Settings scroll viewer");

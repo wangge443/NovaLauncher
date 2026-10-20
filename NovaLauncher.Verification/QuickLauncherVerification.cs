@@ -23,7 +23,7 @@ internal static partial class Program
         await Task.Delay(60);
         Check(window.IsActive, "Keyboard target is the active test window");
         LaunchNative.keybd_event(0x11, 0, 0, UIntPtr.Zero);
-        try { ProfileKey(0x4B); await Task.Delay(80); }
+        try { await Task.Delay(60); ProfileKey(0x4B); await Task.Delay(150); }
         finally { LaunchNative.keybd_event(0x11, 0, 2, UIntPtr.Zero); }
     }
     private static void PreviewQuickKey(UIElement element, Key key) => element.RaiseEvent(new KeyEventArgs(
@@ -56,7 +56,9 @@ internal static partial class Program
         }
         var trigger = Descendants<Button>(window).Single(x => System.Windows.Automation.AutomationProperties.GetAutomationId(x) == "QuickSearchTrigger");
         trigger.Focus();
+        window.PreviewKeyDown += (_, e) => Console.WriteLine($"Keyboard diagnostic: key={e.Key} modifiers={Keyboard.Modifiers} focus={Keyboard.FocusedElement?.GetType().Name}");
         await QuickShortcutAsync(window);
+        await WaitForAsync(() => quick.IsOpen && box.IsKeyboardFocused);
         Check(quick.IsOpen && box.IsKeyboardFocused, "Ctrl+K opens and focuses overlay");
         Check(quick.IsEmpty && quick.EmptyHint == "输入应用名称开始搜索", "Empty history/favorites gives light prompt");
         window.UpdateLayout();

@@ -32,8 +32,7 @@ public sealed class AppSettingsService(IAppSettingsRepository repository) : IApp
         try
         {
             var next = Validate(update(Current)) with { UpdatedAt = DateTimeOffset.UtcNow };
-            await repository.SaveAsync(next, token);
-            Current = next;
+            Current = Validate(await repository.SaveAsync(Current, next, token));
             return true;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)

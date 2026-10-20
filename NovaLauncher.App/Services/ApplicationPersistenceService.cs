@@ -64,7 +64,7 @@ public sealed class ApplicationPersistenceService(
         }
         catch (Exception ex)
         {
-            Trace.TraceError("Application database load failed: {0}", ex.GetType().Name);
+            Trace.TraceError("Application database load failed: {0}", ex);
             return new(applications, "无法读取应用数据库，请检查数据目录权限或数据库文件");
         }
     }
@@ -95,7 +95,7 @@ public sealed class ApplicationPersistenceService(
         catch (DatabaseInitializationException ex) { return ex.Message; }
         catch (Exception ex)
         {
-            Trace.TraceError("Application save failed: {0}", ex.GetType().Name);
+            Trace.TraceError("Application save failed: {0}", ex);
             return "无法保存应用，请检查数据目录权限或数据库文件";
         }
     }
@@ -144,7 +144,7 @@ public sealed class ApplicationPersistenceService(
     private async Task SaveCoreAsync(LauncherApplication application)
     {
         try { await repository.UpdateAsync(application.Id, application.LaunchCount, application.LastLaunchTime, CancellationToken.None); }
-        catch (Exception ex) { Trace.TraceError("Launch statistics save failed for {0}: {1}", application.Id, ex.GetType().Name); }
+        catch (Exception ex) { Trace.TraceError("Launch statistics save failed: {0}", ex); }
     }
 
     public Task FlushAsync() { lock (_sync) return Task.WhenAll(_writes.ToArray()); }

@@ -12,3 +12,10 @@
 **/Cache/Icons/
 *.log
 TestResults/
+artifacts/
+publish/
+**/Logs/
+**/Cache/
+**/CustomIcons/
+**/Profile/
+**/Background/

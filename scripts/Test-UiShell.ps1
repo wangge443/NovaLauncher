@@ -1,4 +1,5 @@
-﻿param(
+# Historical UI Shell check: navigation expectations predate 7.x; not the 8.1 release smoke entry.
+param(
     [string]$ScreenshotDirectory = (Join-Path $PSScriptRoot '../docs/screenshots'),
     [switch]$DesktopCapture,
     [switch]$ForceFallback
@@ -26,7 +27,7 @@ public static class ShellNative {
 }
 '@
 [ShellNative]::SetProcessDPIAware() | Out-Null
-$exe = Join-Path $PSScriptRoot '../NovaLauncher.App/bin/Release/net9.0-windows/NovaLauncher.App.exe'
+$exe = Join-Path $PSScriptRoot '../NovaLauncher.App/bin/Release/net9.0-windows/NovaLauncher.exe'
 $shell = $null
 $appProcess = $null
 $originalCursor = [System.Windows.Forms.Cursor]::Position

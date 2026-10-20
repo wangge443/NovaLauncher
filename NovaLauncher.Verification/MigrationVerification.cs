@@ -191,7 +191,10 @@ internal static partial class Program
             }
             string conflictBefore = Rows(conflict.DatabasePath);
             await ExpectFailureAsync(Initializer(conflict), "Existing empty history goes through Migrate and fails safely");
-            Check(Rows(conflict.DatabasePath) == conflictBefore && BackupCount(conflict) == 0, "Migration SQL failure preserves Applications and does not bootstrap");
+            using (var connection = OpenDatabase(conflict.DatabasePath, true))
+                Check(Rows(conflict.DatabasePath) == conflictBefore && BackupCount(conflict) == 1 &&
+                    Query(connection, "SELECT COUNT(*) FROM __EFMigrationsHistory") == "[[0]]",
+                    "Migration SQL failure preserves Applications and history with a pre-upgrade backup");
             Console.WriteLine($"PASS: {_checks} migration assertions");
             return 0;
         }

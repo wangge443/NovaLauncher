@@ -60,7 +60,11 @@ internal static partial class Program
         finally
         {
             if (original is null && File.Exists(snapshot)) original = JsonSerializer.Deserialize<SettingsSnapshot>(File.ReadAllText(snapshot))?.Original;
-            if (original is not null) await new AppSettingsRepository(new LauncherDbContextFactory(paths)).SaveAsync(original);
+            if (original is not null)
+            {
+                var restoreRepository = new AppSettingsRepository(new LauncherDbContextFactory(paths));
+                await restoreRepository.SaveAsync(await restoreRepository.GetOrCreateAsync(), original);
+            }
             File.Delete(snapshot);
         }
     }

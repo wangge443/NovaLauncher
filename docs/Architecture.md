@@ -1,5 +1,15 @@
 # Nova Launcher — 架构设计
 
+## 8.1 发布安全基础设施
+
+生产 App 入口先配置默认数据根目录并检查 SID + SessionId 范围的 Named Mutex，第二实例通过 CurrentUserOnly Named Pipe 通知原窗口恢复并置前，随后退出，不初始化数据库。主实例在 UI 线程持有 mutex；IPC 后台任务可取消，激活请求调度回 Dispatcher。
+
+AppSettingsRepository 接收 original/requested，使用立即写事务取得写入权，再读取最新行，仅修改显式变化字段并回读合并结果；AppSettingsService 保留串行 gate。LaunchCount 保留单实例共享 VM 下的条件快照写入，旧快照不能回滚统计。数据库正常 pending migration 也执行迁移前校验备份；无新 Migration。
+
+Diagnostics 包含 NovaLog、NovaTraceListener、UnhandledExceptionLogging：512 条有界队列、后台 UTF-8、单文件 1 MiB、最多 10 个文件。异常诊断采用类型/HResult/方法堆栈，省略消息及敏感路径。严重异常不标记已处理。生命周期入口记录版本、启动、就绪、激活、关闭；既有 Trace 失败信息接入本地日志。
+
+Version.props 统一版本，AssemblyName 为 NovaLauncher。EXE 与窗口使用 Resources/Nova.ico；Publish 不启用 trimming。正式用户数据仍在 LOCALAPPDATA；内部测试根目录需标记且拒绝生产目录。详情和限制见 [Release.md](Release.md)。以下功能章节继续有效，阶段交付状态以 8.1 为准。
+
 ## 7.3 Application Search Index（当前架构）
 
 Application → DisplayName → ApplicationSearchEntry（ApplicationId、OriginalName、NormalizedName、FullPinyin、PinyinInitials）。ApplicationSearchService 持有 ApplicationSearchIndex，Index 以现有 ApplicationCardViewModel 引用为键，订阅共享 Applications 的集合变化与 DisplayName 通知。构造时索引已有条目，Add/Replace 索引新项，Rename 替换该项，Remove/Reset 退订并清理；Dispose 释放集合/卡片订阅和字典。

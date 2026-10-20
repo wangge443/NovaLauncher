@@ -5,6 +5,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
+using NovaLauncher.App.Diagnostics;
 
 namespace NovaLauncher.App.Persistence;
 
@@ -33,6 +34,7 @@ public sealed class DatabaseInitializationService(
     {
         try
         {
+            Trace.TraceInformation("Database initialization started");
             Directory.CreateDirectory(Path.GetDirectoryName(paths.DatabasePath)!);
             // Serialize the whole bootstrap + Migrate across launcher processes. Fail promptly if busy.
             using var gate = new FileStream(paths.DatabasePath + ".initialization.lock",
@@ -40,9 +42,11 @@ public sealed class DatabaseInitializationService(
             using var db = factory.CreateDbContext();
             await db.Database.OpenConnectionAsync();
             var connection = (SqliteConnection)db.Database.GetDbConnection();
+            bool existingHistory;
             using (var transaction = connection.BeginTransaction(deferred: false))
             {
                 var schema = ReadSchema(connection, transaction);
+                existingHistory = schema.Any(x => x.Name == "__EFMigrationsHistory");
                 if (!schema.Any(x => x.Name == "__EFMigrationsHistory"))
                 {
                     if (schema.Count > 0)
@@ -62,17 +66,23 @@ public sealed class DatabaseInitializationService(
                 }
                 transaction.Commit();
             }
+            // Normal upgrades need the same recoverable snapshot as the legacy bootstrap.
+            if (existingHistory && (await db.Database.GetPendingMigrationsAsync()).Any()) Backup();
             // EF's SQLite migration lock can survive a killed process. Do not wait indefinitely.
             using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
             await db.Database.MigrateAsync(timeout.Token);
+            Trace.TraceInformation("Database migrations and initialization completed");
         }
         catch (Exception ex)
         {
             Trace.TraceError("Database initialization failed: {0}", ex);
             try
             {
-                File.AppendAllText(Path.Combine(Path.GetDirectoryName(paths.DatabasePath)!, "migration-errors.log"),
-                    $"{DateTimeOffset.UtcNow:O} {ex}{Environment.NewLine}");
+                string logPath = Path.Combine(Path.GetDirectoryName(paths.DatabasePath)!, "migration-errors.log");
+                string line = $"{DateTimeOffset.UtcNow:O} [ERROR] Migration {NovaLog.DescribeException(ex)}{Environment.NewLine}";
+                if (File.Exists(logPath) && new FileInfo(logPath).Length + System.Text.Encoding.UTF8.GetByteCount(line) > 1024 * 1024)
+                    File.WriteAllText(logPath, line, new System.Text.UTF8Encoding(false));
+                else File.AppendAllText(logPath, line, new System.Text.UTF8Encoding(false));
             }
             catch (Exception logError) { Trace.TraceError("Cannot write migration log: {0}", logError); }
             throw new DatabaseInitializationException(ex);
@@ -132,6 +142,7 @@ public sealed class DatabaseInitializationService(
         using var check = destination.CreateCommand();
         check.CommandText = "PRAGMA integrity_check;";
         if (!Equals(check.ExecuteScalar(), "ok")) throw new InvalidDataException("Backup integrity check failed.");
+        Trace.TraceInformation("Pre-migration backup verified");
     }
 
     private sealed record SchemaEntry(string Type, string Name, string Sql);
