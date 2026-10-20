@@ -1,5 +1,11 @@
 # Nova Launcher — 开发流程
 
+## 8.2 大量应用性能专项（已通过用户验收）
+
+稳定基线2272435bff1ede0f486bd1e54ea1b19e5a9fd6a1。先建立10/100/300项各1次预热+5次正式Release基线，再实现Home All首批40、低优先级每批20；没有新增依赖或数据库变化。最终Release 0 warnings / 0 errors，19个既有入口含新增Home断言713项，加独立加载/切页/回收13项，共726项通过；新SCD完整Smoke12项通过。性能表、Blur对比、截图、明确限制与复现入口见 [Performance-8.2.md](Performance-8.2.md)。
+
+用户已通过验收并授权提交 perf: improve large application home rendering；不开始8.3。真实Clean Machine Test继续为未完成的Release Gate。以下章节为此前阶段历史记录。
+
 ## 8.1 发布基线（2026-10-20，已通过开发验收）
 
 基线 b55b477；用户已授权提交 `chore: establish release and diagnostics baseline`，不开始 8.2。收尾再次执行 Release Build：0 warnings / 0 errors（build-closeout.log）；沿用已通过的功能测试与发布验收结果，不重复运行。真实 Clean Machine Test 仍未完成，保留为正式对外发布前的 Release Gate；主要交付形式为 Self-contained win-x64 Portable Preview。构建与发布命令、产物结构、升级和人工 clean-machine 步骤见 [Release.md](Release.md)。Release Build 0 warnings / 0 errors。发布二进制、日志和测试截图位于被忽略的 artifacts，不进入 Git。

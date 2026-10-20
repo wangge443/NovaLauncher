@@ -1,5 +1,7 @@
 # Nova Launcher — Portable Preview 发布基线（8.1）
 
+8.2 已验收更新：基于已提交的8.1 `2272435bff1ede0f486bd1e54ea1b19e5a9fd6a1`，Home大集合渐进渲染与显式性能诊断已完成验证，SCD已重新生成，完整发布Smoke 12项通过。版本仍为0.1.0-preview.1；详见 [Performance-8.2.md](Performance-8.2.md)。以下8.1记录保留历史语境。真实Clean Machine Test仍未完成，Single-file仍为可选/部分验证。
+
 版本 **0.1.0-preview.1**。基线 `b55b477cc81e9edf77b4516c4c0f4cc82e155f20`（已验收 Product Audit 8.0）。8.1 已于 2026-10-20 通过开发验收，用户授权收尾提交；不进入 8.2。推荐主要交付形式为 **Self-contained win-x64 Portable Preview**。
 
 ## 版本与身份

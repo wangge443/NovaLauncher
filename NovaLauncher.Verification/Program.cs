@@ -23,6 +23,10 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length == 3 && args[0] == "--performance-seed")
+            return SeedPerformanceAsync(args[1], int.Parse(args[2])).GetAwaiter().GetResult();
+        if (args.Length == 3 && args[0] == "--performance-background")
+            return SetPerformanceBackgroundAsync(args[1], int.Parse(args[2])).GetAwaiter().GetResult();
         if (args.Length == 5 && args[0] == "--external-drop") return RunExternalDrop(args);
         if (args.Contains("--logging")) return RunLoggingTestsAsync().GetAwaiter().GetResult();
         if (args.Contains("--release-safety")) return RunReleaseSafetyAsync().GetAwaiter().GetResult();
@@ -77,7 +81,8 @@ internal static partial class Program
         {
             try
             {
-                if (args.Contains("--pinyin")) await RunPinyinAsync((MainWindow)app.MainWindow);
+                if (args.Contains("--performance-behavior")) await RunPerformanceBehaviorAsync((MainWindow)app.MainWindow);
+                else if (args.Contains("--pinyin")) await RunPinyinAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--quick-launcher")) await RunQuickLauncherAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--app-edit")) await RunApplicationEditingAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--management")) await RunManagementAsync((MainWindow)app.MainWindow); else if (appearanceTests) await RunAppearanceAsync((MainWindow)app.MainWindow); else if (settingsTests) await RunSettingsAsync((MainWindow)app.MainWindow); else if (profileTests) await RunProfileAsync((MainWindow)app.MainWindow);

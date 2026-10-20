@@ -34,7 +34,7 @@
             <Grid Height="{StaticResource SectionHeaderHeight}" Margin="{StaticResource HomeHeadingSpacing}">
                 <TextBlock Text="全部应用" Style="{StaticResource HomeSectionTitle}" />
             </Grid>
-            <ItemsControl x:Name="AllApplications" ItemsSource="{Binding AllApplications}" Style="{StaticResource HomeCards}"
+            <ItemsControl x:Name="AllApplications" Style="{StaticResource HomeCards}"
                           AutomationProperties.AutomationId="ApplicationGrid" AutomationProperties.Name="全部应用" />
         </StackPanel>
     </ScrollViewer>

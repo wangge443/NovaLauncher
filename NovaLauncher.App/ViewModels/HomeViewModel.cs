@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using NovaLauncher.App.Diagnostics;
 
 namespace NovaLauncher.App.ViewModels;
 
@@ -37,10 +38,12 @@ public sealed class HomeViewModel : ViewModelBase, IDisposable
 
     private void SourceChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
+        long phase = PerformanceTrace.Start();
         SynchronizeSubscriptions();
         RefreshRecent();
         RefreshFavorites();
         OnPropertyChanged(nameof(HasApplications));
+        PerformanceTrace.End("HomeProjection", phase);
     }
 
     private void SynchronizeSubscriptions()

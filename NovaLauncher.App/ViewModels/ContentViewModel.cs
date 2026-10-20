@@ -5,6 +5,7 @@ using System.IO;
 using System.ComponentModel;
 using System.Windows.Data;
 using NovaLauncher.App.Services;
+using NovaLauncher.App.Diagnostics;
 
 namespace NovaLauncher.App.ViewModels;
 
@@ -136,7 +137,10 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
             StatusMessage = "正在加载应用…";
             var result = await _persistence.LoadAsync(_token);
             _token.ThrowIfCancellationRequested();
+            long phase = PerformanceTrace.Start();
             foreach (var application in result.Applications) AddCard(application);
+            PerformanceTrace.End("BuildViewModelsAndIndexes", phase);
+            PerformanceTrace.Mark("ViewModelsCreated");
             await CategoryManager.InitializeAsync(_token);
             if (result.Error is { } error) ShowMessage(error);
             else StatusMessage = null;

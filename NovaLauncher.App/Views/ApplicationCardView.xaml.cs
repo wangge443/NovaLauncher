@@ -14,7 +14,9 @@ public partial class ApplicationCardView : UserControl
 
     public ApplicationCardView()
     {
+        long phase = Diagnostics.PerformanceTrace.Start();
         InitializeComponent();
+        Diagnostics.PerformanceTrace.End("CardXamlConstruction", phase);
         _timeRefresh.Tick += (_, _) => RefreshTime();
     }
 

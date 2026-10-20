@@ -1,5 +1,9 @@
 # Nova Launcher — 架构设计
 
+## 8.2 Home 渐进呈现（已验收）
+
+HomeView保留独立视图集合：超过100项时首批40项，SystemIdle每批20项；卸载取消DispatcherOperation并解除源订阅。完整Applications、Home投影和QuickLauncher索引保持原对象与语义；视图不进行持久化或业务操作。该机制不是真正虚拟化，最终仍创建全量卡片。PerformanceTrace/PerformanceSession仅在带隔离根的显式测试模式启用。测量边界与取舍见 [Performance-8.2.md](Performance-8.2.md)。
+
 ## 8.1 发布安全基础设施
 
 生产 App 入口先配置默认数据根目录并检查 SID + SessionId 范围的 Named Mutex，第二实例通过 CurrentUserOnly Named Pipe 通知原窗口恢复并置前，随后退出，不初始化数据库。主实例在 UI 线程持有 mutex；IPC 后台任务可取消，激活请求调度回 Dispatcher。

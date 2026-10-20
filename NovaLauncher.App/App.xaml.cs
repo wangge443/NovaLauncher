@@ -49,6 +49,8 @@ public partial class App : Application
             try
             {
                 ApplicationDataPaths.ConfigureVerificationRoot(e.Args);
+                PerformanceTrace.Enabled = ApplicationDataPaths.VerificationRoot is not null && e.Args.Contains("--performance-test");
+                PerformanceTrace.Mark("ManagedStartup");
                 _instance = new SingleInstanceCoordinator(ApplicationDataPaths.VerificationRoot?.ToUpperInvariant());
                 if (!_instance.TryAcquire())
                 {
@@ -81,6 +83,7 @@ public partial class App : Application
         if (Persistence is null)
         {
             _log = new NovaLog(Path.Combine(paths.RootDirectory, "Logs"));
+            PerformanceTrace.Log = _log;
             _traceListener = new NovaTraceListener(_log);
             Trace.Listeners.Add(_traceListener);
             _exceptionLogging = new UnhandledExceptionLogging(this, _log);
@@ -135,10 +138,19 @@ public partial class App : Application
             {
                 bool loaded = await _settingsService.LoadAsync();
                 _settings!.Refresh();
+                long background = PerformanceTrace.Start();
                 await _appearance!.InitializeAsync();
+                PerformanceTrace.End("BackgroundInitialize", background);
                 ((MainWindowViewModel)MainWindow.DataContext).ApplyStartupPage(_settingsService.Current.StartupPage);
                 MainWindow.SourceInitialized += (_, _) => WindowPlacementService.Restore(MainWindow, _settingsService.Current);
+                PerformanceTrace.Mark("HomeDataReady");
+                long layout = PerformanceTrace.Start();
                 MainWindow.Show();
+                PerformanceTrace.Mark("MainWindowShown");
+                MainWindow.UpdateLayout();
+                PerformanceTrace.End("HomeFirstLayout", layout);
+                PerformanceTrace.Mark("FirstLayoutCompleted");
+                if (PerformanceTrace.Enabled) _ = PerformanceSession.RunAsync(MainWindow, _content);
                 if (!loaded) _content.Toast.Show("设置读取失败，已使用默认设置");
             }
             if (_activationPending) { _activationPending = false; WindowActivationService.Activate(MainWindow); }

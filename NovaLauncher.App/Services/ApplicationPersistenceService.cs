@@ -5,6 +5,7 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using NovaLauncher.App.Models;
 using NovaLauncher.App.Persistence;
+using NovaLauncher.App.Diagnostics;
 
 namespace NovaLauncher.App.Services;
 
@@ -30,9 +31,15 @@ public sealed class ApplicationPersistenceService(
         var applications = new List<LauncherApplication>();
         try
         {
+            long phase = PerformanceTrace.Start();
             await repository.InitializeAsync(token);
+            PerformanceTrace.End("DatabaseInitialize", phase);
+            PerformanceTrace.Mark("DatabaseInitialized");
             await cache.InitializeAsync(token);
+            phase = PerformanceTrace.Start();
             var records = await repository.GetAllAsync(token);
+            PerformanceTrace.End("DatabaseQueryAndEFMapping", phase);
+            phase = PerformanceTrace.Start();
             foreach (var record in records)
             {
                 token.ThrowIfCancellationRequested();
@@ -55,6 +62,8 @@ public sealed class ApplicationPersistenceService(
                 catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }
                 catch (Exception ex) { Trace.TraceWarning("Application record {0} failed: {1}", record.Id, ex.GetType().Name); }
             }
+            PerformanceTrace.End("ApplicationMaterializationWithIconIO", phase);
+            PerformanceTrace.Mark("ApplicationsLoaded");
             return new(applications, applications.Count != records.Count ? "部分应用记录无法读取" : null);
         }
         catch (OperationCanceledException) when (token.IsCancellationRequested) { throw; }

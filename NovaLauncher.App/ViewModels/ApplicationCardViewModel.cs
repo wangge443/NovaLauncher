@@ -6,6 +6,7 @@ using NovaLauncher.App.Models;
 using NovaLauncher.App.Services;
 using CommunityToolkit.Mvvm.Input;
 using System.Diagnostics;
+using NovaLauncher.App.Diagnostics;
 
 namespace NovaLauncher.App.ViewModels;
 
@@ -79,7 +80,9 @@ public sealed partial class ApplicationCardViewModel : ViewModelBase, IDisposabl
         ToggleFavoriteCommand = new AsyncRelayCommand(ToggleFavoriteAsync, () => CanInteract);
         LaunchCommand = new AsyncRelayCommand(LaunchAsync, () => CanInteract);
         InitializeManagement(management, iconPicker);
+        long phase = PerformanceTrace.Start();
         Icon = DecodeIcon(application.Icon);
+        PerformanceTrace.End("IconDecode", phase);
     }
 
     private static ImageSource DecodeIcon(byte[]? bytes)
