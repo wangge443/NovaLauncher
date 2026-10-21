@@ -21,7 +21,7 @@
         </Border>
         <Grid Margin="{StaticResource WorkspacePadding}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" /><RowDefinition Height="*" />
+            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
         <Button Command="{Binding QuickLauncher.OpenCommand}" Style="{StaticResource QuickSearchTrigger}" AutomationProperties.Name="打开快速启动" AutomationProperties.AutomationId="QuickSearchTrigger">
@@ -31,7 +31,10 @@
                 <TextBlock Grid.Column="2" Text="Ctrl + K" FontSize="11"/>
             </Grid>
         </Button>
-        <StackPanel Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Center">
+        <TextBlock Grid.Row="1" Text="{Binding PageTitle}" Style="{StaticResource WorkspaceSectionTitle}"
+                   Margin="{StaticResource WorkspaceHeadingSpacing}" AutomationProperties.AutomationId="WorkspaceTitle"
+                   Visibility="{Binding ShowPageTitle, Converter={StaticResource BooleanVisibility}}" />
+        <StackPanel Grid.Row="2" HorizontalAlignment="Center" VerticalAlignment="Center">
             <StackPanel.Style>
                 <Style TargetType="StackPanel">
                     <Setter Property="Visibility" Value="Collapsed" />
@@ -81,7 +84,7 @@
             <TextBlock Text="{Binding EmptyHint}" FontSize="{StaticResource SecondaryTextSize}" TextAlignment="Center"
                        Foreground="{DynamicResource MutedTextBrush}" Margin="{StaticResource EmptyHintSpacing}" />
         </StackPanel>
-        <ContentControl Grid.Row="1" Focusable="False" Content="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
+        <ContentControl Grid.Row="2" Focusable="False" Content="{Binding}" HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">
             <ContentControl.Style>
                 <Style TargetType="ContentControl">
                     <Setter Property="ContentTemplate">
@@ -102,14 +105,14 @@
                                 <views:SettingsView DataContext="{Binding DataContext.Settings, RelativeSource={RelativeSource AncestorType=Window}}" />
                             </DataTemplate></Setter.Value></Setter>
                         </DataTrigger>
-                        <DataTrigger Binding="{Binding IsHomeDashboard}" Value="True">
-                            <Setter Property="ContentTemplate"><Setter.Value><DataTemplate><views:HomeView DataContext="{Binding Home}" /></DataTemplate></Setter.Value></Setter>
+                        <DataTrigger Binding="{Binding IsAllApplications}" Value="True">
+                            <Setter Property="ContentTemplate"><Setter.Value><DataTemplate><views:AllApplicationsView /></DataTemplate></Setter.Value></Setter>
                         </DataTrigger>
                     </Style.Triggers>
                 </Style>
             </ContentControl.Style>
         </ContentControl>
-        <TextBlock Grid.Row="2" Text="{Binding StatusMessage}" TextWrapping="Wrap"
+        <TextBlock Grid.Row="3" Text="{Binding StatusMessage}" TextWrapping="Wrap"
                    Foreground="{DynamicResource MutedTextBrush}" FontSize="{StaticResource SecondaryTextSize}" Margin="4,8,4,0"
                    AutomationProperties.AutomationId="ImportStatus" AutomationProperties.LiveSetting="Polite">
             <TextBlock.Style>

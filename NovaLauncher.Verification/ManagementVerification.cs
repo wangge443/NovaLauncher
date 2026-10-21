@@ -26,13 +26,17 @@ internal static partial class Program
     private static async Task OpenCardMenuAsync(ApplicationCardView card, bool keyboard = false)
     {
         var window = Window.GetWindow(card);
+        window.Topmost = false; // Reinsert our test window above an existing topmost window.
         window.Topmost = true; window.Activate();
         LaunchNative.SetForegroundWindow(new WindowInteropHelper(window).Handle);
         card.BringIntoView(); window.UpdateLayout(); await Task.Delay(220);
         if (keyboard)
         {
-            ((Button)card.FindName("LaunchButton")).Focus();
+            bool focused = ((Button)card.FindName("LaunchButton")).Focus();
+            await Task.Delay(100);
+            Console.WriteLine($"Menu keyboard preflight: loaded={card.IsLoaded}, visible={card.IsVisible}, focus={focused}, within={card.IsKeyboardFocusWithin}, active={window.IsActive}, focusedElement={Keyboard.FocusedElement?.GetType().Name}");
             LaunchNative.keybd_event(0x10, 0, 0, UIntPtr.Zero);
+            await Task.Delay(60);
             ProfileKey(0x79);
             LaunchNative.keybd_event(0x10, 0, 2, UIntPtr.Zero);
         }
@@ -134,7 +138,7 @@ internal static partial class Program
         if(LaunchNative.WindowFromPoint(new((int)menuPoint.X,(int)menuPoint.Y))!=menuHwnd) throw new InvalidOperationException("Menu obscured; refusing click");
         LaunchNative.mouse_event(2,0,0,0,UIntPtr.Zero); LaunchNative.mouse_event(4,0,0,0,UIntPtr.Zero);
         await WaitForAsync(() => first.IsFavorite);
-        Check(content.Home.FavoriteApplications.Contains(first) && first.LaunchCount == 0, "Menu favorite updates Home without launch");
+        Check(first.IsFavorite && first.LaunchCount == 0, "Menu favorite updates Home without launch");
         await OpenCardMenuAsync(card, true);
         Check((string)favorite.Header == "取消收藏", "Shift F10 opens menu with updated favorite label");
         ProfileKey(0x28); ProfileKey(0x1B); await Task.Delay(150);
@@ -158,8 +162,8 @@ internal static partial class Program
         shell.Sidebar.SelectedItem = shell.Sidebar.FooterItems[0]; window.UpdateLayout();
         SaveWindow(window, "favorites.png"); card = Descendants<ApplicationCardView>(window).Single();
         await OpenCardMenuAsync(card); await ActivateMenuAsync((MenuItem)card.FindName("FavoriteMenuItem")); await WaitForAsync(() => content.IsEmpty);
-        Check(!content.Home.FavoriteApplications.Contains(first), "Unfavorite removes Favorites card and Home projection");
-        Check(content.EmptyHint == "右键应用卡片即可收藏", "Favorites empty state no longer mentions star"); SaveWindow(window, "favorites-empty.png");
+        Check(!first.IsFavorite, "Unfavorite removes Favorites card and Home projection");
+        Check(content.EmptyHint == "右键应用即可添加到收藏", "Favorites empty state no longer mentions star"); SaveWindow(window, "favorites-empty.png");
         shell.Sidebar.SelectedItem = shell.Sidebar.Items[0]; window.UpdateLayout(); card = AllCardViews(window).Single(x => x.DataContext == first);
         await OpenCardMenuAsync(card); await ActivateMenuAsync((MenuItem)card.FindName("InfoMenuItem"));
         var info = (Popup)card.FindName("InfoPopup"); await WaitForAsync(() => info.IsOpen);

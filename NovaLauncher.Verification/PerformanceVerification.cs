@@ -35,7 +35,7 @@ internal static partial class Program
         var removed = vm.Applications[10];
         vm.Applications.Remove(removed);
         removed.Dispose();
-        await WaitForAsync(() => Descendants<HomeView>(window).Single().IsFullyRendered);
+        await WaitForAsync(() => Descendants<AllApplicationsView>(window).Single().IsFullyRendered);
         window.UpdateLayout();
         Check(AllCardViews(window).Length == 299 && AllCardViews(window)[0].DataContext == moved,
             "Move and removal during pending batches preserve final membership and order");
@@ -53,11 +53,11 @@ internal static partial class Program
             window.UpdateLayout();
             vm.SelectWorkspace(WorkspaceMode.Recent);
             window.UpdateLayout();
-            vm.SelectWorkspace(WorkspaceMode.Home);
+            vm.SelectWorkspace(WorkspaceMode.AllApplications);
             window.UpdateLayout();
-            await WaitForAsync(() => Descendants<HomeView>(window).Single().IsFullyRendered);
+            await WaitForAsync(() => Descendants<AllApplicationsView>(window).Single().IsFullyRendered);
             window.UpdateLayout();
-            Check(Descendants<ApplicationCardView>(window).Count() == 311, $"Cycle {cycle}: Home has no duplicate card accumulation");
+            Check(Descendants<ApplicationCardView>(window).Count() == 299, $"Cycle {cycle}: Home has no duplicate card accumulation");
             var timer = Stopwatch.StartNew();
             var column = (ColumnDefinition)window.FindName("SidebarColumn");
             for (int step = 0; step < 20; step++)
@@ -75,14 +75,14 @@ internal static partial class Program
         Check(alive == 0, "Five unloaded Home views are collectible after dispatcher drains");
         Check(memory[^1] < memory[0] + 8 * 1024 * 1024, "Five full navigation cycles do not grow managed memory by more than 8 MiB");
         File.WriteAllText(Path.Combine(_screenshots, "behavior.json"), JsonSerializer.Serialize(new
-        { ManagedBytes = memory, SidebarResize20StepsMs = sidebarTimes, OldHomeViewsAlive = alive }));
+        { ManagedBytes = memory, SidebarResize20StepsMs = sidebarTimes, OldAllApplicationsViewsAlive = alive }));
         SaveWindow(window, "home-299-navigation.png");
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
     private static WeakReference LeavePerformanceHome(MainWindow window, ContentViewModel vm)
     {
-        var reference = new WeakReference(Descendants<HomeView>(window).Single());
+        var reference = new WeakReference(Descendants<AllApplicationsView>(window).Single());
         vm.SelectWorkspace(WorkspaceMode.Settings);
         window.UpdateLayout();
         return reference;

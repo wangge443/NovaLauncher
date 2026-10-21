@@ -1,5 +1,17 @@
 # Nova Launcher — UI 设计
 
+## 8.3 全部应用主界面（当前规范，已验收）
+
+Sidebar为Logo、工作空间、全部应用（Segoe Fluent Icons E80A应用网格）、动态分类、收藏、最近使用、弹性留白、Profile头像。设置仅在Profile Flyout中进入。导航复用现有44 DIP行高、浅色Active Surface和左侧Accent条，不再使用房子图标或“首页”文案。
+
+ContentView统一呈现：原320×40搜索入口 → 24 DIP → 页面标题 → 18 DIP → 应用Grid。标题16 DIP SemiBold，横向偏移4 DIP与卡片对齐；Workspace Padding仍为24。页面标题为全部应用、分类名、收藏、最近使用或设置；空的全部应用隐藏标题，保留搜索与居中拖拽提示。不增加欢迎词、统计数字、说明Banner或大型白色Panel。
+
+ApplicationCard维持现有尺寸、图标、名称、Hover、焦点和菜单。全部应用只出现一次应用视图；分类/收藏/最近使用各自独立浏览。Background/Overlay/Blur保持原架构，主列表背景透明。
+
+Settings启动选项为“全部应用 / 收藏 / 最近使用”，旧Home存储值兼容。既有“应用”分类名称保持，已记录其与“全部应用”的语义接近问题，后续命名讨论不得直接覆盖用户分类。
+
+本轮按ui-ux-pro-max的heading-hierarchy、keyboard-nav、focus-states、stable layout、semantic resources规则检查，并直接读取本机技能WPF数据中的Resource Dictionaries、InputBindings、keyboard navigation和large-list指导；Python查询不可用，不声称运行过检索脚本。保持用户要求的WPF渐进渲染，不替换为失去Wrap布局的VirtualizingStackPanel。最终真实窗口截图与回归见[Workspace-8.3.md](Workspace-8.3.md)。下文为历史规范，冲突处以本节为准。
+
 ## 7.2 Quick Launcher（当前规范）
 
 顶部 320×40 DIP 搜索入口改成 Button，保留 Fluent 搜索图标与 Ctrl+K 提示，Settings 隐藏入口但快捷键仍可用。主面板宽 580 DIP、水平居中，顶边位于内容区高度 18%（约窗口上方四分之一），随窗口收窄限制宽度和最大高度；结果区独立滚动，不挤动背景页面。
@@ -75,9 +87,8 @@ DesktopBackdrop 仍为 Experimental；300 卡片首次布局约 1.9 秒仍保留
 | 规范 | 最终值（DIP） |
 | --- | --- |
 | Workspace | 四边 24；所有页面共用 ContentView 外壳 |
-| Section | Header 32 高，标题至内容 Margin 12，Section 底部 28；卡片另有 4 外边距 |
-| SectionTitle | 16 / SemiBold / TextBrush，三个标题同一水平起点、同一 Header 高度 |
-| ActionText | 12；查看全部至少 88 × 32，默认 MutedTextBrush，Hover/Focus 为 AccentBrush |
+| Workspace heading | 搜索下方24；标题下方18；卡片另有4外边距 |
+| WorkspaceSectionTitle | 16 / SemiBold / TextBrush，标题与首张卡片左边缘对齐 |
 | ApplicationName | 13，行高 19，固定两行 38，省略并保留完整 Tooltip |
 | SecondaryText | 12 / MutedTextBrush；Hover 统计保留 10.5、每行 15 |
 | NavigationText | 14；44 行高、18 图标、30 图标槽、左右 18/12 内边距 |
@@ -85,7 +96,6 @@ DesktopBackdrop 仍为 Experimental；300 卡片首次布局约 1.9 秒仍保留
 | Empty State | 图标 32、标题 20、说明 12；图标后 20、说明前 8 |
 | Toast | Workspace 右下角，圆角 12、内边距 16/10、字号 13、最大宽度 320 |
 
-首页通过卡片高度 148 → 136、图标 72 → 64、图标与名称间距 12 → 8 收紧整体节奏，保留长名称两行空间。三个区域共享相同标题与卡片资源，不加分割线或独立面板。首页标题在 Workspace 左边距内增加 4，与卡片左边缘对齐；其他页面第一张卡片同样有 4 外边距，首页纵向多出的空间仅来自 Section Header。
 
 普通卡片仅显示图标、名称和星标；Hover/键盘焦点用原 160ms 淡入覆盖层呈现 32 图标、名称、时间及次数，浅 HoverBrush 与 1 DIP 上浮，不改变测量尺寸；关闭动画时沿原资源机制停用上浮。分类入口改为左上 12 DIP Fluent 文件夹图标、28 × 28 点击区域，保留 Tooltip 和“选择应用分类”无障碍名称，默认隐藏、Hover/Focus 出现；原 Popup 与分类命令不变。右上收藏星标保留空心/实心与原交互。
 
@@ -98,13 +108,9 @@ Sidebar 只将重复尺寸替换为语义资源，布局、图标、字号、选
 实际 WPF 截图使用隔离演示数据及读取的系统程序图标，不代表真实用户收藏或启动历史：
 [首页/普通卡片](screenshots/5.5/home.png) · [Hover](screenshots/5.5/card-hover.png) · [分类/Active](screenshots/5.5/category.png) · [收藏](screenshots/5.5/favorites.png) · [最近使用](screenshots/5.5/recent.png) · [Sidebar Hover](screenshots/5.5/sidebar-hover.png) · [Toast](screenshots/5.5/toast.png) · [空首页](screenshots/5.5/empty-home.png) · [空收藏](screenshots/5.5/empty-favorites.png) · [空最近使用](screenshots/5.5/empty-recent.png) · [最大化](screenshots/5.5/maximized.png) · [最小窗口/窄 Sidebar](screenshots/5.5/sidebar-narrow.png) · [最小窗口/宽 Sidebar](screenshots/5.5/sidebar-wide.png)。
 
-## 5.4 首页信息层级
+## 5.4 历史页面设计（8.3已替代）
 
-首页用一个主纵向 ScrollViewer 连续呈现 Recent、Favorite、All，三个区域均复用 ApplicationCardView 与 WrapPanel，自然换行且禁用横向滚动。前两段为空整段折叠；全空沿用现有拖入空状态。Sidebar 设计、宽度与背景系统不变。
-
-标题使用 16 DIP SemiBold、TextBrush；段间距 28 DIP，标题下间距 10 DIP。“查看全部 ›”使用 12 DIP 和 MutedTextBrush，Hover/键盘焦点增强为 TextBrush，沿用 QuietButton 的反馈与焦点样式。颜色、间距和样式集中于 ShellTheme。未添加 Banner、分割线或独立背景面板。
-
-已使用 ui-ux-pro-max 内置一致性、层级、键盘可达和响应布局规则检查。本机 Python 不可用，未声称完成技能数据库检索。实际 WPF 截图：[真实首页](screenshots/5.4/real-home-preview.png)、[空状态](screenshots/5.4/home-empty.png)、[仅全部应用](screenshots/5.4/home-all-only.png)、[多区域](screenshots/5.4/home-sections.png)、[窄窗口滚动](screenshots/5.4/home-small.png)。截图不用于证明 Experimental DWM 合成效果。
+原聚合结构已删除；历史截图保留在screenshots/5.4，不再作为当前产品设计规范。
 
 ## 5.3 最近使用交互
 

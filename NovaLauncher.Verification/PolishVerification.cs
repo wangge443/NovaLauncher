@@ -24,6 +24,7 @@ internal static partial class Program
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"),
             Path.Combine(Environment.SystemDirectory, "cmd.exe"), Path.Combine(Environment.SystemDirectory, "Taskmgr.exe")];
         string[] names = ["记事本", "文件资源管理器", "终端", "任务管理器", "工作笔记", "项目文件", "开发终端", "系统工具"];
+        names = names.Concat(Enumerable.Range(9, 16).Select(i => $"应用 {i}")).ToArray();
         var records = new List<LauncherApplication>();
         for (int i = 0; i < names.Length; i++)
         {
@@ -50,9 +51,9 @@ internal static partial class Program
         var card = AllCardViews(window)[0];
         var size = card.RenderSize;
         Check(Descendants<ApplicationCardView>(window).All(x => x.RenderSize == size), "All Home sections use identical card dimensions");
-        var home = Descendants<HomeView>(window).Single();
-        Check(Descendants<Button>(home).Where(x => System.Windows.Automation.AutomationProperties.GetAutomationId(x).StartsWith("HomeShow")).All(x => x.ActualHeight >= 32 && x.ActualWidth >= 88), "View-all actions have usable hit areas");
-        var scroll = (ScrollViewer)home.FindName("HomeScroll");
+        var home = Descendants<AllApplicationsView>(window).Single();
+        Check(!Descendants<Button>(home).Any(x => System.Windows.Automation.AutomationProperties.GetAutomationId(x).StartsWith("HomeShow")), "Library contains no obsolete view-all actions");
+        var scroll = (ScrollViewer)home.FindName("ApplicationsScroll");
         var bar = Descendants<ScrollBar>(scroll).Single(x => x.Orientation == Orientation.Vertical);
         Check(bar.ActualWidth == 12 && Descendants<Track>(bar).Any(), $"Slim scrollbar retains native Track (width={bar.ActualWidth}, visible={bar.IsVisible}, extent={scroll.ScrollableHeight})");
         ScrollBar.PageDownCommand.Execute(null, bar);
@@ -63,7 +64,8 @@ internal static partial class Program
         await Task.Delay(150);
         Check(Math.Abs(scroll.VerticalOffset - scroll.ScrollableHeight) < 1, "Scrollbar automation reaches end");
         scroll.ScrollToTop(); window.UpdateLayout();
-        card = Descendants<ApplicationCardView>((ItemsControl)home.FindName("RecentApplications")).First();
+        await Task.Delay(150); window.UpdateLayout();
+        card = Descendants<ApplicationCardView>((ItemsControl)home.FindName("AllApplications")).First();
         var before = card.RenderSize;
         var point = card.PointToScreen(new Point(card.ActualWidth / 2, card.ActualHeight / 2));
         Native.SetCursorPos((int)point.X, (int)point.Y);
@@ -96,8 +98,8 @@ internal static partial class Program
         Native.SetCursorPos((int)caption.X, (int)caption.Y);
         shell.Sidebar.SelectedItem = shell.Sidebar.Items[0];
         window.UpdateLayout();
-        home = Descendants<HomeView>(window).Single();
-        scroll = (ScrollViewer)home.FindName("HomeScroll");
+        home = Descendants<AllApplicationsView>(window).Single();
+        scroll = (ScrollViewer)home.FindName("ApplicationsScroll");
         vm.Toast.Show("该应用已添加"); await Task.Delay(250);
         SaveWindow(window, "toast.png");
         var toast = Descendants<ToastView>(window).Single();
@@ -118,9 +120,9 @@ internal static partial class Program
         window.WindowState = WindowState.Normal; window.Width = 1120; window.Height = 760; column.Width = new GridLength(280);
         foreach (var application in vm.Applications.ToArray()) application.Dispose();
         vm.Applications.Clear();
-        foreach (var mode in new[] { WorkspaceMode.Home, WorkspaceMode.Favorites, WorkspaceMode.Recent })
+        foreach (var mode in new[] { WorkspaceMode.AllApplications, WorkspaceMode.Favorites, WorkspaceMode.Recent })
         {
-            shell.Sidebar.SelectedItem = mode == WorkspaceMode.Home ? shell.Sidebar.Items[0] : shell.Sidebar.FooterItems.Single(x => x.Mode == mode);
+            shell.Sidebar.SelectedItem = mode == WorkspaceMode.AllApplications ? shell.Sidebar.Items[0] : shell.Sidebar.FooterItems.Single(x => x.Mode == mode);
             window.UpdateLayout(); await Task.Delay(150);
             Check(vm.IsEmpty, $"{mode} empty state remains available");
             SaveWindow(window, "empty-" + mode.ToString().ToLowerInvariant() + ".png");

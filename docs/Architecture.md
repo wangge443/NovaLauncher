@@ -1,8 +1,16 @@
 # Nova Launcher — 架构设计
 
-## 8.2 Home 渐进呈现（已验收）
+## 8.3 全部应用工作区（当前架构，已验收）
 
-HomeView保留独立视图集合：超过100项时首批40项，SystemIdle每批20项；卸载取消DispatcherOperation并解除源订阅。完整Applications、Home投影和QuickLauncher索引保持原对象与语义；视图不进行持久化或业务操作。该机制不是真正虚拟化，最终仍创建全量卡片。PerformanceTrace/PerformanceSession仅在带隔离根的显式测试模式启用。测量边界与取舍见 [Performance-8.2.md](Performance-8.2.md)。
+内存导航枚举`WorkspaceMode.Home`重命名为`AllApplications`，未持久化该枚举。持久化`StartupPage.Home`及其字符串值保持不变，由MainWindowViewModel映射至全部应用；Settings仅调整Label和显示顺序，无Schema/Migration。
+
+ContentView继续管理搜索入口、页面标题、拖放、空状态与Toast。AllApplicationsView替代HomeView，直接订阅ContentViewModel.Applications；保留8.2首批40/SystemIdle每批20、卸载取消、重新接入和增量同步。删除HomeViewModel及其Recent/Favorite Top6投影、NavigationRequested与查看全部命令，不另建无职责的AllApplicationsViewModel。
+
+分类、收藏、最近使用仍使用FilteredApplications与RecentApplicationComparer，Quick Launcher继续基于完整Applications和既有索引。ApplicationCard、持久化服务、Background、日志架构、SingleInstance和Publish流程不变。统一PageTitle依据Mode/SelectedCategory变化通知。
+
+旧Dashboard专用间距、查看全部按钮样式及Header高度Token已删除；原共用标题样式改名WorkspaceSectionTitle，Profile和Settings引用同一资源。性能探针只适配视图类型/滚动控件名称，保留`HomeFirstLayout`历史JSON键以复用8.2基线协议，该键当前测量全部应用首屏。
+
+8.2测量历史保留在[Performance-8.2.md](Performance-8.2.md)，8.3交付见[Workspace-8.3.md](Workspace-8.3.md)。
 
 ## 8.1 发布安全基础设施
 
@@ -103,24 +111,9 @@ BitmapImage 使用 OnLoad，释放流后 Freeze，避免锁住源文件。缺失
 
 Settings 使用独立 WorkspaceMode 与简单占位模板，Sidebar 不显示 Settings 项，也不显示虚构选中态；可正常返回任意已有导航。以下架构说明为历史记录。
 
-## 5.4 Home Projections
+## 5.4 历史聚合实现（8.3已移除）
 
-本节更新当前边界：Home 使用独立 HomeView/HomeViewModel，ContentView 保留拖放、Toast 和空状态外壳，通过模板切换首页与原筛选列表；同一时刻仅实例化当前页面。设置保留原全部列表占位。
-
-~~~text
-Application Collection
-        ↓ Home Projections（共享 ApplicationCardViewModel 引用）
-Home
-├── Recent Applications (Top 6)
-├── Favorite Applications (Top 6)
-└── All Applications（源集合只读包装）
-~~~
-
-HomeViewModel 监听源集合增删、Move、Reset，以及 LastLaunchTime、DisplayName、IsFavorite 属性；Recent 与独立 Recent 页共用 RecentApplicationComparer，按时间倒序、OrdinalIgnoreCase 名称、Guid 排序。Favorite 取源顺序前六个收藏。投影以 Insert/Remove/Move 更新，不复制模型、卡片或查询 SQLite；未变控件保持。当前无可变 SortOrder 卡片属性，顺序由源集合决定，Move 会触发补位。Dispose 解除集合和属性订阅。
-
-ShowRecentCommand/ShowFavoritesCommand 发出导航事件，由 MainWindowViewModel 选择既有 Sidebar 项，沿原导航切换 Workspace。FilteredApplications 集合变化通知空状态，支持源 Reset。
-
-同一 ViewModel 可出现于多个 Section，因此分类 Popup 的打开状态改为每个 ApplicationCardView 本地 ToggleButton 状态，避免同时弹出多个浮层；打开时同步选择、保存后关闭、Esc 及卸载关闭均属视图适配，仍调用原分类命令。分类/收藏/启动持久化服务、Schema、Migration 和依赖均未修改。下文 5.3 及更早章节保留历史架构。
+旧Dashboard投影与导航事件已经删除；当前依赖关系见8.3，不保留失效架构说明。
 
 ## 当前边界
 

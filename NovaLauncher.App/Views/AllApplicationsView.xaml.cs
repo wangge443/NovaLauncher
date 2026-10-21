@@ -7,14 +7,14 @@ using NovaLauncher.App.ViewModels;
 
 namespace NovaLauncher.App.Views;
 
-public partial class HomeView : UserControl
+public partial class AllApplicationsView : UserControl
 {
     private readonly ObservableCollection<ApplicationCardViewModel> _rendered = [];
-    private HomeViewModel? _home;
+    private ContentViewModel? _content;
     private DispatcherOperation? _pending;
-    public bool IsFullyRendered => _home is null || _rendered.Count == _home.AllApplications.Count;
+    public bool IsFullyRendered => _content is null || _rendered.Count == _content.Applications.Count;
 
-    public HomeView()
+    public AllApplicationsView()
     {
         InitializeComponent();
         AllApplications.ItemsSource = _rendered;
@@ -25,14 +25,14 @@ public partial class HomeView : UserControl
 
     private void Attach()
     {
-        if (ReferenceEquals(_home, DataContext)) return;
+        if (ReferenceEquals(_content, DataContext)) return;
         Detach();
-        _home = DataContext as HomeViewModel;
+        _content = DataContext as ContentViewModel;
         _rendered.Clear();
-        if (_home is null) return;
-        ((INotifyCollectionChanged)_home.AllApplications).CollectionChanged += SourceChanged;
-        int initial = _home.AllApplications.Count <= 100 ? _home.AllApplications.Count : 40;
-        foreach (var card in _home.AllApplications.Take(initial)) _rendered.Add(card);
+        if (_content is null) return;
+        ((INotifyCollectionChanged)_content.Applications).CollectionChanged += SourceChanged;
+        int initial = _content.Applications.Count <= 100 ? _content.Applications.Count : 40;
+        foreach (var card in _content.Applications.Take(initial)) _rendered.Add(card);
         Schedule();
     }
 
@@ -40,27 +40,27 @@ public partial class HomeView : UserControl
     {
         _pending?.Abort();
         _pending = null;
-        if (_home is not null)
-            ((INotifyCollectionChanged)_home.AllApplications).CollectionChanged -= SourceChanged;
-        _home = null;
+        if (_content is not null)
+            ((INotifyCollectionChanged)_content.Applications).CollectionChanged -= SourceChanged;
+        _content = null;
     }
 
     private void SourceChanged(object? sender, NotifyCollectionChangedEventArgs e)
     {
-        if (_home is null) return;
+        if (_content is null) return;
         // Keep existing containers, order and object identity. A change never rebuilds ViewModels.
-        int desired = Math.Min(_home.AllApplications.Count, Math.Max(_rendered.Count,
-            _home.AllApplications.Count <= 100 ? _home.AllApplications.Count : 40));
+        int desired = Math.Min(_content.Applications.Count, Math.Max(_rendered.Count,
+            _content.Applications.Count <= 100 ? _content.Applications.Count : 40));
         if (e.Action == NotifyCollectionChangedAction.Add && e.NewStartingIndex <= _rendered.Count)
-            desired = Math.Min(_home.AllApplications.Count, desired + (e.NewItems?.Count ?? 0));
+            desired = Math.Min(_content.Applications.Count, desired + (e.NewItems?.Count ?? 0));
         Synchronize(desired);
         Schedule();
     }
 
     private void Synchronize(int count)
     {
-        if (_home is null) return;
-        var desired = _home.AllApplications.Take(count).ToArray();
+        if (_content is null) return;
+        var desired = _content.Applications.Take(count).ToArray();
         var set = desired.ToHashSet();
         for (int i = _rendered.Count - 1; i >= 0; i--)
             if (!set.Contains(_rendered[i])) _rendered.RemoveAt(i);
@@ -74,13 +74,13 @@ public partial class HomeView : UserControl
 
     private void Schedule()
     {
-        if (!IsLoaded || _home is null || IsFullyRendered || _pending is not null) return;
+        if (!IsLoaded || _content is null || IsFullyRendered || _pending is not null) return;
         // Input, render and application-idle readiness run before the next batch.
         _pending = Dispatcher.BeginInvoke(DispatcherPriority.SystemIdle, new Action(() =>
         {
             _pending = null;
-            if (!IsLoaded || _home is null) return;
-            Synchronize(Math.Min(_rendered.Count + 20, _home.AllApplications.Count));
+            if (!IsLoaded || _content is null) return;
+            Synchronize(Math.Min(_rendered.Count + 20, _content.Applications.Count));
             Schedule();
         }));
     }

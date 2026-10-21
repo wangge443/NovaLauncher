@@ -23,6 +23,7 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--startup-compat") return RunStartupCompatibility(args[1]);
         if (args.Length == 3 && args[0] == "--performance-seed")
             return SeedPerformanceAsync(args[1], int.Parse(args[2])).GetAwaiter().GetResult();
         if (args.Length == 3 && args[0] == "--performance-background")
@@ -41,10 +42,6 @@ internal static partial class Program
         if (args.Contains("--real-profile")) return VerifyRealProfileAsync().GetAwaiter().GetResult();
         if (args.Length == 2 && args[0] == "--profile-real-run") return RunProfileWindow(args[1], true);
         if (args.Length == 2 && args[0] == "--profile-real-check") return RunProfileWindow(args[1], false);
-        if (args.Contains("--real-home")) return VerifyRealHomeAsync().GetAwaiter().GetResult();
-        if (args.Contains("--home-preview")) return RunHomeWindow("", false);
-        if (args.Length == 2 && args[0] == "--home-real-run") return RunHomeWindow(args[1], true);
-        if (args.Length == 2 && args[0] == "--home-real-check") return RunHomeWindow(args[1], false);
         if (args.Contains("--real-recent")) return VerifyRealRecentAsync().GetAwaiter().GetResult();
         if (args.Length == 2 && args[0] == "--recent-restart") return RunRecentWindow(args[1], false, false);
         if (args.Length == 2 && args[0] == "--recent-real-run") return RunRecentWindow(args[1], true, true);
@@ -66,7 +63,7 @@ internal static partial class Program
         bool categoryTests = args.Contains("--categories");
         bool favoriteTests = args.Contains("--favorites");
         bool recentTests = args.Contains("--recent");
-        bool homeTests = args.Contains("--home");
+        bool allApplicationsTests = args.Contains("--all-applications") || args.Contains("--home");
         bool polishTests = args.Contains("--polish");
         bool profileTests = args.Contains("--profile"); bool settingsTests = args.Contains("--settings"); bool appearanceTests = args.Contains("--appearance");
         _screenshots = Path.GetFullPath(args.FirstOrDefault(arg => !arg.StartsWith("--")) ??
@@ -87,7 +84,7 @@ internal static partial class Program
                 else if (args.Contains("--app-edit")) await RunApplicationEditingAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--management")) await RunManagementAsync((MainWindow)app.MainWindow); else if (appearanceTests) await RunAppearanceAsync((MainWindow)app.MainWindow); else if (settingsTests) await RunSettingsAsync((MainWindow)app.MainWindow); else if (profileTests) await RunProfileAsync((MainWindow)app.MainWindow);
                 else if (polishTests) await RunPolishAsync((MainWindow)app.MainWindow);
-                else if (homeTests) await RunHomeAsync((MainWindow)app.MainWindow);
+                else if (allApplicationsTests) await RunAllApplicationsAsync((MainWindow)app.MainWindow);
                 else if (recentTests) await RunRecentAsync((MainWindow)app.MainWindow);
                 else if (favoriteTests) await RunFavoritesAsync((MainWindow)app.MainWindow);
                 else if (categoryTests) await RunCategoriesAsync((MainWindow)app.MainWindow);

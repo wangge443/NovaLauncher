@@ -103,7 +103,7 @@ internal static partial class Program
         editor.Text="  我的测试应用  "; await Task.Delay(250); CaptureCategoryWindow(window,"rename.png"); editor.Focus(); ProfileKey(0x0D);
         await WaitForAsync(()=>first.DisplayName=="我的测试应用" && !rename.IsOpen);
         Check(first.LaunchCount==1,"Rename Enter trims and does not launch");
-        Check(AllCardViews(window).Single(x=>x.DataContext==first).DataContext==content.Home.FavoriteApplications.Single(),"Home projections share renamed ViewModel");
+        Check(AllCardViews(window).Single(x=>x.DataContext==first).DataContext==content.Applications.Single(x => x.IsFavorite),"Home projections share renamed ViewModel");
         foreach(var nav in new[]{shell.Sidebar.FooterItems[0],shell.Sidebar.FooterItems[1],game})
         {
             shell.Sidebar.SelectedItem=nav; window.UpdateLayout(); Check(Descendants<ApplicationCardView>(window).Any(x=>x.DataContext==first) && first.DisplayName=="我的测试应用","Rename visible in "+nav.Name);
@@ -137,8 +137,8 @@ internal static partial class Program
         await first.RestoreIconCommand.ExecuteAsync(null); Check(first.HasCustomIcon && File.Exists(old),"Restore failure preserves old custom icon"); repo.Fail=false;
         await WaitForAsync(()=>!content.Toast.IsOpen);
         shell.Sidebar.SelectedItem=shell.Sidebar.Items[0]; window.UpdateLayout();
-        Check(Descendants<ApplicationCardView>(window).Where(x=>x.DataContext==first).Count()==3,"Custom icon shared by three Home sections");
-        Check(Descendants<ApplicationCardView>(window).Where(x=>x.DataContext==first).SelectMany(x=>Descendants<Image>(x)).All(x=>ReferenceEquals(x.Source,first.Icon)),"All Home card images update immediately");
+        Check(Descendants<ApplicationCardView>(window).Count(x=>x.DataContext==first)==1,"Custom icon appears once in All Applications");
+        Check(Descendants<ApplicationCardView>(window).Where(x=>x.DataContext==first).SelectMany(x=>Descendants<Image>(x)).All(x=>ReferenceEquals(x.Source,first.Icon)),"All Applications card image updates immediately");
         await Task.Delay(350); SaveWindow(window,"custom-icon.png");
         foreach(var nav in new[]{shell.Sidebar.FooterItems[0],shell.Sidebar.FooterItems[1],game})
         { shell.Sidebar.SelectedItem=nav;window.UpdateLayout();Check(Descendants<ApplicationCardView>(window).Where(x=>x.DataContext==first).SelectMany(x=>Descendants<Image>(x)).All(x=>ReferenceEquals(x.Source,first.Icon)),"Custom icon synchronized in "+nav.Name); }
@@ -170,7 +170,7 @@ internal static partial class Program
         repo.Fail=true;await first.RemoveCommand.ExecuteAsync(null);Check(content.Applications.Contains(first) && File.Exists(old) && content.Toast.Message=="无法移除该应用","Database deletion failure retains UI and files");repo.Fail=false;
         await WaitForAsync(()=>!content.Toast.IsOpen); await OpenCardMenuAsync(card);await ActivateMenuAsync((MenuItem)card.FindName("RemoveMenuItem"));await WaitForAsync(()=>remove.IsOpen);
         ((Button)card.FindName("ConfirmRemoveButton")).Focus();ProfileKey(0x0D);await WaitForAsync(()=>!content.Applications.Contains(first));
-        Check(!content.Home.AllApplications.Contains(first)&&!content.Home.FavoriteApplications.Contains(first)&&!content.Home.RecentApplications.Contains(first),"Confirmed removal updates all Home projections immediately");
+        Check(!content.Applications.Contains(first) && !content.FilteredApplications.Contains(first),"Confirmed removal updates all Home projections immediately");
         using(var db=new LauncherDbContextFactory(paths).CreateDbContext()) Check(!await db.Applications.AnyAsync(x=>x.Id==first.Application.Id) && await db.Categories.AnyAsync(x=>x.Id==game.Id),"SQLite deletes only application row and preserves category");
         Check(File.Exists(exe)&&Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(exe)))==exeHash,"Real test EXE still exists with identical bytes");
         Check(!File.Exists(old)&&!File.Exists(paths.IconPath(first.Application.Id)),"Only Nova custom icon and automatic cache cleaned");

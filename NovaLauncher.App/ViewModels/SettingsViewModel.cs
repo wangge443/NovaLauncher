@@ -29,7 +29,7 @@ public sealed class SettingsViewModel : ViewModelBase
     }
     public AppearanceViewModel? Appearance { get; }
     public IReadOnlyList<StartupPageChoice> StartupPages { get; } =
-        [new(StartupPage.Home, "首页"), new(StartupPage.Recent, "最近使用"), new(StartupPage.Favorites, "收藏")];
+        [new(StartupPage.Home, "全部应用"), new(StartupPage.Favorites, "收藏"), new(StartupPage.Recent, "最近使用")];
     public bool CanEdit => !_isSaving;
     public bool RememberWindowSize { get => _display.RememberWindowSize; set { if (value != RememberWindowSize) Save(s => s with { RememberWindowSize = value }); } }
     public bool RememberWindowPosition { get => _display.RememberWindowPosition; set { if (value != RememberWindowPosition) Save(s => s with { RememberWindowPosition = value }); } }

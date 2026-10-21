@@ -35,7 +35,7 @@ internal static class PerformanceSession
             int firstCount = cards.Length;
             string root = ApplicationDataPaths.VerificationRoot!;
             Save(window, Path.Combine(root, "first.png"));
-            var home = Descendants<HomeView>(window).Single();
+            var home = Descendants<AllApplicationsView>(window).Single();
             var completion = Stopwatch.StartNew();
             while (!home.IsFullyRendered)
             {
@@ -47,7 +47,7 @@ internal static class PerformanceSession
             await Task.Delay(1000);
             window.UpdateLayout();
             cards = Descendants<ApplicationCardView>(window).ToArray();
-            var scroll = Descendants<HomeView>(window).Select(x => (ScrollViewer)x.FindName("HomeScroll")).Single();
+            var scroll = Descendants<AllApplicationsView>(window).Select(x => (ScrollViewer)x.FindName("ApplicationsScroll")).Single();
             int layouts = 0;
             EventHandler handler = (_, _) => layouts++;
             window.LayoutUpdated += handler;

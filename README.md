@@ -4,7 +4,9 @@ Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windo
 
 ## 当前状态
 
-8.2 大量应用性能专项已通过验收：300项Home首屏布局中位数4497→1103ms，采用渐进渲染，未实现真正虚拟化；全量完成与滚动/Resize限制、726项自动断言及新SCD验证见 [Performance-8.2.md](docs/Performance-8.2.md)。已获授权收尾提交，未开始8.3。
+8.3 主界面信息架构简化：默认页面改为“全部应用”，移除聚合 Dashboard，保留分类、收藏、最近使用、Quick Launcher 和 8.2 渐进渲染。实现、验证与截图见 [Workspace-8.3.md](docs/Workspace-8.3.md)。8.3已通过最终验收，授权提交 `refactor: simplify launcher main navigation`；不开始8.4。
+
+8.2 已通过验收并提交为 `b592964`：300项首屏布局中位数4497→1103ms；没有实现真正虚拟化，历史性能与限制见 [Performance-8.2.md](docs/Performance-8.2.md)。
 
 第八阶段 8.1：发布安全与交付基线（已通过开发验收）。当前 Preview 版本为 `0.1.0-preview.1`；增加单实例、字段级设置保存、异步有界日志、统一 Nova 图标与可重复的 FDD/SCD/Single-file 发布脚本。交付目录、验证证据及未完成的真实干净机器验收见 [Release.md](docs/Release.md)。
 

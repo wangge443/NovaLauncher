@@ -63,7 +63,7 @@ internal static partial class Program
         Check(quick.IsEmpty && quick.EmptyHint == "输入应用名称开始搜索", "Empty history/favorites gives light prompt");
         window.UpdateLayout();
         Check(Math.Abs(panel.TranslatePoint(new Point(panel.ActualWidth / 2, 0), overlay).X - overlay.ActualWidth / 2) < 2, "Overlay horizontally centered");
-        Check(content.Mode == WorkspaceMode.Home && content.IsHomeDashboard, "Opening never replaces Home");
+        Check(content.Mode == WorkspaceMode.AllApplications && content.IsAllApplications, "Opening never replaces Home");
         quick.Close(); await Task.Delay(60);
         Check(trigger.IsKeyboardFocused, "Closing restores original focus");
         await ClickFavoriteElementAsync(window, trigger); await WaitForAsync(() => quick.IsOpen && box.IsKeyboardFocused);
@@ -101,8 +101,8 @@ internal static partial class Program
             box.Text = "qq"; PreviewQuickKey(box, Key.Down); await Task.Delay(180); window.UpdateLayout(); SaveWindow(window, "quick-keyboard-selection.png");
             var selected = quick.Results[quick.SelectedIndex]; long count = selected.LaunchCount;
             ProfileKey(0x0D); await WaitForAsync(() => !quick.IsOpen);
-            Check(selected.LaunchCount == count + 1 && selected.LastLaunchTime.HasValue && content.Home.RecentApplications.Contains(selected), "Enter launches selected via shared command and closes on success");
-            Check(quick.SearchQuery == "" && content.Mode == WorkspaceMode.Home, "Successful launch clears query and keeps page");
+            Check(selected.LaunchCount == count + 1 && selected.LastLaunchTime.HasValue && content.Applications.Contains(selected) && selected.LastLaunchTime.HasValue, "Enter launches selected via shared command and closes on success");
+            Check(quick.SearchQuery == "" && content.Mode == WorkspaceMode.AllApplications, "Successful launch clears query and keeps page");
             foreach (var item in new NavigationItem[] { content.CategoryManager.Categories[0], shell.Sidebar.FooterItems[0], shell.Sidebar.FooterItems[1], shell.Sidebar.SettingsItem })
             {
                 shell.Sidebar.SelectedItem = item; var mode = content.Mode; var category = content.SelectedCategory;

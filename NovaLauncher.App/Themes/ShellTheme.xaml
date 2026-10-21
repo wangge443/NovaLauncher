@@ -20,7 +20,6 @@
     <Thickness x:Key="EmptyHintSpacing">0,8,0,0</Thickness>
     <Thickness x:Key="ApplicationNameSpacing">0,8,0,0</Thickness>
     <sys:Double x:Key="ActionTextSize">12</sys:Double>
-    <sys:Double x:Key="SectionHeaderHeight">32</sys:Double>
     <sys:Double x:Key="ApplicationCardWidth">136</sys:Double>
     <sys:Double x:Key="ApplicationCardHeight">136</sys:Double>
     <sys:Double x:Key="ApplicationIconSize">64</sys:Double>
@@ -347,9 +346,8 @@
         <Setter Property="MinHeight" Value="34" />
         <Setter Property="Padding" Value="8,4" />
     </Style>
-    <Thickness x:Key="HomeSectionSpacing">0,0,0,28</Thickness>
-    <Thickness x:Key="HomeHeadingSpacing">4,0,4,12</Thickness>
-    <Style x:Key="HomeSectionTitle" TargetType="TextBlock">
+    <Thickness x:Key="WorkspaceHeadingSpacing">4,0,4,18</Thickness>
+    <Style x:Key="WorkspaceSectionTitle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
         <Setter Property="FontSize" Value="{StaticResource SectionTitleSize}" />
         <Setter Property="FontWeight" Value="SemiBold" />
@@ -358,24 +356,6 @@
             <Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.NeedsTextSurface, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
             <Setter Property="Background" Value="{DynamicResource AppearanceLabelSurface}"/>
         </DataTrigger></Style.Triggers>
-    </Style>
-    <Style x:Key="HomeViewAllButton" TargetType="Button" BasedOn="{StaticResource QuietButton}">
-        <Setter Property="HorizontalAlignment" Value="Right" />
-        <Setter Property="MinHeight" Value="{StaticResource SectionHeaderHeight}" />
-        <Setter Property="MinWidth" Value="88" />
-        <Setter Property="Content" Value="查看全部  ›" />
-        <Setter Property="ContentTemplate">
-            <Setter.Value>
-                <DataTemplate>
-                    <TextBlock Text="{Binding}" FontSize="{StaticResource ActionTextSize}"
-                               Foreground="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
-                </DataTemplate>
-            </Setter.Value>
-        </Setter>
-        <Style.Triggers>
-            <Trigger Property="IsMouseOver" Value="True"><Setter Property="Foreground" Value="{DynamicResource AccentBrush}" /></Trigger>
-            <Trigger Property="IsKeyboardFocused" Value="True"><Setter Property="Foreground" Value="{DynamicResource AccentBrush}" /></Trigger>
-        </Style.Triggers>
     </Style>
     <sys:Double x:Key="ProfileSmallAvatarSize">34</sys:Double>
     <sys:Double x:Key="ProfileLargeAvatarSize">72</sys:Double>
@@ -404,7 +384,7 @@
     <Style x:Key="SettingsPageTitle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="24"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Margin" Value="0,0,0,4"/>
     </Style>
-    <Style x:Key="SettingsSectionTitle" TargetType="TextBlock" BasedOn="{StaticResource HomeSectionTitle}">
+    <Style x:Key="SettingsSectionTitle" TargetType="TextBlock" BasedOn="{StaticResource WorkspaceSectionTitle}">
         <Setter Property="Margin" Value="0,20,0,10"/>
     </Style>
     <Style x:Key="SettingsRow" TargetType="Border">
@@ -492,7 +472,7 @@
     <Style x:Key="QuickSearchTrigger" TargetType="Button" BasedOn="{StaticResource QuietButton}">
         <Setter Property="Width" Value="{StaticResource SearchWidth}"/>
         <Setter Property="Height" Value="{StaticResource SearchHeight}"/>
-        <Setter Property="Margin" Value="0,0,0,16"/>
+        <Setter Property="Margin" Value="0,0,0,24"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
         <Setter Property="Background" Value="{DynamicResource WindowBrush}"/>

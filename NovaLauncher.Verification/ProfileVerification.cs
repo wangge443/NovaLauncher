@@ -174,7 +174,7 @@ internal static partial class Program
         Check(content.Mode == WorkspaceMode.Settings && !popup.IsOpen && shell.Sidebar.TopSelectedItem is null && shell.Sidebar.FooterSelectedItem is null, "Settings closes Flyout and has no Sidebar active item");
         SaveWindow(window, "settings-placeholder.png");
         shell.Sidebar.SelectedItem = shell.Sidebar.Items[0];
-        Check(content.IsHomeDashboard, "Home exits Settings normally");
+        Check(content.IsAllApplications, "Home exits Settings normally");
         foreach (var target in new[] { shell.Sidebar.Items.OfType<CategoryViewModel>().First(), shell.Sidebar.FooterItems[0], shell.Sidebar.FooterItems[1] })
         {
             profile.OpenSettingsCommand.Execute(null);

@@ -145,7 +145,7 @@ internal static partial class Program
             vm.SelectWorkspace(WorkspaceMode.Recent);
             stable &= RecentCards(vm).SequenceEqual(expected);
             vm.SelectWorkspace(WorkspaceMode.Favorites);
-            vm.SelectWorkspace(WorkspaceMode.Home);
+            vm.SelectWorkspace(WorkspaceMode.AllApplications);
         }
         timer.Stop();
         Check(stable, "Equal instants across offsets use deterministic name/Id ties across repeated switches");

@@ -9,7 +9,7 @@ using NovaLauncher.App.Diagnostics;
 
 namespace NovaLauncher.App.ViewModels;
 
-public enum WorkspaceMode { Home, Category, Favorites, Recent, Settings }
+public enum WorkspaceMode { AllApplications, Category, Favorites, Recent, Settings }
 
 public sealed class ContentViewModel : ViewModelBase, IDisposable
 {
@@ -42,7 +42,6 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         Toast = toast;
         _token = _lifetime.Token;
         CategoryManager = new(categories, toast);
-        Home = new(Applications);
         QuickLauncher = new(Applications);
         FilteredApplications = new ListCollectionView(Applications);
         FilteredApplications.Filter = MatchesMode;
@@ -60,10 +59,17 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     public ObservableCollection<ApplicationCardViewModel> Applications { get; } = [];
     public ICollectionView FilteredApplications { get; }
     public CategoryManagerViewModel CategoryManager { get; }
-    public HomeViewModel Home { get; }
     public QuickLauncherViewModel QuickLauncher { get; }
-    private bool _isHomeDashboard = true;
-    public bool IsHomeDashboard { get => _isHomeDashboard; private set => SetProperty(ref _isHomeDashboard, value); }
+    public bool IsAllApplications => Mode == WorkspaceMode.AllApplications;
+    public string PageTitle => Mode switch
+    {
+        WorkspaceMode.Category => SelectedCategory?.Name ?? "",
+        WorkspaceMode.Favorites => "收藏",
+        WorkspaceMode.Recent => "最近使用",
+        WorkspaceMode.Settings => "设置",
+        _ => "全部应用"
+    };
+    public bool ShowPageTitle => !IsAllApplications || !IsEmpty;
     private CategoryViewModel? _selectedCategory;
     public CategoryViewModel? SelectedCategory
     {
@@ -72,12 +78,12 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     }
     private WorkspaceMode _mode;
     public WorkspaceMode Mode { get => _mode; private set => SetProperty(ref _mode, value); }
-    public void SelectWorkspace(WorkspaceMode mode, CategoryViewModel? category = null, bool showHome = true)
+    public void SelectWorkspace(WorkspaceMode mode, CategoryViewModel? category = null)
     {
         if (mode == WorkspaceMode.Category && category is null) throw new ArgumentNullException(nameof(category));
         SelectedCategory = mode == WorkspaceMode.Category ? category : null;
         Mode = mode;
-        IsHomeDashboard = mode == WorkspaceMode.Home && showHome;
+        OnPropertyChanged(nameof(IsAllApplications));
         using (FilteredApplications.DeferRefresh())
         {
             ((ListCollectionView)FilteredApplications).CustomSort = mode == WorkspaceMode.Recent ? RecentApplicationComparer.Instance : null;
@@ -94,7 +100,7 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     };
     public string EmptyHint => Mode switch
     {
-        WorkspaceMode.Favorites => "右键应用卡片即可收藏",
+        WorkspaceMode.Favorites => "右键应用即可添加到收藏",
         WorkspaceMode.Recent => "启动应用后，它会出现在这里",
         WorkspaceMode.Category => "右键应用卡片，选择“移动到分类”",
         _ => "支持 .exe 和 .lnk"
@@ -109,8 +115,10 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
         OnPropertyChanged(nameof(IsEmpty));
         OnPropertyChanged(nameof(EmptyTitle));
         OnPropertyChanged(nameof(EmptyHint));
+        OnPropertyChanged(nameof(PageTitle));
+        OnPropertyChanged(nameof(ShowPageTitle));
     }
-    private void FilteredCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => OnPropertyChanged(nameof(IsEmpty));
+    private void FilteredCollectionChanged(object? sender, NotifyCollectionChangedEventArgs e) => NotifyEmptyState();
     private void RefreshFavorites()
     {
         // Home/category membership is unchanged; keep their controls and keyboard focus intact.
@@ -279,7 +287,6 @@ public sealed class ContentViewModel : ViewModelBase, IDisposable
     {
         if (_token.IsCancellationRequested) return;
         _lifetime.Cancel();
-        Home.Dispose();
         QuickLauncher.Dispose();
         FilteredApplications.CollectionChanged -= FilteredCollectionChanged;
         Toast.Dispose();

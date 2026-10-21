@@ -1,5 +1,6 @@
 namespace NovaLauncher.App.Models;
 
+// Home is the stable persisted value for the All Applications startup destination.
 public enum StartupPage { Home, Recent, Favorites }
 public enum BackgroundMode { Default, DesktopWallpaper, CustomImage }
 public enum BackgroundStretch { UniformToFill, Uniform }

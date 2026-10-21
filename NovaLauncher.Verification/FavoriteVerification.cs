@@ -96,13 +96,13 @@ internal static partial class Program
         SaveWindow(window, "favorites-page.png");
         await first.ToggleFavoriteCommand.ExecuteAsync(null);
         Check(vm.IsEmpty && vm.Applications.Count == 2, "Unfavorite disappears immediately from Favorites but retains source collection");
-        Check(vm.EmptyTitle == "还没有收藏应用" && vm.EmptyHint == "右键应用卡片即可收藏", "Favorites has dedicated empty state");
+        Check(vm.EmptyTitle == "还没有收藏应用" && vm.EmptyHint == "右键应用即可添加到收藏", "Favorites has dedicated empty state");
         window.UpdateLayout();
         SaveWindow(window, "favorites-empty.png");
         await vm.ImportAsync([CopyProbe("未自动收藏")]);
         Check(vm.Applications.Count == 3 && vm.IsEmpty && !vm.Applications.Last().IsFavorite, "Favorites import remains unfavorited and hidden");
         shell.Sidebar.SelectedItem = shell.Sidebar.Items[0];
-        Check(vm.Mode == WorkspaceMode.Home && vm.FilteredApplications.Cast<object>().Count() == 3, "Home restores all applications");
+        Check(vm.Mode == WorkspaceMode.AllApplications && vm.FilteredApplications.Cast<object>().Count() == 3, "Home restores all applications");
         shell.Sidebar.SelectedItem = game;
         await first.ToggleFavoriteCommand.ExecuteAsync(null);
         Check(vm.Mode == WorkspaceMode.Category && first.CategoryId == game.Id && vm.FilteredApplications.Cast<object>().SequenceEqual([first]), "Favoriting within Category keeps its filter and assignment");

@@ -28,6 +28,8 @@ internal static partial class Program
         var service = SettingsService(paths);
         Check(await service.LoadAsync(), "Settings initialize after migrations");
         Check(service.Current is { StartupPage: StartupPage.Home, RememberWindowSize: true, RememberWindowPosition: true, BackgroundMode: NovaLauncher.App.Models.BackgroundMode.Default, ThemeMode: NovaLauncher.App.Models.ThemeMode.Light }, "Default settings match contract");
+        using (var connection = OpenDatabase(paths.DatabasePath, true))
+            Check(Query(connection, "SELECT StartupPage FROM AppSettings").Contains("Home"), "Existing persisted Home value is preserved without migration");
         await SettingsService(paths).LoadAsync();
         using (var db = new LauncherDbContextFactory(paths).CreateDbContext())
         {
@@ -35,6 +37,7 @@ internal static partial class Program
             Check(!db.Database.HasPendingModelChanges() && !(await db.Database.GetPendingMigrationsAsync()).Any(), "Migration and snapshot match");
         }
         var settings = new SettingsViewModel(service, new SettingsDirectoryStub(), paths, content.Toast);
+        Check(settings.StartupPages.Select(x => x.Label).SequenceEqual(["全部应用", "收藏", "最近使用"]), "Startup selector uses new labels with stable persisted values");
         var shell = new MainWindowViewModel(content, profile, settings);
         window.DataContext = shell; window.Topmost = true; window.Activate(); window.UpdateLayout();
         var profileView = Descendants<ProfileView>(window).Single();
@@ -53,14 +56,24 @@ internal static partial class Program
         Check(!settings.RememberWindowSize && !(await new AppSettingsRepository(new LauncherDbContextFactory(paths)).GetOrCreateAsync()).RememberWindowSize, "Space toggles and immediately commits");
         settings.RememberWindowSize = true; await settings.FlushAsync();
         var selector = (ComboBox)view.FindName("StartupSelector");
+        Descendants<ScrollViewer>(view).Single(x => x.TemplatedParent is not TextBox).ScrollToVerticalOffset(220);
+        window.UpdateLayout(); await Task.Delay(150);
         selector.Focus(); ProfileKey(0x28); await Task.Delay(150); await settings.FlushAsync();
-        Check(settings.StartupPage == StartupPage.Recent, "Selector keyboard works");
-        selector.IsDropDownOpen = true; await Task.Delay(100); Check(Descendants<ComboBoxItem>(((Popup)selector.Template.FindName("PART_Popup", selector)).Child).Count() == 3, "Selector popup exposes three choices"); selector.IsDropDownOpen = false;
+        Check(settings.StartupPage == StartupPage.Favorites, "Selector keyboard works");
+        selector.IsDropDownOpen = true; await Task.Delay(100); Check(Descendants<ComboBoxItem>(((Popup)selector.Template.FindName("PART_Popup", selector)).Child).Count() == 3, "Selector popup exposes three choices");
+        CaptureCategoryWindow(window, "settings-startup.png");
+        selector.IsDropDownOpen = false;
         foreach (var page in Enum.GetValues<StartupPage>())
         {
             settings.StartupPage = page; await settings.FlushAsync();
             var restored = SettingsService(paths); await restored.LoadAsync(); shell.ApplyStartupPage(restored.Current.StartupPage);
-            Check(content.Mode.ToString() == page.ToString(), "Startup route restores " + page);
+            Check(content.Mode == (page == StartupPage.Home ? WorkspaceMode.AllApplications :
+                page == StartupPage.Favorites ? WorkspaceMode.Favorites : WorkspaceMode.Recent), "Startup route restores " + page);
+            File.WriteAllText(Path.Combine(paths.RootDirectory, ".nova-verification"), "");
+            string request = Path.Combine(_fixtures, "startup-request.json");
+            File.WriteAllText(request, JsonSerializer.Serialize(new StartupCompatibilityRequest(paths.RootDirectory, page)));
+            await RunCategoryChildAsync("--startup-compat", request);
+            Check(true, "Independent production startup restores " + page);
         }
         foreach (var item in shell.Sidebar.Items.Concat(shell.Sidebar.FooterItems))
         {

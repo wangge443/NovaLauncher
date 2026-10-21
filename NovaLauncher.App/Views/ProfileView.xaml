@@ -20,7 +20,7 @@
                     <Grid Margin="0,0,0,8">
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                             <StackPanel.Style><Style TargetType="StackPanel"><Style.Triggers><DataTrigger Binding="{Binding IsEditingName}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers></Style></StackPanel.Style>
-                            <TextBlock Text="{Binding DisplayName}" Style="{StaticResource HomeSectionTitle}" MaxWidth="180" TextTrimming="CharacterEllipsis" ToolTip="{Binding DisplayName}" />
+                            <TextBlock Text="{Binding DisplayName}" Style="{StaticResource WorkspaceSectionTitle}" MaxWidth="180" TextTrimming="CharacterEllipsis" ToolTip="{Binding DisplayName}" />
                             <Button x:Name="EditNameButton" Command="{Binding BeginEditNameCommand}" Click="EditName_Click" Style="{StaticResource QuietButton}"
                                     Padding="8,6" AutomationProperties.Name="编辑名称" AutomationProperties.AutomationId="EditProfileName">
                                 <TextBlock Text="&#xE70F;" FontFamily="{StaticResource IconFont}" Foreground="{DynamicResource MutedTextBrush}" />

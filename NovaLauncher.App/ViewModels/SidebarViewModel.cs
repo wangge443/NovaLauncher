@@ -2,7 +2,7 @@ using System.Collections.ObjectModel;
 
 namespace NovaLauncher.App.ViewModels;
 
-public record NavigationItem(string Name, string Icon, Guid? CategoryId = null, WorkspaceMode Mode = WorkspaceMode.Home)
+public record NavigationItem(string Name, string Icon, Guid? CategoryId = null, WorkspaceMode Mode = WorkspaceMode.AllApplications)
 {
     public bool IsSettings => Mode == WorkspaceMode.Settings;
 }
@@ -15,7 +15,7 @@ public sealed class SidebarViewModel : ViewModelBase
     public void OpenSettings() => SelectedItem = SettingsItem;
     public CategoryManagerViewModel CategoryManager => _content.CategoryManager;
     public ObservableCollection<CategoryViewModel> Categories => CategoryManager.Categories;
-    public ObservableCollection<NavigationItem> Items { get; } = [new("首页", "\uE80F")];
+    public ObservableCollection<NavigationItem> Items { get; } = [new("全部应用", "\uE80A")];
     public IReadOnlyList<NavigationItem> FooterItems { get; } =
         [new("收藏", "\uE734", Mode: WorkspaceMode.Favorites), new("最近使用", "\uE81C", Mode: WorkspaceMode.Recent)];
 
@@ -43,7 +43,7 @@ public sealed class SidebarViewModel : ViewModelBase
             {
                 if (SetProperty(ref _selectedItem, value))
                 {
-                    _content.SelectWorkspace(value is CategoryViewModel ? WorkspaceMode.Category : value.Mode, value as CategoryViewModel, !value.IsSettings);
+                    _content.SelectWorkspace(value is CategoryViewModel ? WorkspaceMode.Category : value.Mode, value as CategoryViewModel);
                     OnPropertyChanged(nameof(TopSelectedItem));
                     OnPropertyChanged(nameof(FooterSelectedItem));
                 }

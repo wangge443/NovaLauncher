@@ -1,11 +1,12 @@
 param(
     [Parameter(Mandatory)][string]$Label,
     [string]$Executable = "$PSScriptRoot\..\NovaLauncher.App\bin\Release\net9.0-windows\NovaLauncher.exe",
-    [int[]]$Counts = @(10, 100, 300)
+    [int[]]$Counts = @(10, 100, 300),
+    [string]$OutputDirectory
 )
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path $PSScriptRoot
-$output = Join-Path $repo "artifacts\verification\8.2\$Label"
+$output = if ($OutputDirectory) { [IO.Path]::GetFullPath($OutputDirectory) } else { Join-Path $repo "artifacts\verification\8.2\$Label" }
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 $verifier = Join-Path $repo 'NovaLauncher.Verification\bin\Release\net9.0-windows\NovaLauncher.Verification.exe'
 foreach ($count in $Counts) {

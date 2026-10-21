@@ -100,7 +100,7 @@ internal static partial class Program
         // Render a scrollable Home with the real background effect active; no launches or database imports.
         var template=content.Applications[0].Application;
         for(int i=0;i<80;i++) content.Applications.Add(new ApplicationCardViewModel(template with {Id=Guid.NewGuid(),DisplayName="背景性能 "+i},new ApplicationLaunchService(),new MemoryPersistence(),content.CategoryManager,content.Toast));
-        window.UpdateLayout(); var homeScroll=Descendants<ScrollViewer>(Descendants<HomeView>(window).Single()).Single();
+        window.UpdateLayout(); var homeScroll=Descendants<ScrollViewer>(Descendants<AllApplicationsView>(window).Single()).Single();
         timer.Restart();
         for(int i=0;i<30;i++) {homeScroll.ScrollToVerticalOffset(i*40); window.UpdateLayout(); await System.Windows.Threading.Dispatcher.Yield(System.Windows.Threading.DispatcherPriority.Render);}
         Console.WriteLine($"Blur12 Home scroll: {timer.ElapsedMilliseconds} ms / 30 render yields, 82 cards");

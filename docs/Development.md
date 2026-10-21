@@ -1,5 +1,15 @@
 # Nova Launcher — 开发流程
 
+## 8.3 主界面信息架构简化（已通过最终验收）
+
+基线 `b592964549e1ed2ab054cf4797504d8adc89a3ba`。默认全部应用，删除 Dashboard 专用投影和导航，保留完整集合及渐进渲染。持久化 `StartupPage.Home` 不改存储值，新增独立进程启动兼容验证。实现、测试计数、300项性能与截图统一记录在 [Workspace-8.3.md](Workspace-8.3.md)。
+
+最终Release构建0 warnings / 0 errors；728项主进程断言通过，更新的Self-contained包另通过12项Smoke。300项五次正式首屏布局中位数892.0ms（较8.2改善19.2%），Startup Ready中位数3844.8ms，最终300张卡片完成中位数6775.2ms。
+
+回归使用隔离数据根与真实 WPF 窗口，顺序运行；已通过且未受后续改动影响的套件沿用结果。旧 Dashboard 的三份卡片断言更新为单份应用展示；原生右键/Shift+F10 保留命中保护与焦点检查。性能使用相同8.2夹具，预热1次、正式5次。
+
+2026-10-21最终收尾再次Release构建0 warnings / 0 errors（build-closeout.log）；沿用已通过回归与性能结果。用户已授权提交 `refactor: simplify launcher main navigation`；不开始8.4。真实 Clean Machine Test 仍未完成，是正式对外发布前 Release Gate；Single-file 仍仅启动范围部分验证。
+
 ## 8.2 大量应用性能专项（已通过用户验收）
 
 稳定基线2272435bff1ede0f486bd1e54ea1b19e5a9fd6a1。先建立10/100/300项各1次预热+5次正式Release基线，再实现Home All首批40、低优先级每批20；没有新增依赖或数据库变化。最终Release 0 warnings / 0 errors，19个既有入口含新增Home断言713项，加独立加载/切页/回收13项，共726项通过；新SCD完整Smoke12项通过。性能表、Blur对比、截图、明确限制与复现入口见 [Performance-8.2.md](Performance-8.2.md)。
