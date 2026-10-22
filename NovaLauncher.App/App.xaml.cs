@@ -24,6 +24,8 @@ public partial class App : Application
     private bool _closing;
     private bool _closeReady;
     private bool _activationPending;
+    private bool _transparencyRefreshQueued;
+    private bool _transparencyHostFailed;
     private int _exitCode;
     private SingleInstanceCoordinator? _instance;
     private NovaLog? _log;
@@ -140,12 +142,28 @@ public partial class App : Application
                 _settings!.Refresh();
                 long background = PerformanceTrace.Start();
                 await _appearance!.InitializeAsync();
+                ((MainWindow)MainWindow).ConfigureTransparentSurface(_appearance.IsTransparent);
+                _appearance.PropertyChanged += OnAppearanceChanged;
                 PerformanceTrace.End("BackgroundInitialize", background);
                 ((MainWindowViewModel)MainWindow.DataContext).ApplyStartupPage(_settingsService.Current.StartupPage);
                 MainWindow.SourceInitialized += (_, _) => WindowPlacementService.Restore(MainWindow, _settingsService.Current);
                 PerformanceTrace.Mark("HomeDataReady");
                 long layout = PerformanceTrace.Start();
-                MainWindow.Show();
+                try { MainWindow.Show(); }
+                catch (Exception ex) when (_appearance.IsTransparent)
+                {
+                    _log?.Write(LogLevel.Error, "Appearance", "Transparent startup failed; using default window", ex);
+                    TransparencySupport.DisableForSession();
+                    await _appearance.FallBackFromTransparencyAsync();
+                    var failed = MainWindow;
+                    MainWindow = new MainWindow { DataContext = failed.DataContext };
+                    MainWindow.Closing += OnWindowClosing;
+                    failed.Closing -= OnWindowClosing;
+                    failed.Close();
+                    MainWindow.SourceInitialized += (_, _) => WindowPlacementService.Restore(MainWindow, _settingsService.Current);
+                    MainWindow.Show();
+                    _content.Toast.Show("透明背景无法启用，已恢复默认背景");
+                }
                 PerformanceTrace.Mark("MainWindowShown");
                 MainWindow.UpdateLayout();
                 PerformanceTrace.End("HomeFirstLayout", layout);
@@ -197,8 +215,45 @@ public partial class App : Application
         }
     }
 
+    private void OnAppearanceChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(AppearanceService.IsTransparent) || _transparencyRefreshQueued) return;
+        _transparencyRefreshQueued = true;
+        Dispatcher.BeginInvoke(new Action(async () =>
+        {
+            _transparencyRefreshQueued = false;
+            if (_closing || _appearance is null || MainWindow is not MainWindow old || !old.IsVisible ||
+                old.AllowsTransparency == _appearance.IsTransparent || _transparencyHostFailed) return;
+            MainWindow? next = null;
+            try
+            {
+                var state = old.WindowState;
+                next = TransparencyWindowHost.CreateReplacement(old, _appearance.IsTransparent);
+                next.Show(); next.WindowState = state;
+                MainWindow = next;
+                next.Closing += OnWindowClosing;
+                old.Closing -= OnWindowClosing;
+                old.Close();
+                if (state != WindowState.Minimized) next.Activate();
+            }
+            catch (Exception ex)
+            {
+                _log?.Write(LogLevel.Error, "Appearance", "Transparent host unavailable; restoring default", ex);
+                _transparencyHostFailed = true;
+                TransparencySupport.DisableForSession();
+                if (!ReferenceEquals(MainWindow, old)) MainWindow = old;
+                if (next is not null) { next.Closing -= OnWindowClosing; next.Close(); }
+                ((MainWindow)old).UseOpaqueSurface();
+                await _appearance.FallBackFromTransparencyAsync();
+                _content?.Toast.Show("透明背景无法启用，已恢复默认背景");
+            }
+        }));
+    }
+
     private void OnSystemPreferencesChanged(object? sender, PropertyChangedEventArgs e)
     {
+        if (_appearance?.IsTransparent == true && !TransparencySupport.IsSupported())
+            Dispatcher.BeginInvoke(new Action(async () => await _appearance.FallBackFromTransparencyAsync()));
         if (e.PropertyName is nameof(SystemParameters.ClientAreaAnimation) or nameof(SystemParameters.HighContrast))
         {
             Dispatcher.Invoke(() => ShellPreferences.Apply(Resources));
@@ -207,6 +262,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        if (_appearance is not null) _appearance.PropertyChanged -= OnAppearanceChanged;
         _content?.Dispose();
         SystemParameters.StaticPropertyChanged -= OnSystemPreferencesChanged;
         _instance?.Dispose();

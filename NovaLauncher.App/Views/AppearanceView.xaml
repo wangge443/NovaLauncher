@@ -4,11 +4,17 @@
   <Border Style="{StaticResource SettingsRow}"><StackPanel>
    <TextBlock Text="背景模式"/>
    <ComboBox x:Name="ModeSelector" Style="{StaticResource SettingsSelector}" Margin="0,8,0,0" HorizontalAlignment="Left" ItemsSource="{Binding Modes}" DisplayMemberPath="Label" SelectedValuePath="Value" SelectedValue="{Binding Mode}" AutomationProperties.Name="背景模式"/>
+   <TextBlock Text="{Binding TransparencyStatus}" Style="{StaticResource SettingsDescription}" Visibility="{Binding ShowTransparencyStatus, Converter={StaticResource BooleanVisibility}}"/>
    <StackPanel Visibility="{Binding IsDesktop, Converter={StaticResource BooleanVisibility}}">
     <TextBlock Text="读取系统静态壁纸，不捕获动态壁纸；更换后可手动刷新" Style="{StaticResource SettingsDescription}"/>
     <Button Content="刷新桌面壁纸" Style="{StaticResource SettingsButton}" HorizontalAlignment="Left" Command="{Binding RefreshCommand}" AutomationProperties.Name="刷新桌面壁纸"/>
    </StackPanel>
    <Button x:Name="ChooseBackground" Content="选择图片" Style="{StaticResource SettingsButton}" HorizontalAlignment="Left" Margin="0,8,0,0" Visibility="{Binding IsCustom, Converter={StaticResource BooleanVisibility}}" Command="{Binding ChooseImageCommand}" AutomationProperties.Name="选择背景图片"/>
+  </StackPanel></Border>
+  <Border Style="{StaticResource SettingsRow}" Visibility="{Binding IsTransparent, Converter={StaticResource BooleanVisibility}}"><StackPanel>
+   <DockPanel><TextBlock Text="玻璃遮罩强度"/><TextBlock Text="{Binding GlassOverlayPercent, StringFormat={}{0:0}%}" HorizontalAlignment="Right"/></DockPanel>
+   <TextBlock Text="数值越高，玻璃遮罩越强，后方内容越弱；文字和图标保持清晰" Style="{StaticResource SettingsDescription}"/>
+   <Slider Style="{StaticResource AppearanceSlider}" Minimum="20" Maximum="95" TickFrequency="1" IsSnapToTickEnabled="True" Value="{Binding GlassOverlayPercent, UpdateSourceTrigger=PropertyChanged}" Margin="0,8,0,0" AutomationProperties.Name="玻璃遮罩强度"/>
   </StackPanel></Border>
   <StackPanel Visibility="{Binding IsImageMode, Converter={StaticResource BooleanVisibility}}">
    <Border Style="{StaticResource SettingsRow}"><StackPanel>

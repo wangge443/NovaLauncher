@@ -118,7 +118,9 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <SolidColorBrush x:Key="GlassWorkspaceSurface" Color="White"/>
     <SolidColorBrush x:Key="AppearanceLabelSurface" Color="#CCFFFFFF"/>
+    <SolidColorBrush x:Key="ApplicationNameSurface" Color="#CCFFFFFF"/>
     <Style x:Key="ApplicationNameStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource AppFont}" />
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
@@ -131,7 +133,7 @@
         <Setter Property="Height" Value="{StaticResource ApplicationNameHeight}" />
         <Setter Property="ClipToBounds" Value="True" />
             <Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.NeedsTextSurface, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
-            <Setter Property="Background" Value="{DynamicResource AppearanceLabelSurface}"/>
+            <Setter Property="Background" Value="{DynamicResource ApplicationNameSurface}"/>
         </DataTrigger></Style.Triggers>
     </Style>
     <Style x:Key="ApplicationDetailStyle" TargetType="TextBlock">
@@ -355,7 +357,7 @@
         <Setter Property="VerticalAlignment" Value="Center" />
             <Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.NeedsTextSurface, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
             <Setter Property="Background" Value="{DynamicResource AppearanceLabelSurface}"/>
-        </DataTrigger></Style.Triggers>
+        </DataTrigger><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"><Setter Property="HorizontalAlignment" Value="Left"/><Setter Property="Padding" Value="0,3"/><Setter Property="FontSize" Value="22"/><Setter Property="Background" Value="Transparent"/></DataTrigger></Style.Triggers>
     </Style>
     <sys:Double x:Key="ProfileSmallAvatarSize">34</sys:Double>
     <sys:Double x:Key="ProfileLargeAvatarSize">72</sys:Double>
@@ -382,16 +384,16 @@
         </ControlTemplate></Setter.Value></Setter>
     </Style>
     <Style x:Key="SettingsPageTitle" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="24"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Margin" Value="0,0,0,4"/>
+        <Setter Property="FontSize" Value="24"/><Setter Property="FontWeight" Value="SemiBold"/><Setter Property="Margin" Value="0,0,0,4"/><Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
     </Style>
     <Style x:Key="SettingsSectionTitle" TargetType="TextBlock" BasedOn="{StaticResource WorkspaceSectionTitle}">
-        <Setter Property="Margin" Value="0,20,0,10"/>
+        <Setter Property="Margin" Value="0,20,0,10"/><Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"><Setter Property="FontSize" Value="15"/><Setter Property="Margin" Value="0,24,0,12"/></DataTrigger></Style.Triggers>
     </Style>
     <Style x:Key="SettingsRow" TargetType="Border">
         <Setter Property="Padding" Value="16,12"/><Setter Property="MinHeight" Value="64"/>
         <Setter Property="Margin" Value="0,0,0,4"/><Setter Property="CornerRadius" Value="8"/>
         <Setter Property="Background" Value="{DynamicResource SidebarBrush}"/>
-    </Style>
+    <Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"><Setter Property="Background" Value="{DynamicResource GlassCardSurface}"/><Setter Property="BorderBrush" Value="{DynamicResource GlassSurfaceBorder}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Margin" Value="0,0,0,8"/><Setter Property="Effect" Value="{DynamicResource GlassCardShadow}"/><Setter Property="TextElement.FontSize" Value="14"/></DataTrigger></Style.Triggers></Style>
     <Style x:Key="SettingsDescription" TargetType="TextBlock">
         <Setter Property="FontSize" Value="{StaticResource SecondaryTextSize}"/>
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
@@ -400,6 +402,25 @@
     <Style x:Key="SettingsButton" TargetType="Button" BasedOn="{StaticResource QuietButton}">
         <Setter Property="Padding" Value="12,6"/><Setter Property="MinHeight" Value="32"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+    <Style x:Key="CategoryCreateRow" TargetType="Button" BasedOn="{StaticResource SettingsButton}">
+        <Setter Property="HorizontalAlignment" Value="Left"/><Setter Property="Margin" Value="0,8,0,0"/>
+        <Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+            <Setter Property="HorizontalAlignment" Value="Stretch"/><Setter Property="HorizontalContentAlignment" Value="Left"/>
+            <Setter Property="Height" Value="42"/><Setter Property="Margin" Value="0,2"/>
+            <Setter Property="Background" Value="{DynamicResource GlassCategorySurface}"/>
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+                <Border x:Name="Surface" Background="{TemplateBinding Background}" BorderBrush="{DynamicResource GlassSurfaceBorder}" BorderThickness="1" CornerRadius="6" Padding="8,2">
+                    <ContentPresenter HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource GlassInputHoverSurface}"/></Trigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
+                    <Trigger Property="IsPressed" Value="True"><Setter TargetName="Surface" Property="Background" Value="{DynamicResource GlassInputActiveSurface}"/></Trigger>
+                    <Trigger Property="IsEnabled" Value="False"><Setter Property="Opacity" Value="0.5"/></Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate></Setter.Value></Setter>
+        </DataTrigger></Style.Triggers>
     </Style>
     <Style x:Key="SettingsToggle" TargetType="CheckBox">
         <Setter Property="Width" Value="48"/><Setter Property="Height" Value="32"/>
@@ -475,17 +496,29 @@
         <Setter Property="Margin" Value="0,0,0,24"/>
         <Setter Property="HorizontalAlignment" Value="Left"/>
         <Setter Property="Foreground" Value="{DynamicResource MutedTextBrush}"/>
-        <Setter Property="Background" Value="{DynamicResource WindowBrush}"/>
+        <Setter Property="Background" Value="{DynamicResource WindowBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}"/>
         <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
-            <Border x:Name="Surface" Background="{TemplateBinding Background}" CornerRadius="{StaticResource SearchRadius}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+            <Border x:Name="Surface" Background="{TemplateBinding Background}" CornerRadius="{StaticResource SearchRadius}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </Border>
             <ControlTemplate.Triggers>
+                <MultiDataTrigger><MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"/>
+                    <Condition Binding="{Binding IsMouseOver, RelativeSource={RelativeSource Self}}" Value="True"/>
+                </MultiDataTrigger.Conditions><Setter TargetName="Surface" Property="Background" Value="{DynamicResource GlassInputHoverSurface}"/></MultiDataTrigger>
+                <MultiDataTrigger><MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"/>
+                    <Condition Binding="{Binding IsKeyboardFocused, RelativeSource={RelativeSource Self}}" Value="True"/>
+                </MultiDataTrigger.Conditions><Setter TargetName="Surface" Property="Background" Value="{DynamicResource GlassInputFocusSurface}"/><Setter TargetName="Surface" Property="BorderThickness" Value="2"/></MultiDataTrigger>
+                <MultiDataTrigger><MultiDataTrigger.Conditions>
+                    <Condition Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"/>
+                    <Condition Binding="{Binding IsPressed, RelativeSource={RelativeSource Self}}" Value="True"/>
+                </MultiDataTrigger.Conditions><Setter TargetName="Surface" Property="Background" Value="{DynamicResource GlassInputActiveSurface}"/></MultiDataTrigger>
                 <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource MutedTextBrush}"/></Trigger>
                 <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Surface" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/></Trigger>
             </ControlTemplate.Triggers>
         </ControlTemplate></Setter.Value></Setter>
-        <Style.Triggers><DataTrigger Binding="{Binding Mode}" Value="Settings"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
+        <Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"><Setter Property="Background" Value="{DynamicResource GlassInputSurface}"/><Setter Property="Foreground" Value="{DynamicResource TextBrush}"/><Setter Property="BorderBrush" Value="{DynamicResource GlassControlBorder}"/></DataTrigger><DataTrigger Binding="{Binding Mode}" Value="Settings"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers>
     </Style>
     <Style x:Key="QuickResultContainer" TargetType="ListBoxItem">
         <Setter Property="Height" Value="{StaticResource QuickRowHeight}"/>

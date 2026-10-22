@@ -1,0 +1,53 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:options="http://schemas.microsoft.com/winfx/2006/xaml/presentation/options">
+    <!-- Four material levels; alpha never applies to text or Window.Opacity.
+         Base anchors chrome; workspace tint varies spatially at the user's saved intensity. -->
+    <SolidColorBrush options:Freeze="True" x:Key="GlassWindowBase" Color="#16DCE6F0"/>
+    <LinearGradientBrush options:Freeze="True" x:Key="GlassWorkspaceSurface" StartPoint="0,0" EndPoint="0.85,1">
+        <GradientStop Color="#F2EDF3F9" Offset="0"/>
+        <GradientStop Color="#B8E3ECF5" Offset="0.48"/>
+        <GradientStop Color="#DBEAF1F8" Offset="1"/>
+    </LinearGradientBrush>
+    <Color x:Key="GlassChromeColor">#32EAF1F8</Color>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassChromeSurface" Color="{StaticResource GlassChromeColor}"/>
+    <Color x:Key="GlassElevatedColor">#F2F7F9FC</Color>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassElevatedSurface" Color="{StaticResource GlassElevatedColor}"/>
+    <Color x:Key="GlassOverlayColor">#FAF9FAFC</Color>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassOverlaySurface" Color="{StaticResource GlassOverlayColor}"/>
+    <Color x:Key="GlassLabelColor">#00FFFFFF</Color>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassLabelSurface" Color="{StaticResource GlassLabelColor}"/>
+    <Color x:Key="GlassSelectedColor">#E6E9EFFB</Color>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassSelectedSurface" Color="{StaticResource GlassSelectedColor}"/>
+    <Color x:Key="GlassHeadingColor">#00E8EEF6</Color>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassHeadingSurface" Color="{StaticResource GlassHeadingColor}"/>
+    <!-- Panels catch light at the upper edge; controls are denser than their container. -->
+    <LinearGradientBrush options:Freeze="True" x:Key="GlassCardSurface" StartPoint="0,0" EndPoint="0.25,1">
+        <GradientStop Color="#D9F4F8FC" Offset="0"/>
+        <GradientStop Color="#B5E7EFF7" Offset="0.45"/>
+        <GradientStop Color="#C2EAF1F8" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush options:Freeze="True" x:Key="GlassPanelSurface" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#6BEAF1F8" Offset="0"/>
+        <GradientStop Color="#40DCE7F2" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassInputSurface" Color="#C9EDF3FA"/>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassInputHoverSurface" Color="#DEF2F7FC"/>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassInputFocusSurface" Color="#EBF4F8FD"/>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassInputActiveSurface" Color="#D9DDEAF8"/>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassCategorySurface" Color="#BFEAF2FA"/>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassBrandSurface" Color="#24FFFFFF"/>
+    <LinearGradientBrush options:Freeze="True" x:Key="GlassSurfaceBorder" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#BFFFFFFF" Offset="0"/>
+        <GradientStop Color="#30445B75" Offset="1"/>
+    </LinearGradientBrush>
+    <SolidColorBrush options:Freeze="True" x:Key="GlassControlBorder" Color="#66465E7A"/>
+    <DropShadowEffect x:Key="GlassCardShadow" Color="#233B58" BlurRadius="6" ShadowDepth="1" Opacity="0.07"/>
+    <SolidColorBrush options:Freeze="True" x:Key="MutedTextBrush" Color="#46576B"/>
+    <SolidColorBrush options:Freeze="True" x:Key="SidebarBrush" Color="{StaticResource GlassChromeColor}"/>
+    <SolidColorBrush options:Freeze="True" x:Key="HoverBrush" Color="{StaticResource GlassElevatedColor}"/>
+    <SolidColorBrush options:Freeze="True" x:Key="SelectedBrush" Color="{StaticResource GlassSelectedColor}"/>
+    <SolidColorBrush options:Freeze="True" x:Key="AppearanceLabelSurface" Color="{StaticResource GlassHeadingColor}"/>
+    <SolidColorBrush options:Freeze="True" x:Key="WindowBrush" Color="{StaticResource GlassOverlayColor}"/>
+    <SolidColorBrush options:Freeze="True" x:Key="ApplicationNameSurface" Color="{StaticResource GlassLabelColor}"/>
+</ResourceDictionary>

@@ -16,6 +16,9 @@ public enum BackgroundMode
 // Presentation inputs and material lifecycle; HWND interop is isolated in the controller.
 public partial class ShellBackgroundView : UserControl
 {
+    public static readonly DependencyProperty IsTransparentSurfaceProperty = DependencyProperty.Register(
+        nameof(IsTransparentSurface), typeof(bool), typeof(ShellBackgroundView), new PropertyMetadata(false));
+    public bool IsTransparentSurface { get => (bool)GetValue(IsTransparentSurfaceProperty); set => SetValue(IsTransparentSurfaceProperty, value); }
     public static readonly DependencyProperty ModeProperty = DependencyProperty.Register(
         nameof(Mode), typeof(BackgroundMode), typeof(ShellBackgroundView),
         new PropertyMetadata(BackgroundMode.SolidColor, OnModeChanged));
@@ -77,6 +80,8 @@ public partial class ShellBackgroundView : UserControl
         if (_controller is not null || Window.GetWindow(this) is not Window window) return;
         SetValue(IsHighContrastProperty, SystemParameters.HighContrast);
         SystemParameters.StaticPropertyChanged += PreferencesChanged;
+        // Layered windows own their alpha surface; the legacy DWM controller must not repaint it opaque.
+        if (window.AllowsTransparency) return;
         _controller = new DesktopBackdropController(window, (active, reason) =>
         {
             SetValue(IsBackdropActivePropertyKey, active);

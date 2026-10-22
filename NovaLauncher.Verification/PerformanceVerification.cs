@@ -116,7 +116,7 @@ internal static partial class Program
         var original = await repository.GetOrCreateAsync();
         await repository.SaveAsync(original, original with
         {
-            BackgroundMode = blur < 0 ? BackgroundMode.Default : BackgroundMode.CustomImage,
+            BackgroundMode = blur == -2 ? BackgroundMode.Transparent : blur < 0 ? BackgroundMode.Default : BackgroundMode.CustomImage,
             BackgroundImagePath = blur < 0 ? null : imagePath,
             BackgroundBlurRadius = Math.Max(0, blur)
         });

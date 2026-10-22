@@ -23,6 +23,9 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length == 3 && args[0] == "--glass-polish") return RunTransparencyLive(args[1], args[2], polish: true);
+        if (args.Length == 3 && args[0] == "--transparency-live") return RunTransparencyLive(args[1], args[2]);
+        if (args.Length == 3 && args[0] == "--transparency-system") return RunTransparencySystem(args[1], args[2]);
         if (args.Length == 2 && args[0] == "--startup-compat") return RunStartupCompatibility(args[1]);
         if (args.Length == 3 && args[0] == "--performance-seed")
             return SeedPerformanceAsync(args[1], int.Parse(args[2])).GetAwaiter().GetResult();
@@ -78,7 +81,8 @@ internal static partial class Program
         {
             try
             {
-                if (args.Contains("--performance-behavior")) await RunPerformanceBehaviorAsync((MainWindow)app.MainWindow);
+                if (args.Contains("--transparency-prototype")) await RunTransparencyPrototypeAsync((MainWindow)app.MainWindow);
+                else if (args.Contains("--performance-behavior")) await RunPerformanceBehaviorAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--pinyin")) await RunPinyinAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--quick-launcher")) await RunQuickLauncherAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--app-edit")) await RunApplicationEditingAsync((MainWindow)app.MainWindow);

@@ -1,5 +1,56 @@
 # Nova Launcher — UI 设计
 
+## 8.4.3 Glass Integration Polish（当前规范，已通过最终验收）
+
+2026-10-22 用户确认本阶段视觉作为 Nova Preview 的 Glass Mode 基线。TitleBar / Sidebar / Workspace 使用同一套 Glass Material；轻渐变基底、设置玻璃浮层、无底色标题和独立搜索交互层为当前规范。此前 8.4～8.4.2 章节仅保留历史记录，旧 Alpha 和标题底面不再是当前要求。
+
+### 最终材质层级
+
+资源集中在 `NovaLauncher.App/Themes/GlassMode.xaml`，使用同一组冷蓝灰色相，文字不参与透明度叠加。
+
+| 层级 | 资源 | 作用 |
+| --- | --- | --- |
+| Window Base | GlassWindowBase、GlassChromeSurface | 约 9% 的整窗底色；标题栏和侧栏共用约 20% 的 Chrome 色，品牌区沿用轻透明底色。替代此前侧栏额外 55% 白色叠层。 |
+| Workspace Tint | GlassWorkspaceSurface | 非均匀渐变，Alpha 为 95% → 72% → 86%，再乘用户保存的遮罩强度。边缘有光感，中部让背景色进入；不再用整窗纯白均匀幕布。 |
+| Section / Panel | GlassPanelSurface、GlassCardSurface | 分类外容器约 42% → 25%；设置卡片约 85% → 71% → 76%，上缘更亮，主体透出背景色。 |
+| Control / Input / Row | GlassInputSurface、GlassCategorySurface | 搜索常态约 79%，分类行约 75%；行项比外容器清楚。“新建分类”成为同宽、同圆角的列表末行。 |
+
+设置卡片用 1 DIP 渐变细边框、上缘高光及 Opacity 0.07 / Depth 1 / Radius 6 的轻阴影体现浮层。降低板感同时保留局部阅读底面；没有新增背景模糊、捕获或合成机制。
+
+页面标题 22 DIP / SemiBold，分组标题 15 DIP / SemiBold，设置行文本 14 DIP，描述 12 DIP；Glass 标题背景透明，主要靠间距和字重组织。次要文字加深到 #46576B。Quick Launcher、菜单、Toast、Profile 的高可读底面资源保留。
+
+搜索仍为打开 Quick Launcher 的原按钮入口，输入和搜索行为不变。普通、Hover、Focus、Pressed 使用不同 Surface；Focus 有 2 DIP 强调色边框，快捷键与搜索图标、文案在同一底面中，并以细分隔线区分。
+
+验证、截图与提交边界见 [8.4.3交付记录](GlassIntegration-8.4.3.md) 和 [透明技术记录](Transparency-8.4.md)。不开始下一阶段。
+
+## 8.4.2 Glass Surface Polish（历史记录）
+
+本轮只改变Glass Mode的资源与视图样式。顶部搜索入口使用60%浅冷灰GlassInputSurface，图标、搜索文字与Ctrl+K共用同一背景，保留轻边框和Hover/键盘反馈；实际Quick Launcher浮层仍为原高不透明Surface。
+
+Workspace与Section标题由整行95%底色改为按文字宽度排列的45%浅冷灰GlassHeadingSurface，不再形成贯穿页面的白条；Settings仅保留Workspace“设置”标题，隐藏内部重复的大标题。没有增加实际模糊效果。
+
+Settings采用90%浅冷灰GlassCardSurface与轻边框，区别于95%的Hover/Elevated Surface及98%的Overlay Surface。分类外层沿用GlassCardSurface，每个分类项增加GlassCategorySurface、轻边界与内边距。品牌N图标改用GlassBrandSurface，NOVA/LAUNCHER/工作空间直接沿用Sidebar底面，不再复用高不透明选中底色。
+
+新增Input、Card、Category、Brand、SurfaceBorder Token集中在GlassMode.xaml并冻结画刷；Workspace、Heading、Selected资源职责分离。以上样式仅在Transparent生效，三种稳定背景保留原材质；用户Tint值、底层合成、Window.Opacity与业务逻辑不变。详细截图与验证见 [GlassSurface-8.4.2.md](GlassSurface-8.4.2.md)。以下章节为历史记录。
+
+## 8.4.1 Glass Visual Hierarchy（历史记录）
+
+用户可见模式更名为“玻璃模式（实验性）”，内部仍为Transparent。Transparent负责Windows窗口合成，Glass Surface Tokens负责可读性，两者分离；本轮没有重做AllowsTransparency或窗口宿主机制。
+
+GlassMode.xaml仅合并到玻璃窗口的局部资源，关闭/回退时移除。颜色统一为语义Token：GlassWorkspaceSurface（白色，强度由已保存遮罩决定）、GlassChromeSurface（55%白色叠加）、GlassElevatedSurface（95%浅色）、GlassOverlaySurface（98%浅色）、GlassLabelSurface（透明）、GlassSelectedSurface（90%浅蓝）、GlassHeadingSurface（95%浅色）。相同颜色通过Color Token复用，不在控件中散落alpha常量。
+
+层级：后窗 → Workspace Tint → TitleBar/Sidebar → Selected/Hover → Settings/浮层。40% Workspace Tint叠加55% Chrome后，TitleBar与Sidebar的有效遮罩约73%；文字与图标不降低Opacity。应用名称去除白砖，使用透明名称底色；Hover仍为原尺寸与布局。Settings标题有局部保护底色，内容卡片95%，保留卡片间的玻璃背景。Quick Launcher、主菜单/分类子菜单、Profile及Toast继续使用高可读Surface。空状态增加局部高不透明底色。背景Expander使用现有Accent FocusRing，避免默认大虚线焦点框；不移除键盘焦点提示。Scrollbar与轻边框保持原实现。
+
+本轮实机40%遮罩可清楚感知后窗，复杂背景下建议调高。持久化遮罩与图片模式共用字段，无法可靠区分默认72%与用户主动保存的72%，因此**保留现有72%默认及所有保存值**，不静默重置到40%；40%是视觉验收值，不是已修改的产品默认。未新增设置字段、Migration或模糊/Shader/捕获效果。
+
+截图、性能和验收结果见 [Transparency-8.4.md](Transparency-8.4.md#841-glass-mode-视觉统一)。下节保留8.4历史设计，视觉要求由本节取代。
+
+## 8.4 实时透明背景（历史设计）
+
+实验透明模式层级为真实后窗 → Windows alpha窗口合成 → 白色Tint → Nova UI。Tint复用20–95%遮罩参数，默认72%；不降低Window或Root Grid透明度，不对Root施加BlurEffect。Sidebar、标题栏、标签底面和Settings Row保持不透明，Quick Launcher、Context Menu和Profile保留高不透明Surface。透明只作用于Shell背景，不重新设计ApplicationCard或8.3布局。
+
+Settings明确区分静态桌面壁纸与“透明桌面（实验性）”；只有透明模式显示玻璃遮罩，图片模式保留图片遮罩/Blur/Stretch。能力不支持时显示对应说明并回退默认。依据ui-ux-pro-max的对比度、焦点、语义标签和可退出路径规则核查；跨屏/DPI、系统Snap等仍有人工验收边界，见 [Transparency-8.4.md](Transparency-8.4.md)。
+
 ## 8.3 全部应用主界面（当前规范，已验收）
 
 Sidebar为Logo、工作空间、全部应用（Segoe Fluent Icons E80A应用网格）、动态分类、收藏、最近使用、弹性留白、Profile头像。设置仅在Profile Flyout中进入。导航复用现有44 DIP行高、浅色Active Surface和左侧Accent条，不再使用房子图标或“首页”文案。

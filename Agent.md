@@ -2,7 +2,7 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前为第八阶段 8.3：主界面信息架构简化，稳定基线 b592964549e1ed2ab054cf4797504d8adc89a3ba。取消聚合 Dashboard，以全部应用作为默认主页面；保留独立分类、收藏、最近使用、Quick Launcher和8.2渐进渲染。无Schema/Migration或新增业务模块，不改变Application数据语义；不改拼音/Quick Launcher算法、Background实现、日志架构、单实例或Publish流程。8.3已通过最终验收，用户授权提交 refactor: simplify launcher main navigation；不开始8.4。真实Clean Machine Test仍未完成，继续作为正式对外发布前Release Gate；主要交付为Self-contained win-x64 Portable Preview，Single-file仅部分验证。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前第八阶段8.4.3：Glass Integration Polish（已通过最终验收，Nova Preview Glass Mode基线），稳定基线3eaf6b89c8b0a8bc7a2735f3cc5318c75583e574。沿用8.4已验证透明机制，本轮仅调整Glass材质层级、Surface Brush / Alpha / Resource及视觉布局，不重做透明技术，不改数据库、业务、搜索或性能架构。保留Default、DesktopWallpaper、CustomImage及8.3导航和渐进渲染；透明模式独立、实验性、可关闭和回退。禁止通过桌面截图或Window.Opacity伪造；如需Migration先停止说明，不自动创建。用户已授权最终收尾并提交 style: refine glass mode visual hierarchy；提交包含此前8.4～8.4.3累计工作，不开始8.5。Clean Machine Test仍未完成；主要交付为Self-contained win-x64 Portable Preview，Single-file仅部分验证。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
@@ -55,4 +55,4 @@
 3. UI 工作先检查 ui-ux-pro-max 的安装与指令，形成设计参数和状态方案，再映射为 WPF 资源与控件。
 4. 按小范围改动实施，不覆盖用户工作；只有明确独立且有收益的工作流才考虑委派。
 5. 执行必要验证，记录未验证项与实际限制，清理本次无用临时文件，并同步相关文档。
-6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前8.3已通过最终验收，按用户授权完成提交；不开始8.4，不将真实Clean Machine Test标记为完成。
+6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前8.4.3已验收并获最终提交授权；完成指定提交后停止，不开始8.5，不将真实Clean Machine Test标记为完成。

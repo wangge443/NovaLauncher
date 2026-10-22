@@ -22,8 +22,9 @@
             </Grid.RowDefinitions>
             <StackPanel Margin="12,0,0,20">
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="38" Height="38" CornerRadius="12" Background="{DynamicResource SelectedBrush}"
+                    <Border Width="38" Height="38" CornerRadius="12"
                             BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" Margin="0,0,12,0">
+                        <Border.Style><Style TargetType="Border"><Setter Property="Background" Value="{DynamicResource SelectedBrush}"/><Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"><Setter Property="Background" Value="{DynamicResource GlassBrandSurface}"/></DataTrigger></Style.Triggers></Style></Border.Style>
                         <Path Data="M 3,22 L 3,3 L 19,22 L 19,3" Stroke="{DynamicResource AccentBrush}" StrokeThickness="2.5"
                               Width="19" Height="22" Stretch="Uniform" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>

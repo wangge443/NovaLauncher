@@ -3,18 +3,23 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <StackPanel>
         <TextBlock Text="分类管理" Style="{StaticResource SettingsSectionTitle}"/>
-        <Border Style="{StaticResource SettingsRow}">
+        <Border><Border.Style><Style TargetType="Border" BasedOn="{StaticResource SettingsRow}">
+            <Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                <Setter Property="Background" Value="{DynamicResource GlassPanelSurface}"/><Setter Property="Padding" Value="12,10"/>
+                <Setter Property="Effect" Value="{x:Null}"/>
+            </DataTrigger></Style.Triggers>
+        </Style></Border.Style>
             <StackPanel>
                 <ItemsControl ItemsSource="{Binding Categories}" AutomationProperties.Name="所有分类">
                     <ItemsControl.ItemTemplate><DataTemplate>
-                        <Grid MinHeight="36" Margin="0,2">
+                        <Border CornerRadius="6" Margin="0,2"><Border.Style><Style TargetType="Border"><Style.Triggers><DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"><Setter Property="Background" Value="{DynamicResource GlassCategorySurface}"/><Setter Property="BorderBrush" Value="{DynamicResource GlassSurfaceBorder}"/><Setter Property="BorderThickness" Value="1"/><Setter Property="Padding" Value="8,2"/></DataTrigger></Style.Triggers></Style></Border.Style><Grid MinHeight="36">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="28"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
                             <TextBlock Text="{Binding Icon}" Style="{StaticResource ManagementIcon}" VerticalAlignment="Center" Foreground="{DynamicResource MutedTextBrush}"/>
                             <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}"/>
-                        </Grid>
+                        </Grid></Border>
                     </DataTemplate></ItemsControl.ItemTemplate>
                 </ItemsControl>
-                <Button x:Name="NewCategoryButton" Content="＋ 新建分类" HorizontalAlignment="Left" Style="{StaticResource SettingsButton}" Margin="0,8,0,0"
+                <Button x:Name="NewCategoryButton" Content="＋ 新建分类" Style="{StaticResource CategoryCreateRow}"
                         IsEnabled="{Binding IsReady}" Command="{Binding BeginCreateCommand}" Click="BeginCategory_Click" AutomationProperties.Name="新建分类" AutomationProperties.AutomationId="NewCategory"/>
                 <StackPanel Visibility="{Binding IsEditing, Converter={StaticResource BooleanVisibility}}" Margin="0,12,0,0">
                     <TextBlock Text="分类名称"/><TextBlock Text="1–24 个字符，名称不能重复" Style="{StaticResource SettingsDescription}"/>

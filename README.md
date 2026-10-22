@@ -1,10 +1,17 @@
 # Nova Launcher
 
+## 8.4.3 Glass Integration Polish（已通过最终验收）
+
+重建整窗、Workspace、面板、控件四层材质；统一Chrome与Sidebar，去掉标题底色，设置卡片使用轻高光/细边界，分类末行整合创建入口。Release 0 warnings / 0 errors；透明28项、相关回归231项、发布启动6项通过。实际截图、材质参数和验证边界见 [8.4.3交付记录](docs/GlassIntegration-8.4.3.md)。8.4.3透明底层、数据库、业务、搜索和性能架构不变；用户已确认作为Nova Preview Glass Mode基线并授权提交 style: refine glass mode visual hierarchy，不开始下一阶段。
+
+
 Nova Launcher 是面向 Windows 11 的现代桌面应用启动器，采用 Windows 11 Minimal Glass UI，通过左侧导航和右侧大图标启动区组织应用。
 
 ## 当前状态
 
-8.3 主界面信息架构简化：默认页面改为“全部应用”，移除聚合 Dashboard，保留分类、收藏、最近使用、Quick Launcher 和 8.2 渐进渲染。实现、验证与截图见 [Workspace-8.3.md](docs/Workspace-8.3.md)。8.3已通过最终验收，授权提交 `refactor: simplify launcher main navigation`；不开始8.4。
+8.4.3 Glass Integration Polish已通过最终验收：用户可见名称为“玻璃模式（实验性）”，沿用8.4实时透明机制，采用Windows逐像素窗口合成，保留Default、DesktopWallpaper和CustomImage。实时后窗证据、路线比较、性能和待人工验证项见 [Transparency-8.4.md](docs/Transparency-8.4.md)。最新视觉与独立验收包见 [GlassIntegration-8.4.3.md](docs/GlassIntegration-8.4.3.md)。
+
+8.3 主界面信息架构简化已通过验收并提交为 `3eaf6b8`：默认“全部应用”，移除聚合 Dashboard，保留分类、收藏、最近使用、Quick Launcher 和渐进渲染。实现与验证见 [Workspace-8.3.md](docs/Workspace-8.3.md)。
 
 8.2 已通过验收并提交为 `b592964`：300项首屏布局中位数4497→1103ms；没有实现真正虚拟化，历史性能与限制见 [Performance-8.2.md](docs/Performance-8.2.md)。
 

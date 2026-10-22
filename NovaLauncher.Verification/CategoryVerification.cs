@@ -286,12 +286,18 @@ internal static partial class Program
         return app.Run();
     }
 
-    private static void CaptureCategoryWindow(Window window, string filename)
+    private static void CaptureCategoryWindow(Window window, string filename, bool activate = true, FrameworkElement? region = null)
     {
-        window.Topmost = true;
-        window.Activate();
+        if (activate) { window.Topmost = true; window.Activate(); }
         var hwnd = new WindowInteropHelper(window).Handle;
         CaptureNative.GetWindowRect(hwnd, out var rect);
+        if (region is not null)
+        {
+            var topLeft = region.PointToScreen(new Point(0, 0));
+            var bottomRight = region.PointToScreen(new Point(region.ActualWidth, region.ActualHeight));
+            rect.Left = (int)topLeft.X; rect.Top = (int)topLeft.Y;
+            rect.Right = (int)bottomRight.X; rect.Bottom = (int)bottomRight.Y;
+        }
         int width = rect.Right - rect.Left, height = rect.Bottom - rect.Top;
         var screen = CaptureNative.GetDC(IntPtr.Zero);
         var memory = CaptureNative.CreateCompatibleDC(screen);

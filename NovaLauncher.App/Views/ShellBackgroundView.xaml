@@ -5,6 +5,10 @@
              x:Name="BackgroundHost" IsHitTestVisible="False" Focusable="False"
              AutomationProperties.AutomationId="ShellBackground">
     <Grid>
+      <Grid x:Name="StableLayers">
+       <Grid.Style><Style TargetType="Grid"><Style.Triggers>
+        <DataTrigger Binding="{Binding IsTransparentSurface, ElementName=BackgroundHost}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger>
+       </Style.Triggers></Style></Grid.Style>
         <Border x:Name="SolidColorBackground" Background="{DynamicResource BackgroundFallbackBrush}">
             <Border.Style>
                 <Style TargetType="Border">
@@ -52,5 +56,10 @@
             <Border x:Name="WhiteOverlay" Background="White" Opacity="{Binding OverlayOpacity}"/>
             <Border Height="48" VerticalAlignment="Top" Background="{DynamicResource SidebarBrush}"/>
         </Grid>
+      </Grid>
+      <Border Background="{DynamicResource GlassWindowBase}"
+              Visibility="{Binding IsTransparentSurface, ElementName=BackgroundHost, Converter={StaticResource BooleanVisibility}}"/>
+      <Border x:Name="GlassOverlay" Background="{DynamicResource GlassWorkspaceSurface}" Opacity="{Binding Settings.Appearance.Background.OverlayOpacity}"
+              Visibility="{Binding IsTransparentSurface, ElementName=BackgroundHost, Converter={StaticResource BooleanVisibility}}"/>
     </Grid>
 </UserControl>

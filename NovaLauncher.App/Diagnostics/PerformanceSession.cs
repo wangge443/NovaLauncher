@@ -64,6 +64,7 @@ internal static class PerformanceSession
             double scrollCpu = (process.TotalProcessorTime - cpu).TotalMilliseconds;
             int scrollLayouts = layouts;
             layouts = 0;
+            cpu = process.TotalProcessorTime;
             phase = PerformanceTrace.Start();
             for (int i = 0; i < 20; i++)
             {
@@ -72,6 +73,7 @@ internal static class PerformanceSession
                 await window.Dispatcher.InvokeAsync(() => { }, DispatcherPriority.Background);
             }
             PerformanceTrace.End("Resize20Steps", phase);
+            double resizeCpu = (process.TotalProcessorTime - cpu).TotalMilliseconds;
             window.LayoutUpdated -= handler;
             window.Width = 1200;
             scroll.ScrollToTop();
@@ -88,7 +90,9 @@ internal static class PerformanceSession
                 ManagedBytes = memory, WorkingSet = process.WorkingSet64,
                 GCCollections = Enumerable.Range(0, 3).Select(GC.CollectionCount).ToArray(),
                 InteractionGC = Enumerable.Range(0, 3).Select(i => GC.CollectionCount(i) - gcBefore[i]).ToArray(),
-                ScrollLayouts = scrollLayouts, ResizeLayouts = layouts, ScrollCpuMs = scrollCpu
+                ScrollLayouts = scrollLayouts, ResizeLayouts = layouts, ScrollCpuMs = scrollCpu,
+                ResizeCpuMs = resizeCpu, TotalCpuMs = process.TotalProcessorTime.TotalMilliseconds,
+                RenderTier = RenderCapability.Tier >> 16, LayeredWindow = window.AllowsTransparency
             };
             await File.WriteAllTextAsync(Path.Combine(root, "performance.json"),
                 JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));

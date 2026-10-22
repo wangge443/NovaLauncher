@@ -1,14 +1,39 @@
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Media;
 using NovaLauncher.App.ViewModels;
 
 namespace NovaLauncher.App.Views;
 
 public partial class MainWindow : Window
 {
+    private ResourceDictionary? _glassResources;
     public MainWindow()
     {
         InitializeComponent();
+    }
+
+    public void ConfigureTransparentSurface(bool enabled)
+    {
+        // Must run before the HWND is created. Runtime mode changes replace only the window host.
+        AllowsTransparency = enabled;
+        if (!enabled) return;
+        Background = Brushes.Transparent;
+        var root = (System.Windows.Controls.Grid)WindowFrame.Child;
+        root.Children.OfType<ShellBackgroundView>().Single().IsTransparentSurface = true;
+        _glassResources = new ResourceDictionary { Source = new Uri("/NovaLauncher;component/Themes/GlassMode.xaml", UriKind.Relative) };
+        Resources.MergedDictionaries.Add(_glassResources);
+        root.Children.OfType<System.Windows.Controls.Grid>().First().SetResourceReference(System.Windows.Controls.Panel.BackgroundProperty, "GlassChromeSurface");
+    }
+
+    public void UseOpaqueSurface()
+    {
+        if (_glassResources is not null) Resources.MergedDictionaries.Remove(_glassResources);
+        _glassResources = null;
+        SetResourceReference(BackgroundProperty, "WindowBrush");
+        var root = (System.Windows.Controls.Grid)WindowFrame.Child;
+        root.Children.OfType<System.Windows.Controls.Grid>().First().Background = Brushes.Transparent;
+        root.Children.OfType<ShellBackgroundView>().Single().IsTransparentSurface = false;
     }
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)

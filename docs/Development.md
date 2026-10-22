@@ -1,5 +1,26 @@
 # Nova Launcher — 开发流程
 
+## 8.4.3 Glass Integration Polish（已通过最终验收）
+
+重建整窗、Workspace、面板、控件四层材质；统一Chrome与Sidebar，去掉标题底色，设置卡片使用轻高光/细边界，分类末行整合创建入口。Release 0 warnings / 0 errors；透明28项、相关回归231项、发布启动6项通过。实际截图、材质参数和验证边界见 [8.4.3交付记录](GlassIntegration-8.4.3.md)。8.4.3透明底层、数据库、业务、搜索和性能架构不变；用户已确认作为Nova Preview Glass Mode基线并授权提交 style: refine glass mode visual hierarchy，不开始下一阶段。
+
+
+最终收尾：Release Build再次通过（0 warnings / 0 errors）；补验Favorites 31、Recent 22、Profile 44、Management 46项，与本阶段已有231项合计374项相关回归通过，另透明28项、发布启动6项通过。其余未受影响测试沿用8.4.1完整728项记录，不声称全部重跑。收尾未改产品代码；累计提交包含此前8.4～8.4.3工作，范围已核对，无Schema/Migration或业务/搜索/渐进渲染改动。
+
+## 8.4.2 Glass Surface Polish（待验收）
+
+只调整Glass搜索入口、局部标题、设置卡片、分类行与品牌区资源。Release 0 warnings / 0 errors；231项相关回归及25项透明专项通过。当前验收包使用独立self-contained-8.4.2目录，避免覆盖运行中的8.4.1。截图和发布说明见 [GlassSurface-8.4.2.md](GlassSurface-8.4.2.md)。不自动commit，不修改合成机制、数据结构或业务逻辑。
+
+## 8.4.1 Glass Mode视觉统一（待验收）
+
+在8.4未提交改动上继续，只调整Glass Surface资源、界面名称和视觉样式。最终Release Build 0 warnings / 0 errors，20组完整回归728项、透明专项25项通过。导入套件Tooltip首轮超时，原代码单独复核通过；保留首次日志，未降低断言。七类界面及Hover截图见Transparency-8.4.md；现有默认值72%和保存值不覆盖，40%为本轮视觉验收值。底层合成、数据库、业务、搜索和性能架构不变。本阶段不自动commit。
+
+## 8.4 真透明背景（待验收）
+
+先对比旧DesktopBackdrop、官方DWM None/Mica/Mica Alt/Desktop Acrylic与WPF layered窗口，再接入独立Transparent模式。动态测试使用独立真实测试窗口和合成像素读数，不以壁纸截图判定通过。完整路线、数据、截图、复现命令与未验证项见 [Transparency-8.4.md](Transparency-8.4.md)。
+
+最终Release Build为0 warnings / 0 errors；既有728项回归、25项透明专项、5项系统窗口检查通过，另Self-contained发布Smoke 12项通过。Win+Z面板已视觉确认。透明300应用首屏中位数874.3ms、Ready 3781.1ms；Resize相比同期Default耗时增加34.3%，保留实验性。用户确认没有多个不同DPI显示器，跨显示器/DPI及长时间移动稳定性仍待人工验收。真实Clean Machine Test仍未完成。无新依赖或Migration，本阶段不自动commit，不开始8.5。
+
 ## 8.3 主界面信息架构简化（已通过最终验收）
 
 基线 `b592964549e1ed2ab054cf4797504d8adc89a3ba`。默认全部应用，删除 Dashboard 专用投影和导航，保留完整集合及渐进渲染。持久化 `StartupPage.Home` 不改存储值，新增独立进程启动兼容验证。实现、测试计数、300项性能与截图统一记录在 [Workspace-8.3.md](Workspace-8.3.md)。

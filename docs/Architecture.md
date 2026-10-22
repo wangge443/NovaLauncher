@@ -1,5 +1,11 @@
 # Nova Launcher — 架构设计
 
+## 8.4 透明窗口宿主（当前架构，8.4.3最终验收通过）
+
+BackgroundMode.Transparent使用WPF AllowsTransparency逐像素alpha；8.4.1由Shell背景Tint及局部Glass Surface Brush参与半透明，Window.Opacity保持1。TransparencySupport检测Windows/DWM/无障碍与会话条件；AppearanceService复用BackgroundOverlayOpacity，无Schema/Migration。MainWindow.ConfigureTransparentSurface分离窗口合成与UI Surface可读性；该模式不启用旧DesktopBackdropController。
+
+AllowsTransparency需要在HWND创建前设置，因此App在切换时通过TransparencyWindowHost替换Window并保持同一MainWindowViewModel，保留几何/导航/Sidebar及Settings视图状态。稳定背景恢复普通HWND；失败时恢复不透明Surface并停用本会话透明能力。业务集合、搜索、Repository、日志架构和单实例协议不变；App既有激活回调始终使用当前MainWindow。详情见 [Transparency-8.4.md](Transparency-8.4.md)。
+
 ## 8.3 全部应用工作区（当前架构，已验收）
 
 内存导航枚举`WorkspaceMode.Home`重命名为`AllApplications`，未持久化该枚举。持久化`StartupPage.Home`及其字符串值保持不变，由MainWindowViewModel映射至全部应用；Settings仅调整Label和显示顺序，无Schema/Migration。

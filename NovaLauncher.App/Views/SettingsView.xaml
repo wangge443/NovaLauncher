@@ -5,7 +5,7 @@
   <StackPanel Margin="0,0,12,12">
    <TextBlock Text="设置" Style="{StaticResource SettingsPageTitle}" />
    <TextBlock Text="外观" Style="{StaticResource SettingsSectionTitle}" />
-   <Expander x:Name="BackgroundExpander" Header="背景" IsExpanded="False" Margin="0,0,0,8" AutomationProperties.Name="背景设置">
+   <Expander x:Name="BackgroundExpander" Header="背景" FocusVisualStyle="{StaticResource FocusRing}" IsExpanded="False" Margin="0,0,0,8" AutomationProperties.Name="背景设置">
     <views:AppearanceView DataContext="{Binding Appearance}"/>
    </Expander>
    <Border Style="{StaticResource SettingsRow}"><Grid>

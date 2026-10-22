@@ -12,6 +12,7 @@ public interface IAppearanceService : System.ComponentModel.INotifyPropertyChang
     ImageSource? Image { get; }
     bool HasImage { get; }
     bool NeedsTextSurface { get; }
+    bool IsTransparent { get; }
     double OverlayOpacity { get; }
     double BlurRadius { get; }
     Stretch Stretch { get; }
@@ -34,7 +35,8 @@ public sealed class AppearanceService(IAppSettingsService settings, BackgroundIm
     public AppSettings Preview => _preview;
     public ImageSource? Image { get => _image; private set { SetProperty(ref _image, value); OnPropertyChanged(nameof(HasImage)); OnPropertyChanged(nameof(NeedsTextSurface)); } }
     public bool HasImage => Image is not null;
-    public bool NeedsTextSurface => HasImage && OverlayOpacity < 0.60;
+    public bool IsTransparent => _preview.BackgroundMode == BackgroundMode.Transparent;
+    public bool NeedsTextSurface => IsTransparent || (HasImage && OverlayOpacity < 0.60);
     public double OverlayOpacity => _preview.BackgroundOverlayOpacity;
     public double BlurRadius => _preview.BackgroundBlurRadius;
     public Stretch Stretch => _preview.BackgroundStretch == BackgroundStretch.Uniform ? Stretch.Uniform : Stretch.UniformToFill;
@@ -42,15 +44,27 @@ public sealed class AppearanceService(IAppSettingsService settings, BackgroundIm
     {
         _preview = value; OnPropertyChanged(nameof(Preview)); OnPropertyChanged(nameof(OverlayOpacity));
         OnPropertyChanged(nameof(BlurRadius)); OnPropertyChanged(nameof(Stretch)); OnPropertyChanged(nameof(NeedsTextSurface));
+        OnPropertyChanged(nameof(IsTransparent));
     }
     public async Task InitializeAsync()
     {
         Publish(settings.Current);
         Image = await ResolveAsync(settings.Current);
+        if (IsTransparent && !TransparencySupport.IsSupported())
+        {
+            await FallBackFromTransparencyAsync();
+            toast.Show("当前系统不支持实时透明背景");
+        }
+    }
+    public async Task FallBackFromTransparencyAsync()
+    {
+        await SetModeAsync(BackgroundMode.Default);
+        // Rendering safety cannot depend on whether SQLite is currently writable.
+        if (IsTransparent) { Publish(_preview with { BackgroundMode = BackgroundMode.Default }); Image = null; }
     }
     private async Task<ImageSource?> ResolveAsync(AppSettings value)
     {
-        if (value.BackgroundMode == BackgroundMode.Default || (value.BackgroundMode == BackgroundMode.CustomImage && value.BackgroundImagePath is null)) return null;
+        if (value.BackgroundMode is BackgroundMode.Default or BackgroundMode.Transparent || (value.BackgroundMode == BackgroundMode.CustomImage && value.BackgroundImagePath is null)) return null;
         try
         {
             string? path = value.BackgroundMode == BackgroundMode.DesktopWallpaper ? await wallpaper.GetPathAsync() : value.BackgroundImagePath;
@@ -68,6 +82,11 @@ public sealed class AppearanceService(IAppSettingsService settings, BackgroundIm
     {
         await FlushAsync();
         if (!Enum.IsDefined(mode)) mode = BackgroundMode.Default;
+        if (mode == BackgroundMode.Transparent && !TransparencySupport.IsSupported())
+        {
+            toast.Show("当前系统不支持实时透明背景");
+            mode = BackgroundMode.Default;
+        }
         var next = settings.Current with { BackgroundMode = mode };
         var image = await ResolveAsync(next);
         if (await settings.UpdateAsync(s => s with { BackgroundMode = mode })) { Publish(settings.Current); Image = image; }

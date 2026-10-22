@@ -13,20 +13,25 @@ public sealed class AppearanceViewModel : ViewModelBase
     {
         _service = service;
         _toast = toast;
-        service.PropertyChanged += (_, _) => { OnPropertyChanged(nameof(Mode)); OnPropertyChanged(nameof(IsCustom)); OnPropertyChanged(nameof(IsDesktop)); OnPropertyChanged(nameof(IsImageMode)); OnPropertyChanged(nameof(OverlayPercent)); OnPropertyChanged(nameof(BlurRadius)); OnPropertyChanged(nameof(Stretch)); OnPropertyChanged(nameof(ModeLabel)); };
+        service.PropertyChanged += (_, _) => { OnPropertyChanged(nameof(Mode)); OnPropertyChanged(nameof(IsCustom)); OnPropertyChanged(nameof(IsDesktop)); OnPropertyChanged(nameof(IsImageMode)); OnPropertyChanged(nameof(IsTransparent)); OnPropertyChanged(nameof(ShowTransparencyStatus)); OnPropertyChanged(nameof(TransparencyStatus)); OnPropertyChanged(nameof(GlassOverlayPercent)); OnPropertyChanged(nameof(OverlayPercent)); OnPropertyChanged(nameof(BlurRadius)); OnPropertyChanged(nameof(Stretch)); OnPropertyChanged(nameof(ModeLabel)); };
         ChangeModeCommand = new AsyncRelayCommand<BackgroundModeChoice>(choice => RunAsync(() => service.SetModeAsync(choice?.Value ?? BackgroundMode.Default)));
         ChooseImageCommand = new AsyncRelayCommand(() => RunAsync(async () => { string? path = picker.Pick(); if (path is not null) await service.ImportAsync(path); }));
         RefreshCommand = new AsyncRelayCommand(() => RunAsync(service.RefreshWallpaperAsync));
         RestoreCommand = new AsyncRelayCommand(() => RunAsync(service.RestoreDefaultAsync));
     }
     public IAppearanceService Background => _service;
-    public IReadOnlyList<BackgroundModeChoice> Modes { get; } = [new(BackgroundMode.Default,"默认"),new(BackgroundMode.DesktopWallpaper,"桌面壁纸"),new(BackgroundMode.CustomImage,"自定义图片")];
+    public IReadOnlyList<BackgroundModeChoice> Modes { get; } = [new(BackgroundMode.Default,"默认"),new(BackgroundMode.DesktopWallpaper,"桌面壁纸"),new(BackgroundMode.CustomImage,"自定义图片"),new(BackgroundMode.Transparent,"玻璃模式（实验性）")];
     public IReadOnlyList<BackgroundStretchChoice> Stretches { get; } = [new(BackgroundStretch.UniformToFill,"填充"),new(BackgroundStretch.Uniform,"适应")];
     public BackgroundMode Mode { get => _service.Preview.BackgroundMode; set { if (value != Mode && CanEdit) ChangeModeCommand.Execute(Modes.Single(x => x.Value == value)); } }
     public string ModeLabel => Modes.Single(x => x.Value == Mode).Label;
     public bool IsCustom => Mode == BackgroundMode.CustomImage;
     public bool IsDesktop => Mode == BackgroundMode.DesktopWallpaper;
-    public bool IsImageMode => Mode != BackgroundMode.Default;
+    public bool IsImageMode => Mode is BackgroundMode.DesktopWallpaper or BackgroundMode.CustomImage;
+    public bool IsTransparent => Mode == BackgroundMode.Transparent;
+    public bool ShowTransparencyStatus => IsTransparent || !TransparencySupport.IsSupported();
+    public string TransparencyStatus => TransparencySupport.IsSupported() ? "实时显示窗口后方内容；实验性模式，不提供背景模糊" : "当前系统不支持实时透明背景";
+    // Same physical tint concept: reuse the existing field, no duplicate persisted column.
+    public double GlassOverlayPercent { get => OverlayPercent; set => OverlayPercent = value; }
     public bool CanEdit => !_busy;
     public double OverlayPercent { get => _service.OverlayOpacity * 100; set { if (CanEdit) _service.PreviewParameters(value / 100, BlurRadius, Stretch); } }
     public double BlurRadius { get => _service.BlurRadius; set { if (CanEdit) _service.PreviewParameters(OverlayPercent / 100, value, Stretch); } }

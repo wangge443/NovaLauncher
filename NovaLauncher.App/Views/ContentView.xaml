@@ -28,7 +28,14 @@
             <Grid Width="292"><Grid.ColumnDefinitions><ColumnDefinition Width="24"/><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
                 <TextBlock Text="&#xE721;" FontFamily="{StaticResource IconFont}"/>
                 <TextBlock Grid.Column="1" Text="搜索应用"/>
-                <TextBlock Grid.Column="2" Text="Ctrl + K" FontSize="11"/>
+                <Border Grid.Column="2" BorderBrush="{DynamicResource BorderBrush}">
+                    <Border.Style><Style TargetType="Border"><Style.Triggers>
+                        <DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True">
+                            <Setter Property="BorderThickness" Value="1,0,0,0"/><Setter Property="Padding" Value="10,0,0,0"/>
+                        </DataTrigger>
+                    </Style.Triggers></Style></Border.Style>
+                    <TextBlock Text="Ctrl + K" FontSize="11" VerticalAlignment="Center"/>
+                </Border>
             </Grid>
         </Button>
         <TextBlock Grid.Row="1" Text="{Binding PageTitle}" Style="{StaticResource WorkspaceSectionTitle}"
@@ -39,7 +46,7 @@
                 <Style TargetType="StackPanel">
                     <Setter Property="Visibility" Value="Collapsed" />
                     <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsEmpty}" Value="True">
+                        <DataTrigger Binding="{Binding DataContext.Settings.Appearance.Background.IsTransparent, RelativeSource={RelativeSource AncestorType=Window}}" Value="True"><Setter Property="Background" Value="{DynamicResource GlassElevatedSurface}"/></DataTrigger><DataTrigger Binding="{Binding IsEmpty}" Value="True">
                             <Setter Property="Visibility" Value="Visible" />
                         </DataTrigger>
                     </Style.Triggers>
