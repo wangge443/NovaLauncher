@@ -191,7 +191,13 @@ internal static partial class Program
         using var child = Process.Start(start)!;
         var stdout = child.StandardOutput.ReadToEndAsync();
         var stderr = child.StandardError.ReadToEndAsync();
-        await child.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(45));
+        try { await child.WaitForExitAsync().WaitAsync(TimeSpan.FromSeconds(45)); }
+        catch (TimeoutException)
+        {
+            child.Kill(entireProcessTree: true);
+            await child.WaitForExitAsync();
+            throw;
+        }
         Check(child.ExitCode == 0, $"Independent WPF {mode}: {await stdout} {await stderr}");
     }
 

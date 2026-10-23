@@ -22,14 +22,14 @@ internal static partial class Program
         ApplicationDataPaths.ConfigureVerificationRoot(["--verification-data-root=" + Path.GetFullPath(args[1])]);
         var settings = new AppSettingsService(new AppSettingsRepository(new LauncherDbContextFactory(ApplicationDataPaths.Default)));
         if (!await settings.LoadAsync()) return 1;
-        return await settings.UpdateAsync(s => s with { GlobalHotkeyEnabled = bool.Parse(args[2]), GlobalHotkeyModifiers = int.Parse(args[3]), GlobalHotkeyKey = int.Parse(args[4]) }) ? 0 : 1;
+        return await settings.UpdateAsync(s => s with { CloseToTray = false, GlobalHotkeyEnabled = bool.Parse(args[2]), GlobalHotkeyModifiers = int.Parse(args[3]), GlobalHotkeyKey = int.Parse(args[4]) }) ? 0 : 1;
     }
-    private static async Task<int> VerifyRealHotkeyUpgradeAsync(string output)
+    private static async Task<int> VerifyRealHotkeyUpgradeAsync(string output, bool tray = false)
     {
         string root = Path.GetFullPath(output); Directory.CreateDirectory(root);
         string original = ApplicationDataPaths.Default.DatabasePath;
         if (!File.Exists(original)) throw new FileNotFoundException("No real database available for upgrade verification.");
-        string backup = Path.Combine(root, "real-before-8.5-" + DateTimeOffset.UtcNow.ToString("yyyyMMddTHHmmssZ") + ".db");
+        string backup = Path.Combine(root, "real-before-" + (tray ? "8.6-" : "8.5-") + DateTimeOffset.UtcNow.ToString("yyyyMMddTHHmmssZ") + ".db");
         // SQLite online backup includes WAL state. Production is opened read-only and never migrated here.
         using (var source = OpenDatabase(original, true))
         using (var target = new Microsoft.Data.Sqlite.SqliteConnection("Data Source=" + backup))
@@ -57,7 +57,7 @@ internal static partial class Program
         using (var untouched = OpenDatabase(original, true))
             foreach (var pair in snapshots) Check(Query(untouched, $"SELECT {pair.Value.Columns} FROM \"{pair.Key}\" ORDER BY Id") == pair.Value.Rows, "Production remains unchanged: " + pair.Key);
         var settings = await new AppSettingsRepository(factory).GetOrCreateAsync();
-        Check(settings.GlobalHotkeyEnabled && settings.GlobalHotkeyModifiers == 3 && settings.GlobalHotkeyKey == 32, "Real old-user copy receives correct defaults");
+        Check(tray ? settings.CloseToTray : settings.GlobalHotkeyEnabled && settings.GlobalHotkeyModifiers == 3 && settings.GlobalHotkeyKey == 32, "Real old-user copy receives correct defaults");
         Check(BackupCount(paths) == 1, "Normal migration pipeline also creates its own pre-upgrade backup");
         Console.WriteLine($"PASS: {_checks} real-backup upgrade assertions; original database not upgraded");
         return 0;
@@ -150,7 +150,7 @@ internal static partial class Program
         var factory = new LauncherDbContextFactory(paths);
         using (var db = factory.CreateDbContext())
         {
-            string previous = db.Database.GetMigrations().Last(x => !x.EndsWith("AddGlobalHotkeySettings"));
+            string previous = db.Database.GetMigrations().TakeWhile(x => !x.EndsWith("AddGlobalHotkeySettings")).Last();
             await db.GetService<IMigrator>().MigrateAsync(previous);
             await db.Database.ExecuteSqlRawAsync("INSERT INTO AppSettings (Id,StartupPage,RememberWindowSize,RememberWindowPosition,BackgroundMode,ThemeMode,UpdatedAt,WindowWidth,WindowHeight,WindowLeft,WindowTop) VALUES (1,'Recent',0,0,'Transparent','Light','2026-10-22T00:00:00+00:00',1000,700,100,150)");
         }
@@ -316,7 +316,7 @@ internal static partial class Program
                 }
                 finally { Environment.SetEnvironmentVariable("NOVA_LAUNCH_TEST_OUTPUT", oldProbeOutput); }
                 Console.WriteLine($"PASS: {_checks} real global hotkey assertions");
-                other.Close(); other = null; app.MainWindow.Close();
+                other.Close(); other = null; app.RequestExplicitExit();
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); other?.Close(); app.Shutdown(1); }
         }));

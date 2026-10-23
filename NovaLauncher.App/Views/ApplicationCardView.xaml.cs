@@ -18,6 +18,15 @@ public partial class ApplicationCardView : UserControl
         InitializeComponent();
         Diagnostics.PerformanceTrace.End("CardXamlConstruction", phase);
         _timeRefresh.Tick += (_, _) => RefreshTime();
+        IsVisibleChanged += (_, _) =>
+        {
+            if (!IsVisible)
+            {
+                _timeRefresh.Stop();
+                CardMenu.IsOpen = InfoPopup.IsOpen = RenamePopup.IsOpen = RemovePopup.IsOpen = false;
+            }
+            else UpdateInteraction();
+        };
     }
 
     private void Card_MouseEnter(object sender, MouseEventArgs e) => UpdateInteraction();
@@ -40,7 +49,7 @@ public partial class ApplicationCardView : UserControl
 
     private void UpdateInteraction()
     {
-        bool active = IsMouseOver || IsKeyboardFocusWithin || CardMenu.IsOpen || InfoPopup.IsOpen || RenamePopup.IsOpen || RemovePopup.IsOpen;
+        bool active = IsVisible && (IsMouseOver || IsKeyboardFocusWithin || CardMenu.IsOpen || InfoPopup.IsOpen || RenamePopup.IsOpen || RemovePopup.IsOpen);
         var duration = (Duration)FindResource("HoverDuration");
         double offset = active && duration.HasTimeSpan && duration.TimeSpan > TimeSpan.Zero
             ? -(double)FindResource("ApplicationCardLift") : 0;

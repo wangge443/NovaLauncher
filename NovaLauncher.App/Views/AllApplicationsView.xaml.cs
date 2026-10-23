@@ -21,6 +21,11 @@ public partial class AllApplicationsView : UserControl
         DataContextChanged += (_, _) => Attach();
         Loaded += (_, _) => { Attach(); Schedule(); };
         Unloaded += (_, _) => Detach();
+        IsVisibleChanged += (_, _) =>
+        {
+            if (IsVisible) Schedule();
+            else { _pending?.Abort(); _pending = null; }
+        };
     }
 
     private void Attach()
@@ -74,12 +79,12 @@ public partial class AllApplicationsView : UserControl
 
     private void Schedule()
     {
-        if (!IsLoaded || _content is null || IsFullyRendered || _pending is not null) return;
+        if (!IsLoaded || !IsVisible || _content is null || IsFullyRendered || _pending is not null) return;
         // Input, render and application-idle readiness run before the next batch.
         _pending = Dispatcher.BeginInvoke(DispatcherPriority.SystemIdle, new Action(() =>
         {
             _pending = null;
-            if (!IsLoaded || _content is null) return;
+            if (!IsLoaded || !IsVisible || _content is null) return;
             Synchronize(Math.Min(_rendered.Count + 20, _content.Applications.Count));
             Schedule();
         }));

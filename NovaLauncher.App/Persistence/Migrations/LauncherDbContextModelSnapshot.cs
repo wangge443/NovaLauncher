@@ -73,6 +73,11 @@ namespace NovaLauncher.App.Persistence.Migrations
                         .HasColumnType("TEXT")
                         .HasDefaultValue("UniformToFill");
 
+                    b.Property<bool>("CloseToTray")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(true);
+
                     b.Property<bool>("GlobalHotkeyEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")

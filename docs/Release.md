@@ -1,5 +1,12 @@
 # Nova Launcher — Portable Preview 发布基线（8.1）
 
+## 8.6 System Tray + Startup（已通过验收）
+
+NotifyIcon 托盘驻留，默认关闭到托盘；托盘菜单提供打开 Nova、快速启动、设置与真正退出。开机启动默认 Off，以当前用户 HKCU Run 的 NovaLauncher 值为准；显式开启后通过带引号的实际 EXE 路径和 --startup 登录后台启动。后台初始化保留核心集合与搜索索引，不显示窗口、不构建应用卡片视觉控件。保持 8.4.3 Glass 与 8.2 分批渲染策略，隐藏时暂停视图刷新。仅新增 CloseToTray 最小 Migration；用户已授权最终收尾提交，不开始新功能。
+
+实现、验证、性能与人工重启验收项见 [Tray-And-Startup-8.6.md](Tray-And-Startup-8.6.md)。
+
+
 ## 8.5 Global Hotkey（已通过最终验收）
 
 新增最小Migration 20261022141212_AddGlobalHotkeySettings：仅AppSettings增加GlobalHotkeyEnabled（INTEGER，默认1）、GlobalHotkeyModifiers（INTEGER，默认3，Ctrl|Alt）、GlobalHotkeyKey（INTEGER，默认32，VK_SPACE）。正常升级复用SQLite在线备份及EF迁移流程，其他表不变。真实nova.db先备份，仅隔离副本执行升级验证；正式用户库留待实际启动验收版时按现有流程升级。独立8.5验收包不覆盖旧版本；无Installer、托盘或开机启动。

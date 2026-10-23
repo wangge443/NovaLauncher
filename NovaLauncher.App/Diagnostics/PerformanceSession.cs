@@ -97,13 +97,13 @@ internal static class PerformanceSession
             await File.WriteAllTextAsync(Path.Combine(root, "performance.json"),
                 JsonSerializer.Serialize(report, new JsonSerializerOptions { WriteIndented = true }));
             PerformanceTrace.WriteSummary();
-            window.Close();
+            ((App)Application.Current).RequestExplicitExit();
         }
         catch (Exception ex)
         {
             PerformanceTrace.Log?.Write(LogLevel.Error, "PERF", "Session failed", ex);
             await File.WriteAllTextAsync(Path.Combine(ApplicationDataPaths.VerificationRoot!, "performance-error.txt"), ex.ToString());
-            window.Close();
+            ((App)Application.Current).RequestExplicitExit();
         }
     }
 

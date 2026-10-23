@@ -2,7 +2,7 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前第八阶段 8.5：Global Hotkey（已通过最终验收），基线 d625eace1d4862a23828106b9f6d5a2e41e37126。默认 Ctrl + Alt + Space 复用现有 Quick Launcher，Ctrl + K 保持窗口内行为。使用 RegisterHotKey，不引入键盘 Hook、托盘、开机启动或后台服务。用户已授权仅 AppSettings 新增三个字段的最小 Migration，真实数据库先备份，仅隔离副本执行升级验证。保持 8.4.3 Glass 材质、True Transparency、8.2 性能架构、搜索和单实例协议不变。用户已授权收尾提交 feat: add global quick launcher hotkey；不开始下一阶段。主要交付为 Self-contained win-x64 Portable Preview；真实 Clean Machine Test 仍未完成。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前第八阶段 8.6：System Tray + Startup，基线 df30026d870b9f90f715237a30790ce904235475。使用系统 NotifyIcon，托盘始终显示；CloseToTray 默认 true，开机启动默认 Off，HKCU Run 为启动注册真实来源。新增最小 CloseToTray Migration，不增加第三方依赖。保持 True Transparency、搜索与 8.2 性能架构；只补充隐藏生命周期。8.6 已通过用户验收，已授权最终收尾提交 feat: add system tray and startup support；不开始新功能。不得开始 Auto Update、Installer 或 Clean Machine Test；Windows 重启/登录启动必须标记 Awaiting Manual Reboot Verification。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
@@ -55,4 +55,4 @@
 3. UI 工作先检查 ui-ux-pro-max 的安装与指令，形成设计参数和状态方案，再映射为 WPF 资源与控件。
 4. 按小范围改动实施，不覆盖用户工作；只有明确独立且有收益的工作流才考虑委派。
 5. 执行必要验证，记录未验证项与实际限制，清理本次无用临时文件，并同步相关文档。
-6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前8.5已通过最终验收，用户已授权提交 feat: add global quick launcher hotkey，不进入托盘或开机启动阶段，不将真实Clean Machine Test标记为完成。
+6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前8.6已通过验收，仅执行已授权的最终收尾提交，不进入Auto Update或Installer阶段，不将真实Clean Machine Test标记为完成。

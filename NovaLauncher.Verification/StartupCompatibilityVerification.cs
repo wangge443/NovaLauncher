@@ -36,7 +36,7 @@ internal static partial class Program
                     Check(Descendants<AllApplicationsView>(app.MainWindow).Any(), "Legacy Home opens application library");
                     Check(shell.Settings.StartupPages.Single(x => x.Value == request.Page).Label == "全部应用", "Legacy Home has known Settings label");
                 }
-                app.MainWindow.Close();
+                app.RequestExplicitExit();
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); app.Shutdown(1); }
         }));

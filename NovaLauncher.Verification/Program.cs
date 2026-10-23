@@ -23,6 +23,9 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length >= 3 && args[0] == "--tray-live") return RunTrayLive(args[1], args[2], args.Contains("--startup"), args.Contains("--probe"));
+        if (args.Length == 1 && args[0] == "--tray-registry") return VerifyRealStartupRegistry();
+        if (args.Length == 2 && args[0] == "--tray-real-upgrade") return VerifyRealHotkeyUpgradeAsync(args[1], tray: true).GetAwaiter().GetResult();
         if (args.Length == 2 && args[0] == "--hotkey-real-upgrade") return VerifyRealHotkeyUpgradeAsync(args[1]).GetAwaiter().GetResult();
         if (args.Length == 5 && args[0] == "--hotkey-config") return SetHotkeyConfigAsync(args).GetAwaiter().GetResult();
         if (args.Length == 3 && args[0] == "--hotkey-live") return RunHotkeyLive(args[1], args[2]);
@@ -84,7 +87,8 @@ internal static partial class Program
         {
             try
             {
-                if (args.Contains("--hotkey")) await RunHotkeyTestsAsync();
+                if (args.Contains("--tray")) await RunTrayTestsAsync();
+                else if (args.Contains("--hotkey")) await RunHotkeyTestsAsync();
                 else if (args.Contains("--transparency-prototype")) await RunTransparencyPrototypeAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--performance-behavior")) await RunPerformanceBehaviorAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--pinyin")) await RunPinyinAsync((MainWindow)app.MainWindow);

@@ -143,6 +143,17 @@ function Start-Nova {
     Start-Sleep -Milliseconds 600
 }
 function Close-Nova {
+    # 8.6 defaults X to residency. This legacy persistence smoke explicitly opts out;
+    # real tray Exit is verified separately by Test-TrayStartup.ps1.
+    Open-Settings
+    $residency = Find-Ui 'CloseToTray' -Optional
+    if ($null -ne $residency) {
+        $toggle = $residency.GetCurrentPattern([Windows.Automation.TogglePattern]::Pattern)
+        if ($toggle.Current.ToggleState -eq [Windows.Automation.ToggleState]::On) {
+            $toggle.Toggle()
+            Wait-For { $toggle.Current.ToggleState -eq [Windows.Automation.ToggleState]::Off } 'close-to-tray disabled for persistence smoke'
+        }
+    }
     Invoke-Ui 'CloseButton'
     if (-not $appProcess.WaitForExit(15000)) { throw 'Published EXE did not shut down' }
     if ($appProcess.ExitCode -ne 0) { throw "Published EXE exit code $($appProcess.ExitCode)" }

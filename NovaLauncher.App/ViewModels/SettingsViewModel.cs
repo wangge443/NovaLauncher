@@ -16,9 +16,9 @@ public sealed class SettingsViewModel : ViewModelBase
     private AppSettings _display;
     private bool _isSaving;
     private Task _pending = Task.CompletedTask;
-    public SettingsViewModel(IAppSettingsService service, IDataDirectoryService directory, ApplicationDataPaths paths, IToastService toast, AppearanceViewModel? appearance = null, GlobalHotkeyViewModel? hotkey = null)
+    public SettingsViewModel(IAppSettingsService service, IDataDirectoryService directory, ApplicationDataPaths paths, IToastService toast, AppearanceViewModel? appearance = null, GlobalHotkeyViewModel? hotkey = null, BackgroundStartupViewModel? backgroundStartup = null)
     {
-        Hotkey = hotkey; Appearance = appearance; _service = service; _toast = toast; _display = service.Current;
+        BackgroundStartup = backgroundStartup; Hotkey = hotkey; Appearance = appearance; _service = service; _toast = toast; _display = service.Current;
         DataDirectory = paths.RootDirectory; DatabasePath = paths.DatabasePath;
         OpenDataDirectoryCommand = new AsyncRelayCommand(async () =>
         {
@@ -29,6 +29,7 @@ public sealed class SettingsViewModel : ViewModelBase
     }
     public AppearanceViewModel? Appearance { get; }
     public GlobalHotkeyViewModel? Hotkey { get; }
+    public BackgroundStartupViewModel? BackgroundStartup { get; }
     public IReadOnlyList<StartupPageChoice> StartupPages { get; } =
         [new(StartupPage.Home, "全部应用"), new(StartupPage.Favorites, "收藏"), new(StartupPage.Recent, "最近使用")];
     public bool CanEdit => !_isSaving;
@@ -42,7 +43,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public IAsyncRelayCommand OpenDataDirectoryCommand { get; }
     public IRelayCommand AppearanceCommand { get; }
     public void Refresh() { _display = _service.Current; NotifyValues(); }
-    public async Task FlushAsync() { await _pending; if (Appearance is not null) await Appearance.FlushAsync(); if (Hotkey is not null) await Hotkey.FlushAsync(); }
+    public async Task FlushAsync() { await _pending; if (Appearance is not null) await Appearance.FlushAsync(); if (Hotkey is not null) await Hotkey.FlushAsync(); if (BackgroundStartup is not null) await BackgroundStartup.FlushAsync(); }
     private void Save(Func<AppSettings, AppSettings> update)
     {
         if (_isSaving) { NotifyValues(); return; }

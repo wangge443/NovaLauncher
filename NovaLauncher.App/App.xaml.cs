@@ -3,6 +3,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Windows.Interop;
 using NovaLauncher.App.Diagnostics;
 using NovaLauncher.App.Helpers;
 using NovaLauncher.App.ViewModels;
@@ -20,6 +21,16 @@ public partial class App : Application
     private SettingsViewModel? _settings;
     private AppearanceService? _appearance;
     private GlobalHotkeyService? _globalHotkey;
+    private ITrayIconService? _tray;
+    private IStartupRegistrationService? _startupRegistration;
+    private bool _backgroundStartup;
+    private bool _ready;
+    private bool _explicitExit;
+    private bool _trayHintShown;
+    private bool _hasShown;
+    private Task _hideSave = Task.CompletedTask;
+    public bool IsBackgroundStartup => _backgroundStartup;
+    public bool IsTrayVisible => _tray?.IsVisible == true;
     public Task ReadyTask => _startupTask;
     private Task _startupTask = Task.CompletedTask;
     private bool _closing;
@@ -47,6 +58,7 @@ public partial class App : Application
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        _backgroundStartup = e.Args.Contains("--startup", StringComparer.Ordinal);
         if (Persistence is null)
         {
             try
@@ -57,6 +69,7 @@ public partial class App : Application
                 _instance = new SingleInstanceCoordinator(ApplicationDataPaths.VerificationRoot?.ToUpperInvariant());
                 if (!_instance.TryAcquire())
                 {
+                    if (_backgroundStartup) { Shutdown(); return; }
                     _startupTask = ActivateExistingAndExitAsync();
                     return; // No window, settings, profile, database or migrations in a secondary process.
                 }
@@ -91,6 +104,8 @@ public partial class App : Application
             Trace.Listeners.Add(_traceListener);
             _exceptionLogging = new UnhandledExceptionLogging(this, _log);
             _log.WriteStartup(typeof(App).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "unknown");
+            if (_backgroundStartup) _log.Write(LogLevel.Information, "Startup", "App launched with --startup");
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
             _instance!.Listen(() => Dispatcher.BeginInvoke(new Action(RequestActivation)));
         }
         ShellPreferences.Apply(Resources);
@@ -112,9 +127,20 @@ public partial class App : Application
         {
             _globalHotkey = new GlobalHotkeyService(_settingsService, _log);
             _globalHotkey.Triggered += OpenGlobalQuickLauncher;
+            BackgroundStartupViewModel? backgroundStartup = null;
+            if (Persistence is null)
+            {
+                // Verification uses an isolated key, never the user's actual Run entry.
+                string key = ApplicationDataPaths.VerificationRoot is null ? RegistryStartupStore.RunKey
+                    : @"Software\NovaLauncher\Verification\" + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(paths.RootDirectory))) + @"\Run";
+                string executable = ApplicationDataPaths.VerificationRoot is not null && Path.GetFileName(Environment.ProcessPath) == "NovaLauncher.Verification.exe"
+                    ? Path.Combine(AppContext.BaseDirectory, "NovaLauncher.exe") : Environment.ProcessPath!;
+                _startupRegistration = new StartupRegistrationService(new RegistryStartupStore(key), executable, _log);
+                backgroundStartup = new BackgroundStartupViewModel(_settingsService, _startupRegistration, _content.Toast);
+            }
             _appearance = new AppearanceService(_settingsService, new BackgroundImageStore(paths), new DesktopWallpaperSource(), _content.Toast);
             _settings = new SettingsViewModel(_settingsService, new DataDirectoryService(paths), paths, _content.Toast,
-                new AppearanceViewModel(_appearance, new BackgroundFilePicker(), _content.Toast), new GlobalHotkeyViewModel(_globalHotkey));
+                new AppearanceViewModel(_appearance, new BackgroundFilePicker(), _content.Toast), new GlobalHotkeyViewModel(_globalHotkey), backgroundStartup);
         }
         MainWindow = new MainWindow
         {
@@ -129,15 +155,42 @@ public partial class App : Application
     {
         _log?.Write(LogLevel.Information, "SingleInstance", "Activation requested by secondary instance");
         if (_closing) return;
-        if (MainWindow?.IsVisible == true) WindowActivationService.Activate(MainWindow);
+        if (_ready) ShowMainWindow();
         else _activationPending = true;
+    }
+
+    private void ShowMainWindow()
+    {
+        if (_closing) return;
+        bool hidden = !MainWindow.IsVisible;
+        WindowActivationService.Activate(MainWindow);
+        _hasShown = true;
+        if (hidden) _settings?.BackgroundStartup?.Refresh();
+        if (hidden) _log?.Write(LogLevel.Information, "Tray", "MainWindow restored from tray");
+    }
+
+    private void OnTrayAction(TrayAction action)
+    {
+        if (_closing) return;
+        if (action == TrayAction.Exit) { RequestExplicitExit(); return; }
+        if (action == TrayAction.QuickLauncher) { OpenGlobalQuickLauncher(); return; }
+        ShowMainWindow();
+        if (action == TrayAction.Settings && MainWindow.DataContext is MainWindowViewModel shell) shell.Sidebar.OpenSettings();
+    }
+
+    public void RequestExplicitExit()
+    {
+        if (_closing) return;
+        _explicitExit = true;
+        _log?.Write(LogLevel.Information, "Application", "Explicit exit");
+        MainWindow.Close();
     }
 
     private void OpenGlobalQuickLauncher()
     {
         if (_closing || MainWindow is not MainWindow window) return;
         var timer = Stopwatch.StartNew();
-        WindowActivationService.Activate(window);
+        ShowMainWindow();
         double visible = timer.Elapsed.TotalMilliseconds;
         window.OpenQuickLauncher();
         double opened = timer.Elapsed.TotalMilliseconds;
@@ -170,7 +223,11 @@ public partial class App : Application
                 MainWindow.SourceInitialized += (_, _) => WindowPlacementService.Restore(MainWindow, _settingsService.Current);
                 PerformanceTrace.Mark("HomeDataReady");
                 long layout = PerformanceTrace.Start();
-                try { MainWindow.Show(); }
+                try
+                {
+                    if (_backgroundStartup) new WindowInteropHelper(MainWindow).EnsureHandle();
+                    else { MainWindow.Show(); _hasShown = true; }
+                }
                 catch (Exception ex) when (_appearance.IsTransparent)
                 {
                     _log?.Write(LogLevel.Error, "Appearance", "Transparent startup failed; using default window", ex);
@@ -182,19 +239,39 @@ public partial class App : Application
                     failed.Closing -= OnWindowClosing;
                     failed.Close();
                     MainWindow.SourceInitialized += (_, _) => WindowPlacementService.Restore(MainWindow, _settingsService.Current);
-                    MainWindow.Show();
+                    if (_backgroundStartup) new WindowInteropHelper(MainWindow).EnsureHandle();
+                    else { MainWindow.Show(); _hasShown = true; }
                     _content.Toast.Show("透明背景无法启用，已恢复默认背景");
                 }
-                PerformanceTrace.Mark("MainWindowShown");
+                if (!_backgroundStartup) PerformanceTrace.Mark("MainWindowShown");
                 // A dedicated message HWND keeps registrations stable across Glass host swaps.
-                if (Persistence is null) _globalHotkey!.Initialize(new HotkeyRegistrar());
-                MainWindow.UpdateLayout();
+                if (Persistence is null)
+                {
+                    var startupState = _backgroundStartup ? _startupRegistration!.Read() : _startupRegistration!.RepairMovedPath();
+                    if (startupState.Error is not null) _content.Toast.Show(startupState.Error);
+                    _tray = new TrayIconService(_log);
+                    _tray.Requested += action => Dispatcher.BeginInvoke(new Action(() => OnTrayAction(action)));
+                    try { _tray.Initialize(); }
+                    catch (Exception ex)
+                    {
+                        _log?.Write(LogLevel.Error, "Tray", "Tray initialization failed; keeping window accessible", ex);
+                        _tray.Dispose(); _tray = null;
+                        MainWindow.Show(); _hasShown = true;
+                        _content.Toast.Show("系统托盘不可用，关闭窗口将退出 Nova。");
+                    }
+                    LogReady("Tray Ready");
+                    _globalHotkey!.Initialize(new HotkeyRegistrar());
+                    LogReady("Global Hotkey Ready");
+                }
+                if (!_backgroundStartup) MainWindow.UpdateLayout();
                 PerformanceTrace.End("HomeFirstLayout", layout);
                 PerformanceTrace.Mark("FirstLayoutCompleted");
-                if (PerformanceTrace.Enabled) _ = PerformanceSession.RunAsync(MainWindow, _content);
+                if (PerformanceTrace.Enabled && !_backgroundStartup) _ = PerformanceSession.RunAsync(MainWindow, _content);
                 if (!loaded) _content.Toast.Show("设置读取失败，已使用默认设置");
             }
-            if (_activationPending) { _activationPending = false; WindowActivationService.Activate(MainWindow); }
+            _ready = true;
+            if (_activationPending) { _activationPending = false; ShowMainWindow(); }
+            LogReady(_backgroundStartup ? "Background Ready" : "Manual Ready");
             _log?.Write(LogLevel.Information, "Application", "Window ready");
         }
         catch (Exception ex)
@@ -206,19 +283,50 @@ public partial class App : Application
         }
     }
 
+    private void LogReady(string phase)
+    {
+        using var process = Process.GetCurrentProcess();
+        _log?.Write(LogLevel.Information, "Startup", FormattableString.Invariant($"{phase} processMs={(DateTime.Now - process.StartTime).TotalMilliseconds:F2} managedBytes={GC.GetTotalMemory(false)}"));
+    }
+
+    private async Task HideToTrayAsync()
+    {
+        _content!.QuickLauncher.Close();
+        _settings?.Hotkey?.CancelCapture();
+        var placement = WindowPlacementService.Capture(_settingsService!.Current, MainWindow);
+        MainWindow.Hide();
+        _log?.Write(LogLevel.Information, "Tray", "MainWindow hidden to tray");
+        string hint = Path.Combine(ApplicationDataPaths.Default.RootDirectory, "tray-hint-shown");
+        if (!_trayHintShown && !File.Exists(hint))
+        {
+            _trayHintShown = true;
+            _tray!.ShowBackgroundHint(_globalHotkey?.IsRegistered == true
+                ? $"按 {_globalHotkey.Hotkey} 可快速启动应用。右键托盘图标可退出 Nova。"
+                : "双击托盘图标可打开 Nova，右键可退出 Nova。");
+            try { await File.WriteAllTextAsync(hint, "1"); }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException) { _log?.Write(LogLevel.Warning, "Tray", "Tray hint state could not be saved", ex); }
+        }
+        await _settingsService.UpdateAsync(s => s with { WindowWidth = placement.WindowWidth, WindowHeight = placement.WindowHeight, WindowLeft = placement.WindowLeft, WindowTop = placement.WindowTop });
+    }
+
     private async void OnWindowClosing(object? sender, CancelEventArgs e)
     {
         if (_closeReady || _content is null) return;
         e.Cancel = true;
         if (_closing) return;
+        if (!_explicitExit && _ready && _settingsService?.Current.CloseToTray == true && _tray?.IsVisible == true)
+        {
+            _hideSave = HideToTrayAsync();
+            return;
+        }
         _closing = true;
         if (_globalHotkey is not null) _globalHotkey.SuppressActivation = true;
         MainWindow.IsEnabled = false;
         try
         {
-            await _startupTask; await _content.FlushAsync(); if (_profile is not null) await _profile.FlushAsync();
+            await _startupTask; await _hideSave; await _content.FlushAsync(); if (_profile is not null) await _profile.FlushAsync();
             if (_settings is not null) await _settings.FlushAsync();
-            if (_settingsService is not null && !await _settingsService.UpdateAsync(current => WindowPlacementService.Capture(current, MainWindow)))
+            if (_hasShown && _settingsService is not null && !await _settingsService.UpdateAsync(current => WindowPlacementService.Capture(current, MainWindow)))
             {
                 _content.Toast.Show("设置保存失败");
                 // Keep the failure visible briefly while still honoring the user's close request.
@@ -233,10 +341,12 @@ public partial class App : Application
         finally
         {
             _globalHotkey?.Dispose();
+            _tray?.Dispose();
+            _instance?.Dispose();
             _log?.Write(LogLevel.Information, "Application", "Shutdown");
             if (_log is not null) await _log.StopAsync();
             // Flush may complete synchronously; defer Close until the current Closing event has returned.
-            _ = Dispatcher.BeginInvoke(new Action(() => { _closeReady = true; MainWindow.Close(); }));
+            _ = Dispatcher.BeginInvoke(new Action(() => { _closeReady = true; MainWindow.Close(); Shutdown(_exitCode); }));
         }
     }
 
@@ -247,19 +357,22 @@ public partial class App : Application
         Dispatcher.BeginInvoke(new Action(async () =>
         {
             _transparencyRefreshQueued = false;
-            if (_closing || _appearance is null || MainWindow is not MainWindow old || !old.IsVisible ||
+            if (_closing || _appearance is null || MainWindow is not MainWindow old ||
                 old.AllowsTransparency == _appearance.IsTransparent || _transparencyHostFailed) return;
             MainWindow? next = null;
             try
             {
                 var state = old.WindowState;
+                bool visible = old.IsVisible;
                 next = TransparencyWindowHost.CreateReplacement(old, _appearance.IsTransparent);
-                next.Show(); next.WindowState = state;
+                if (!_hasShown) { next.Width = old.Width; next.Height = old.Height; }
+                if (visible) next.Show(); else new WindowInteropHelper(next).EnsureHandle();
+                next.WindowState = state;
                 MainWindow = next;
                 next.Closing += OnWindowClosing;
                 old.Closing -= OnWindowClosing;
                 old.Close();
-                if (state != WindowState.Minimized) next.Activate();
+                if (visible && state != WindowState.Minimized) next.Activate();
             }
             catch (Exception ex)
             {
@@ -288,6 +401,7 @@ public partial class App : Application
     protected override void OnExit(ExitEventArgs e)
     {
         _globalHotkey?.Dispose();
+        _tray?.Dispose();
         if (_appearance is not null) _appearance.PropertyChanged -= OnAppearanceChanged;
         _content?.Dispose();
         SystemParameters.StaticPropertyChanged -= OnSystemPreferencesChanged;

@@ -7,6 +7,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>NovaLauncher</AssemblyName>
     <RootNamespace>NovaLauncher.App</RootNamespace>
     <Product>Nova Launcher</Product>
@@ -20,6 +21,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Using Remove="System.Drawing" />
+    <Using Remove="System.Windows.Forms" />
     <Resource Include="Resources/Nova.ico" />
     <None Update="ThirdParty/ToolGood.Words.Pinyin.LICENSE.txt" CopyToOutputDirectory="PreserveNewest" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />

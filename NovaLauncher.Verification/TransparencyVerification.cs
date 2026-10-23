@@ -59,7 +59,7 @@ internal static partial class Program
                 await shell.Settings.Appearance.Background.SetModeAsync(NovaLauncher.App.Models.BackgroundMode.Default);
                 await WaitForAsync(() => !app.MainWindow.AllowsTransparency);
                 Console.WriteLine($"PASS: {_checks} system-window assertions; Win+Z screenshot requires visual review");
-                companion.Close(); companion = null; app.MainWindow.Close();
+                companion.Close(); companion = null; app.RequestExplicitExit();
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); companion?.Close(); app.Shutdown(1); }
             finally { if (desktopShown) SendSystemChord(0x5B, 0x44); }
@@ -264,7 +264,7 @@ internal static partial class Program
                 fallbackWindow.Close();
                 behind.Close(); behind = null; shield.Close(); shield = null;
                 Console.WriteLine($"PASS: {_checks} transparency assertions; Tier={RenderCapability.Tier >> 16}; DPI={VisualTreeHelper.GetDpi(app.MainWindow).PixelsPerDip}");
-                app.MainWindow.Close();
+                app.RequestExplicitExit();
             }
             catch (Exception ex) { Console.Error.WriteLine(ex); behind?.Close(); shield?.Close(); app.Shutdown(1); }
             finally { Environment.SetEnvironmentVariable("NOVA_DISABLE_TRANSPARENCY", null); }

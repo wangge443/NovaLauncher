@@ -14,6 +14,7 @@ public sealed class LauncherDbContext(DbContextOptions<LauncherDbContext> option
     {
         var settings = builder.Entity<AppSettingsEntity>();
         settings.HasKey(x => x.Id);
+        settings.Property(x => x.CloseToTray).HasDefaultValue(true);
         settings.Property(x => x.GlobalHotkeyEnabled).HasDefaultValue(true);
         settings.Property(x => x.GlobalHotkeyModifiers).HasDefaultValue(3);
         settings.Property(x => x.GlobalHotkeyKey).HasDefaultValue(32);

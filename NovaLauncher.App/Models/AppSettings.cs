@@ -9,6 +9,7 @@ public enum ThemeMode { Light }
 public record AppSettings
 {
     public int Id { get; init; } = 1;
+    public bool CloseToTray { get; init; } = true;
     public bool GlobalHotkeyEnabled { get; init; } = true;
     public int GlobalHotkeyModifiers { get; init; } = 3;
     public int GlobalHotkeyKey { get; init; } = 32;

@@ -1,5 +1,12 @@
 # Nova Launcher — 产品定义
 
+## 8.6 System Tray + Startup（已通过验收）
+
+NotifyIcon 托盘驻留，默认关闭到托盘；托盘菜单提供打开 Nova、快速启动、设置与真正退出。开机启动默认 Off，以当前用户 HKCU Run 的 NovaLauncher 值为准；显式开启后通过带引号的实际 EXE 路径和 --startup 登录后台启动。后台初始化保留核心集合与搜索索引，不显示窗口、不构建应用卡片视觉控件。保持 8.4.3 Glass 与 8.2 分批渲染策略，隐藏时暂停视图刷新。仅新增 CloseToTray 最小 Migration；用户已授权最终收尾提交，不开始新功能。
+
+实现、验证、性能与人工重启验收项见 [Tray-And-Startup-8.6.md](Tray-And-Startup-8.6.md)。
+
+
 ## 8.5 Global Hotkey（已通过最终验收）
 
 默认 Ctrl + Alt + Space 在 Nova 运行期间恢复/显示并置前主窗口，复用 Quick Launcher；首次打开空查询，重复按下聚焦并全选现有查询。Ctrl + K 仍是窗口内快捷键；Esc返回原页面。Settings新增快捷启动开关、按键录制、冲突提示与重试。X仍退出程序，完全退出后热键不再生效。
