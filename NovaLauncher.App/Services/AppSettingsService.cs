@@ -40,7 +40,14 @@ public sealed class AppSettingsService(IAppSettingsRepository repository) : IApp
         finally { _gate.Release(); }
     }
 
-    public static AppSettings Validate(AppSettings value) => value with
+    public static AppSettings Validate(AppSettings value)
+    {
+        if (new GlobalHotkey(value.GlobalHotkeyModifiers, value.GlobalHotkeyKey).ValidationError is not null)
+        {
+            Trace.TraceWarning("GlobalHotkey invalid settings; using default shortcut");
+            value = value with { GlobalHotkeyEnabled = true, GlobalHotkeyModifiers = 3, GlobalHotkeyKey = 32 };
+        }
+        return value with
     {
         Id = 1,
         StartupPage = Enum.IsDefined(value.StartupPage) ? value.StartupPage : StartupPage.Home,
@@ -51,7 +58,8 @@ public sealed class AppSettingsService(IAppSettingsRepository repository) : IApp
         WindowWidth = Dimension(value.WindowWidth, 800, 1120),
         WindowHeight = Dimension(value.WindowHeight, 560, 720),
         WindowLeft = Coordinate(value.WindowLeft), WindowTop = Coordinate(value.WindowTop)
-    };
+        };
+    }
     private static double? Dimension(double? value, double minimum, double fallback) => value is null ? null :
         double.IsFinite(value.Value) ? Math.Clamp(value.Value, minimum, 7680) : fallback;
     private static double? Coordinate(double? value) => value is { } number && double.IsFinite(number) && Math.Abs(number) <= 100000 ? number : null;

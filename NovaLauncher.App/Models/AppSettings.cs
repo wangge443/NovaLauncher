@@ -9,6 +9,9 @@ public enum ThemeMode { Light }
 public record AppSettings
 {
     public int Id { get; init; } = 1;
+    public bool GlobalHotkeyEnabled { get; init; } = true;
+    public int GlobalHotkeyModifiers { get; init; } = 3;
+    public int GlobalHotkeyKey { get; init; } = 32;
     public StartupPage StartupPage { get; init; } = StartupPage.Home;
     public bool RememberWindowSize { get; init; } = true;
     public bool RememberWindowPosition { get; init; } = true;

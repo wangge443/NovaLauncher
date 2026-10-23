@@ -1,5 +1,10 @@
 # Nova Launcher
 
+## 8.5 Global Hotkey（已通过最终验收）
+
+默认 Ctrl + Alt + Space 从其他程序呼出 Nova Quick Launcher，Ctrl + K 保持窗口内行为。支持开关、快捷键录制、冲突保留旧键及重启恢复。仅运行期间有效，X仍退出；不含托盘或开机启动。新增最小AppSettings Migration，详见 [8.5交付记录](docs/GlobalHotkey-8.5.md)。已通过最终验收，不开始下一阶段。
+
+
 ## 8.4.3 Glass Integration Polish（已通过最终验收）
 
 重建整窗、Workspace、面板、控件四层材质；统一Chrome与Sidebar，去掉标题底色，设置卡片使用轻高光/细边界，分类末行整合创建入口。Release 0 warnings / 0 errors；透明28项、相关回归231项、发布启动6项通过。实际截图、材质参数和验证边界见 [8.4.3交付记录](docs/GlassIntegration-8.4.3.md)。8.4.3透明底层、数据库、业务、搜索和性能架构不变；用户已确认作为Nova Preview Glass Mode基线并授权提交 style: refine glass mode visual hierarchy，不开始下一阶段。

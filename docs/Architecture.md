@@ -1,5 +1,12 @@
 # Nova Launcher — 架构设计
 
+## 8.5 Global Hotkey（已通过最终验收）
+
+Windows WM_HOTKEY → HotkeyRegistrar（HwndSource消息窗口 / RegisterHotKey + MOD_NOREPEAT）→ GlobalHotkeyService → WindowActivationService → MainWindow.OpenQuickLauncher → 原QuickLauncherOverlay.OpenAndFocus。消息窗口在主HWND创建后建立，独立于Glass窗口替换；不改透明机制、搜索索引或渐进卡片架构。IHotkeyRegistrar支持纯抽象测试。候选注册在保存成功前与旧注册同时保留，失败释放候选；退出时注销。
+
+完整实现、兼容策略、测试和限制见 [GlobalHotkey-8.5.md](GlobalHotkey-8.5.md)。
+
+
 ## 8.4 透明窗口宿主（当前架构，8.4.3最终验收通过）
 
 BackgroundMode.Transparent使用WPF AllowsTransparency逐像素alpha；8.4.1由Shell背景Tint及局部Glass Surface Brush参与半透明，Window.Opacity保持1。TransparencySupport检测Windows/DWM/无障碍与会话条件；AppearanceService复用BackgroundOverlayOpacity，无Schema/Migration。MainWindow.ConfigureTransparentSurface分离窗口合成与UI Surface可读性；该模式不启用旧DesktopBackdropController。

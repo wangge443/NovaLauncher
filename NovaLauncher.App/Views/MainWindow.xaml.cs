@@ -39,10 +39,12 @@ public partial class MainWindow : Window
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         if (e.Key != Key.K || Keyboard.Modifiers != ModifierKeys.Control || DataContext is not MainWindowViewModel vm) return;
-        if (QuickOverlay.IsComposing) return;
-        QuickOverlay.OpenAndFocus();
+        if (QuickOverlay.IsComposing || vm.Settings?.Hotkey?.IsCapturing == true) return;
+        OpenQuickLauncher();
         e.Handled = true;
     }
+
+    public void OpenQuickLauncher() => QuickOverlay.OpenAndFocus();
 
     private void ShellLayout_SizeChanged(object sender, SizeChangedEventArgs e)
     {

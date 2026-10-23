@@ -23,6 +23,9 @@ internal static partial class Program
     [STAThread]
     private static int Main(string[] args)
     {
+        if (args.Length == 2 && args[0] == "--hotkey-real-upgrade") return VerifyRealHotkeyUpgradeAsync(args[1]).GetAwaiter().GetResult();
+        if (args.Length == 5 && args[0] == "--hotkey-config") return SetHotkeyConfigAsync(args).GetAwaiter().GetResult();
+        if (args.Length == 3 && args[0] == "--hotkey-live") return RunHotkeyLive(args[1], args[2]);
         if (args.Length == 3 && args[0] == "--glass-polish") return RunTransparencyLive(args[1], args[2], polish: true);
         if (args.Length == 3 && args[0] == "--transparency-live") return RunTransparencyLive(args[1], args[2]);
         if (args.Length == 3 && args[0] == "--transparency-system") return RunTransparencySystem(args[1], args[2]);
@@ -81,7 +84,8 @@ internal static partial class Program
         {
             try
             {
-                if (args.Contains("--transparency-prototype")) await RunTransparencyPrototypeAsync((MainWindow)app.MainWindow);
+                if (args.Contains("--hotkey")) await RunHotkeyTestsAsync();
+                else if (args.Contains("--transparency-prototype")) await RunTransparencyPrototypeAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--performance-behavior")) await RunPerformanceBehaviorAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--pinyin")) await RunPinyinAsync((MainWindow)app.MainWindow);
                 else if (args.Contains("--quick-launcher")) await RunQuickLauncherAsync((MainWindow)app.MainWindow);

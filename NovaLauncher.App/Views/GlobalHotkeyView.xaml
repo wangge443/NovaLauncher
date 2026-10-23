@@ -1,0 +1,27 @@
+<UserControl x:Class="NovaLauncher.App.Views.GlobalHotkeyView"
+ xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+ xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+ PreviewKeyDown="Capture_KeyDown" Unloaded="View_Unloaded">
+ <StackPanel>
+  <TextBlock Text="快捷启动" Style="{StaticResource SettingsSectionTitle}"/>
+  <Border Style="{StaticResource SettingsRow}"><Grid>
+   <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+   <StackPanel Margin="0,0,16,0"><TextBlock Text="全局快速启动"/>
+    <TextBlock Text="在其他程序中也可快速呼出 Nova 搜索。" Style="{StaticResource SettingsDescription}"/>
+   </StackPanel>
+   <CheckBox Grid.Column="1" IsChecked="{Binding Enabled}" IsEnabled="{Binding CanEdit}" Style="{StaticResource SettingsToggle}" AutomationProperties.Name="全局快速启动" AutomationProperties.AutomationId="GlobalHotkeyEnabled"/>
+  </Grid></Border>
+  <Border Style="{StaticResource SettingsRow}"><StackPanel>
+   <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+    <StackPanel><TextBlock Text="快捷键"/><TextBlock Text="{Binding CaptureLabel}" Margin="0,6,0,0" FontWeight="SemiBold" AutomationProperties.AutomationId="GlobalHotkeyShortcut"/></StackPanel>
+    <Button x:Name="CaptureButton" Grid.Column="1" Content="修改" Style="{StaticResource SettingsButton}" IsEnabled="{Binding CanEdit}" Command="{Binding BeginCaptureCommand}" Click="BeginCapture_Click" AutomationProperties.AutomationId="GlobalHotkeyCapture"/>
+   </Grid>
+   <TextBlock Text="{Binding Status}" Style="{StaticResource SettingsDescription}" AutomationProperties.LiveSetting="Polite" AutomationProperties.AutomationId="GlobalHotkeyStatus"/>
+   <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+    <Button Content="重试注册" Command="{Binding RetryCommand}" IsEnabled="{Binding CanEdit}" Style="{StaticResource SettingsButton}" Visibility="{Binding CanRetry, Converter={StaticResource BooleanVisibility}}"/>
+    <Button Content="取消修改" Command="{Binding CancelCaptureCommand}" Style="{StaticResource SettingsButton}" Visibility="{Binding IsCapturing, Converter={StaticResource BooleanVisibility}}"/>
+   </StackPanel>
+   <TextBlock Text="Nova 退出后快捷键不可用。窗口内仍可使用 Ctrl + K。" Style="{StaticResource SettingsDescription}"/>
+  </StackPanel></Border>
+ </StackPanel>
+</UserControl>

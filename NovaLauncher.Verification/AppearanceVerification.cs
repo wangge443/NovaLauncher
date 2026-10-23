@@ -118,7 +118,7 @@ internal static partial class Program
         foreach(var item in shell.Sidebar.Items.Concat(shell.Sidebar.FooterItems)) { shell.Sidebar.SelectedItem=item; window.UpdateLayout(); Check(appearance.HasImage,"Background retained on "+item.Name); }
         await WaitForAsync(()=>!content.Toast.IsOpen); await Task.Delay(200); shell.Sidebar.OpenSettings(); await Task.Delay(100); var settingsView=Descendants<SettingsView>(window).Single();
         ((Expander)settingsView.FindName("BackgroundExpander")).IsExpanded=true; window.UpdateLayout();
-        var slider=Descendants<Slider>(settingsView).Single(x => x.Name == "OverlaySlider"); slider.BringIntoView(); window.Activate();
+        var slider=Descendants<Slider>(settingsView).Single(x => x.Name == "OverlaySlider"); slider.BringIntoView(); await FocusGlassTestWindowAsync(window);
         LaunchNative.SetForegroundWindow(new System.Windows.Interop.WindowInteropHelper(window).Handle);
         slider.Focus(); await WaitForAsync(() => slider.IsKeyboardFocused && window.IsActive);
         ProfileKey(0x27); await WaitForAsync(() => vm.OverlayPercent == 73);

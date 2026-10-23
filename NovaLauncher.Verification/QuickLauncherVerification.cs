@@ -18,9 +18,7 @@ internal static partial class Program
 {
     private static async Task QuickShortcutAsync(MainWindow window)
     {
-        window.Activate();
-        LaunchNative.SetForegroundWindow(new WindowInteropHelper(window).Handle);
-        await Task.Delay(60);
+        await FocusGlassTestWindowAsync(window);
         Check(window.IsActive, "Keyboard target is the active test window");
         LaunchNative.keybd_event(0x11, 0, 0, UIntPtr.Zero);
         try { await Task.Delay(60); ProfileKey(0x4B); await Task.Delay(150); }

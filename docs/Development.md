@@ -1,5 +1,12 @@
 # Nova Launcher — 开发流程
 
+## 8.5 Global Hotkey（已通过最终验收）
+
+新增 --hotkey 自动验证、--hotkey-live 实际WM_HOTKEY与窗口测试、--hotkey-real-upgrade 真实库只读备份及隔离副本升级检查、scripts/Test-GlobalHotkey.ps1 独立进程/Chrome前台与全屏验证。所有测试使用隔离数据，交互式桌面输入测试顺序运行。详细结果见本阶段交付记录；用户已授权最终提交，不开始下一阶段。
+
+完整实现、兼容策略、测试和限制见 [GlobalHotkey-8.5.md](GlobalHotkey-8.5.md)。
+
+
 ## 8.4.3 Glass Integration Polish（已通过最终验收）
 
 重建整窗、Workspace、面板、控件四层材质；统一Chrome与Sidebar，去掉标题底色，设置卡片使用轻高光/细边界，分类末行整合创建入口。Release 0 warnings / 0 errors；透明28项、相关回归231项、发布启动6项通过。实际截图、材质参数和验证边界见 [8.4.3交付记录](GlassIntegration-8.4.3.md)。8.4.3透明底层、数据库、业务、搜索和性能架构不变；用户已确认作为Nova Preview Glass Mode基线并授权提交 style: refine glass mode visual hierarchy，不开始下一阶段。

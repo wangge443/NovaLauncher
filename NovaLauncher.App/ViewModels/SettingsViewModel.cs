@@ -16,9 +16,9 @@ public sealed class SettingsViewModel : ViewModelBase
     private AppSettings _display;
     private bool _isSaving;
     private Task _pending = Task.CompletedTask;
-    public SettingsViewModel(IAppSettingsService service, IDataDirectoryService directory, ApplicationDataPaths paths, IToastService toast, AppearanceViewModel? appearance = null)
+    public SettingsViewModel(IAppSettingsService service, IDataDirectoryService directory, ApplicationDataPaths paths, IToastService toast, AppearanceViewModel? appearance = null, GlobalHotkeyViewModel? hotkey = null)
     {
-        Appearance = appearance; _service = service; _toast = toast; _display = service.Current;
+        Hotkey = hotkey; Appearance = appearance; _service = service; _toast = toast; _display = service.Current;
         DataDirectory = paths.RootDirectory; DatabasePath = paths.DatabasePath;
         OpenDataDirectoryCommand = new AsyncRelayCommand(async () =>
         {
@@ -28,6 +28,7 @@ public sealed class SettingsViewModel : ViewModelBase
         AppearanceCommand = new RelayCommand(() => toast.Show("外观设置将在下一阶段提供"));
     }
     public AppearanceViewModel? Appearance { get; }
+    public GlobalHotkeyViewModel? Hotkey { get; }
     public IReadOnlyList<StartupPageChoice> StartupPages { get; } =
         [new(StartupPage.Home, "全部应用"), new(StartupPage.Favorites, "收藏"), new(StartupPage.Recent, "最近使用")];
     public bool CanEdit => !_isSaving;
@@ -41,7 +42,7 @@ public sealed class SettingsViewModel : ViewModelBase
     public IAsyncRelayCommand OpenDataDirectoryCommand { get; }
     public IRelayCommand AppearanceCommand { get; }
     public void Refresh() { _display = _service.Current; NotifyValues(); }
-    public async Task FlushAsync() { await _pending; if (Appearance is not null) await Appearance.FlushAsync(); }
+    public async Task FlushAsync() { await _pending; if (Appearance is not null) await Appearance.FlushAsync(); if (Hotkey is not null) await Hotkey.FlushAsync(); }
     private void Save(Func<AppSettings, AppSettings> update)
     {
         if (_isSaving) { NotifyValues(); return; }

@@ -19,6 +19,7 @@ public partial class App : Application
     private IAppSettingsService? _settingsService;
     private SettingsViewModel? _settings;
     private AppearanceService? _appearance;
+    private GlobalHotkeyService? _globalHotkey;
     public Task ReadyTask => _startupTask;
     private Task _startupTask = Task.CompletedTask;
     private bool _closing;
@@ -109,9 +110,11 @@ public partial class App : Application
         _settingsService ??= Persistence is null ? new AppSettingsService(new AppSettingsRepository(new LauncherDbContextFactory(paths))) : null;
         if (_settingsService is not null)
         {
+            _globalHotkey = new GlobalHotkeyService(_settingsService, _log);
+            _globalHotkey.Triggered += OpenGlobalQuickLauncher;
             _appearance = new AppearanceService(_settingsService, new BackgroundImageStore(paths), new DesktopWallpaperSource(), _content.Toast);
             _settings = new SettingsViewModel(_settingsService, new DataDirectoryService(paths), paths, _content.Toast,
-                new AppearanceViewModel(_appearance, new BackgroundFilePicker(), _content.Toast));
+                new AppearanceViewModel(_appearance, new BackgroundFilePicker(), _content.Toast), new GlobalHotkeyViewModel(_globalHotkey));
         }
         MainWindow = new MainWindow
         {
@@ -128,6 +131,24 @@ public partial class App : Application
         if (_closing) return;
         if (MainWindow?.IsVisible == true) WindowActivationService.Activate(MainWindow);
         else _activationPending = true;
+    }
+
+    private void OpenGlobalQuickLauncher()
+    {
+        if (_closing || MainWindow is not MainWindow window) return;
+        var timer = Stopwatch.StartNew();
+        WindowActivationService.Activate(window);
+        double visible = timer.Elapsed.TotalMilliseconds;
+        window.OpenQuickLauncher();
+        double opened = timer.Elapsed.TotalMilliseconds;
+        void RecordFocus()
+        {
+            bool focused = System.Windows.Input.Keyboard.FocusedElement is System.Windows.Controls.TextBox { Name: "QueryBox" };
+            _log?.Write(LogLevel.Information, "GlobalHotkey",
+                FormattableString.Invariant($"Activation visibleMs={visible:F2} overlayMs={opened:F2} focusedMs={timer.Elapsed.TotalMilliseconds:F2} focused={focused}"));
+        }
+        if (System.Windows.Input.Keyboard.FocusedElement is System.Windows.Controls.TextBox { Name: "QueryBox" }) RecordFocus();
+        else Dispatcher.BeginInvoke(RecordFocus, System.Windows.Threading.DispatcherPriority.Input);
     }
 
     private async Task InitializeAsync()
@@ -165,6 +186,8 @@ public partial class App : Application
                     _content.Toast.Show("透明背景无法启用，已恢复默认背景");
                 }
                 PerformanceTrace.Mark("MainWindowShown");
+                // A dedicated message HWND keeps registrations stable across Glass host swaps.
+                if (Persistence is null) _globalHotkey!.Initialize(new HotkeyRegistrar());
                 MainWindow.UpdateLayout();
                 PerformanceTrace.End("HomeFirstLayout", layout);
                 PerformanceTrace.Mark("FirstLayoutCompleted");
@@ -189,6 +212,7 @@ public partial class App : Application
         e.Cancel = true;
         if (_closing) return;
         _closing = true;
+        if (_globalHotkey is not null) _globalHotkey.SuppressActivation = true;
         MainWindow.IsEnabled = false;
         try
         {
@@ -208,6 +232,7 @@ public partial class App : Application
         }
         finally
         {
+            _globalHotkey?.Dispose();
             _log?.Write(LogLevel.Information, "Application", "Shutdown");
             if (_log is not null) await _log.StopAsync();
             // Flush may complete synchronously; defer Close until the current Closing event has returned.
@@ -262,6 +287,7 @@ public partial class App : Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        _globalHotkey?.Dispose();
         if (_appearance is not null) _appearance.PropertyChanged -= OnAppearanceChanged;
         _content?.Dispose();
         SystemParameters.StaticPropertyChanged -= OnSystemPreferencesChanged;

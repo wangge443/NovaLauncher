@@ -1,5 +1,12 @@
 # Nova Launcher — 产品定义
 
+## 8.5 Global Hotkey（已通过最终验收）
+
+默认 Ctrl + Alt + Space 在 Nova 运行期间恢复/显示并置前主窗口，复用 Quick Launcher；首次打开空查询，重复按下聚焦并全选现有查询。Ctrl + K 仍是窗口内快捷键；Esc返回原页面。Settings新增快捷启动开关、按键录制、冲突提示与重试。X仍退出程序，完全退出后热键不再生效。
+
+完整实现、兼容策略、测试和限制见 [GlobalHotkey-8.5.md](GlobalHotkey-8.5.md)。
+
+
 ## 8.4 实时透明背景（实验性，8.4.3最终验收通过）
 
 Settings外观提供“玻璃模式（实验性）”（8.4.1更名）：实时显示窗口后方内容，提供玻璃遮罩强度；不提供背景Blur。Default、DesktopWallpaper、CustomImage继续保留，DesktopWallpaper仅表示静态壁纸文件。透明模式可立即关闭，不支持时回退默认。数据结构、既有导航与搜索语义不变。证据、性能及手工验收边界见 [Transparency-8.4.md](Transparency-8.4.md)。

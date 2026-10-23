@@ -4,6 +4,7 @@
  <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" CanContentScroll="False" Focusable="False">
   <StackPanel Margin="0,0,12,12">
    <TextBlock Text="设置" Style="{StaticResource SettingsPageTitle}" />
+   <views:GlobalHotkeyView DataContext="{Binding Hotkey}"><views:GlobalHotkeyView.Style><Style TargetType="views:GlobalHotkeyView"><Style.Triggers><DataTrigger Binding="{Binding}" Value="{x:Null}"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></views:GlobalHotkeyView.Style></views:GlobalHotkeyView>
    <TextBlock Text="外观" Style="{StaticResource SettingsSectionTitle}" />
    <Expander x:Name="BackgroundExpander" Header="背景" FocusVisualStyle="{StaticResource FocusRing}" IsExpanded="False" Margin="0,0,0,8" AutomationProperties.Name="背景设置">
     <views:AppearanceView DataContext="{Binding Appearance}"/>
