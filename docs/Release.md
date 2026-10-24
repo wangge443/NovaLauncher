@@ -1,5 +1,15 @@
 # Nova Launcher — Portable Preview 发布基线（8.1）
 
+## 8.7.1 闭环更新（当前状态）
+
+**NOT READY FOR PREVIEW**。用户已人工确认 Profile → Settings 与 Glass Alt+Tab 正常；两项自动失败均归类 TEST HARNESS ISSUE，修正验证方式后完整 Portable Smoke 12 项、系统窗口专项 8 项通过。历史旧库由候选 EXE 升级与重启已 PASS；针对已升级库要求重复迁移的旧脚本为 NOT APPLICABLE。Startup ON/OFF 两轮真实 Windows Restart 仍为 NOT TESTED。产品与透明实现未修改，候选 SHA256 保持不变。详情见 [8.7.1闭环报告](Preview-Release-Gate-Closure-8.7.1.md)。下文 8.7 失败统计保留为历史记录，不代表这三项仍未闭环。
+
+## 8.7 Clean Machine Validation + Preview Release（验收中）
+
+基线 16fde14f7476329273050d3afada78e167ac662e，版本 0.1.0-preview.1。本轮仅验证和文档；候选 ZIP 已生成，Release 构建零警告零错误。30 组验证完整通过，3 组未通过或前提不适用；真实干净 Windows 与登录启动由用户人工测试，仍为 NOT TESTED。当前结论 **NOT READY FOR PREVIEW**，不自动提交、打 tag 或发布。
+
+详见 [Clean Machine 验收与问题记录](Clean-Machine-Test-8.7.md) 和 [Preview 候选说明](Preview-Release-0.1.0-preview.1.md)。
+
 ## 8.6 System Tray + Startup（已通过验收）
 
 NotifyIcon 托盘驻留，默认关闭到托盘；托盘菜单提供打开 Nova、快速启动、设置与真正退出。开机启动默认 Off，以当前用户 HKCU Run 的 NovaLauncher 值为准；显式开启后通过带引号的实际 EXE 路径和 --startup 登录后台启动。后台初始化保留核心集合与搜索索引，不显示窗口、不构建应用卡片视觉控件。保持 8.4.3 Glass 与 8.2 分批渲染策略，隐藏时暂停视图刷新。仅新增 CloseToTray 最小 Migration；用户已授权最终收尾提交，不开始新功能。

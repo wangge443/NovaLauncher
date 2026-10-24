@@ -194,7 +194,11 @@ function Open-CardMenu {
     Wait-For { $null -ne (Find-Ui 'FavoriteMenuItem' -Optional) } 'card context menu'
 }
 function Open-Settings {
-    Invoke-Ui 'ProfileAvatar'
+    # Avatar is a toggle. The persistence check leaves the flyout open, so clicking
+    # it unconditionally would close the very popup we are about to search.
+    if ($null -eq (Find-Ui 'ProfileSettings' -Invokable -Optional)) {
+        Invoke-Ui 'ProfileAvatar'
+    }
     Invoke-Ui 'ProfileSettings'
 }
 function Choose-File([string]$path) {

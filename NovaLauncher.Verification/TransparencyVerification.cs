@@ -38,12 +38,31 @@ internal static partial class Program
                 window.Width = 1000; window.Height = 650; window.Left = 100; window.Top = 70;
                 companion = new Window { Title = "Nova Alt-Tab verification companion", Width = 1000, Height = 650,
                     Left = 110, Top = 80, Background = Brushes.LightBlue };
-                companion.Show(); companion.Activate(); await Task.Delay(150);
-                window.Activate(); LaunchNative.SetForegroundWindow(new WindowInteropHelper(window).Handle); await Task.Delay(150);
-                SendSystemChord(0x12, 0x09); await Task.Delay(500);
+                companion.Show();
+                // IsActive is WPF thread state, not proof that Windows accepted foreground
+                // activation. Establish the MRU pair with real input before testing Alt+Tab.
+                await ActivateSystemTestWindowAsync(companion);
+                await ActivateSystemTestWindowAsync(window);
+                IntPtr originalHandle = new WindowInteropHelper(window).Handle;
+                Check(TransparencyNative.GetForegroundWindow() == originalHandle && !window.Topmost && !companion.Topmost,
+                    "Alt+Tab precondition: Nova is actual foreground and neither test window is topmost");
+                Console.WriteLine($"AltTab before: {DescribeSystemForeground()} nova={originalHandle} companion={new WindowInteropHelper(companion).Handle}");
+                await SendSystemChordAsync(0x12, 0x09);
+                await WaitForAsync(() => TransparencyNative.GetForegroundWindow() == new WindowInteropHelper(companion).Handle);
+                Console.WriteLine($"AltTab away: {DescribeSystemForeground()}");
                 Check(TransparencyNative.GetForegroundWindow() == new WindowInteropHelper(companion).Handle, "Native Alt+Tab switches from transparent Nova to companion");
-                SendSystemChord(0x12, 0x09); await Task.Delay(500);
+                await SendSystemChordAsync(0x12, 0x09);
+                await WaitForAsync(() => TransparencyNative.GetForegroundWindow() == originalHandle);
+                Console.WriteLine($"AltTab return: {DescribeSystemForeground()}");
                 Check(TransparencyNative.GetForegroundWindow() == new WindowInteropHelper(window).Handle, "Native Alt+Tab returns to transparent Nova");
+                Check(window.IsVisible && window.AllowsTransparency && window.Opacity == 1 && new WindowInteropHelper(window).Handle == originalHandle,
+                    "Alt+Tab preserves visible Glass HWND and full window opacity");
+                await SendSystemChordAsync(0x11, 0x4B);
+                await WaitForAsync(() => shell.Content.QuickLauncher.IsOpen && Keyboard.FocusedElement is TextBox { Name: "QueryBox" });
+                Check(shell.Content.QuickLauncher.IsOpen, "Ctrl+K remains interactive and focuses Quick Launcher after Alt+Tab");
+                CaptureCategoryWindow(window, "alt-tab-restored-quick-launcher.png", activate: false);
+                ProfileKey(0x1B);
+                await WaitForAsync(() => !shell.Content.QuickLauncher.IsOpen);
                 SendSystemChord(0x5B, 0x44); desktopShown = true; await Task.Delay(500);
                 Check(TransparencyNative.GetForegroundWindow() != new WindowInteropHelper(window).Handle, "Win+D exposes desktop instead of leaving transparent Nova active");
                 SendSystemChord(0x5B, 0x44); desktopShown = false; await Task.Delay(500);
@@ -72,6 +91,58 @@ internal static partial class Program
         LaunchNative.keybd_event(modifier, 0, 0, UIntPtr.Zero);
         try { ProfileKey(key); }
         finally { LaunchNative.keybd_event(modifier, 0, 2, UIntPtr.Zero); }
+    }
+
+    private static async Task ActivateSystemTestWindowAsync(Window window)
+    {
+        IntPtr handle = new WindowInteropHelper(window).Handle;
+        // Some command hosts supply SW_HIDE. This only prepares the verification window.
+        LaunchNative.ShowWindow(handle, 1);
+        try
+        {
+            window.Topmost = true;
+            window.Activate();
+            LaunchNative.SetForegroundWindow(handle);
+            await Task.Delay(150);
+            Point point = window.PointToScreen(new Point(300, 15));
+            Native.SetCursorPos((int)point.X, (int)point.Y);
+            IntPtr hit = LaunchNative.WindowFromPoint(new((int)point.X, (int)point.Y));
+            if (TransparencyNative.GetAncestor(hit, 2) != handle)
+            {
+                Console.WriteLine($"Foreground setup blocked: target={handle} hit={hit} root={TransparencyNative.GetAncestor(hit, 2)} point={point} {DescribeSystemForeground()}");
+                CaptureCategoryWindow(window, "foreground-setup-blocked.png", activate: false);
+                throw new InvalidOperationException("System test foreground setup is obstructed; refusing input.");
+            }
+            LaunchNative.mouse_event(2, 0, 0, 0, UIntPtr.Zero);
+            await Task.Delay(80);
+            LaunchNative.mouse_event(4, 0, 0, 0, UIntPtr.Zero);
+            await WaitForAsync(() => TransparencyNative.GetForegroundWindow() == handle);
+        }
+        finally { window.Topmost = false; }
+        await Task.Delay(250);
+        await WaitForAsync(() => TransparencyNative.GetForegroundWindow() == handle);
+    }
+
+    private static async Task SendSystemChordAsync(byte modifier, byte key)
+    {
+        LaunchNative.keybd_event(modifier, 0, 0, UIntPtr.Zero);
+        try
+        {
+            await Task.Delay(50);
+            LaunchNative.keybd_event(key, 0, 0, UIntPtr.Zero);
+            try { await Task.Delay(80); }
+            finally { LaunchNative.keybd_event(key, 0, 2, UIntPtr.Zero); }
+            await Task.Delay(50);
+        }
+        finally { LaunchNative.keybd_event(modifier, 0, 2, UIntPtr.Zero); }
+    }
+
+    private static string DescribeSystemForeground()
+    {
+        IntPtr handle = TransparencyNative.GetForegroundWindow();
+        var title = new System.Text.StringBuilder(256);
+        TransparencyNative.GetWindowText(handle, title, title.Capacity);
+        return $"foreground={handle} title={title}";
     }
 
     private static int RunTransparencyLive(string rootPath, string output, bool polish = false)
@@ -383,5 +454,7 @@ internal static partial class Program
         [DllImport("gdi32.dll")] internal static extern uint GetPixel(IntPtr dc, int x, int y);
         [DllImport("user32.dll")] internal static extern IntPtr SendMessage(IntPtr hwnd, uint message, IntPtr wParam, IntPtr lParam);
         [DllImport("user32.dll")] internal static extern IntPtr GetForegroundWindow();
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)] internal static extern int GetWindowText(IntPtr hwnd, System.Text.StringBuilder title, int capacity);
+        [DllImport("user32.dll")] internal static extern IntPtr GetAncestor(IntPtr hwnd, uint flags);
     }
 }

@@ -2,7 +2,7 @@
 
 ## 范围与当前阶段
 
-项目目标是 Windows 11 风格的现代桌面应用启动器。当前第八阶段 8.6：System Tray + Startup，基线 df30026d870b9f90f715237a30790ce904235475。使用系统 NotifyIcon，托盘始终显示；CloseToTray 默认 true，开机启动默认 Off，HKCU Run 为启动注册真实来源。新增最小 CloseToTray Migration，不增加第三方依赖。保持 True Transparency、搜索与 8.2 性能架构；只补充隐藏生命周期。8.6 已通过用户验收，已授权最终收尾提交 feat: add system tray and startup support；不开始新功能。不得开始 Auto Update、Installer 或 Clean Machine Test；Windows 重启/登录启动必须标记 Awaiting Manual Reboot Verification。
+项目目标是 Windows 11 风格的现代桌面应用启动器。当前第八阶段 8.7.1：Preview Release Gate Closure，基线 16fde14f7476329273050d3afada78e167ac662e，版本 0.1.0-preview.1。只调查 Release Gate、修正测试验证方式和报告，只有确认真实产品 Bug 后才允许最小修复；没有产品变更时必须保持候选 ZIP SHA256 不变，不新增业务功能、Migration、视觉调整或架构重构，不开发 Installer / Auto Update。真实干净 Windows 与注销/重启验证由用户人工执行；结果收到前必须标为 NOT TESTED，最终结论不得标 READY FOR PREVIEW。发现问题记录复现、严重级别和发布阻塞状态，不擅自大范围修复。本轮不自动 commit、创建 tag 或 GitHub Release。
 
 本文件是用户指定的项目工作规范。项目级 AGENTS.md 提供自动发现入口并引用本文件，不复制正文。开始任务时阅读本文件、README.md、docs/Product.md、docs/Design.md、docs/Architecture.md 和 docs/Development.md。全局规则仍以当前生效的 canonical AGENTS.md 为准。
 
@@ -55,4 +55,4 @@
 3. UI 工作先检查 ui-ux-pro-max 的安装与指令，形成设计参数和状态方案，再映射为 WPF 资源与控件。
 4. 按小范围改动实施，不覆盖用户工作；只有明确独立且有收益的工作流才考虑委派。
 5. 执行必要验证，记录未验证项与实际限制，清理本次无用临时文件，并同步相关文档。
-6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前8.6已通过验收，仅执行已授权的最终收尾提交，不进入Auto Update或Installer阶段，不将真实Clean Machine Test标记为完成。
+6. 用简体中文交付结果、验证情况与必要的下一步；代码、命令和技术标识保持英文。当前8.7.1仅修正验证器和测试说明，Profile与Glass人工已确认正常，Startup两轮真实重启仍未测试；真实Clean Machine及登录启动未实测不得标记通过，不自动提交或发布。
